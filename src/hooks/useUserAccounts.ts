@@ -1,5 +1,5 @@
-import { TokenAccount } from "../models";
-import { useAccountsContext } from "./../contexts/accounts";
+import { TokenAccount } from "../app/models";
+import { useAccountsContext } from "../app/contexts/accounts";
 
 export function useUserAccounts() {
   const context = useAccountsContext();

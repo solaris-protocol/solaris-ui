@@ -1,12 +1,12 @@
 import { PublicKey } from "@solana/web3.js";
 import { useMemo } from "react";
-import { useMidPriceInUSD } from "../contexts/market";
+import { useMidPriceInUSD } from "../app/contexts/market";
 import { useLendingMarket } from "./useLendingMarket";
 import { getLendingReserves, useLendingReserve } from "./useLendingReserves";
 import { useUserDeposits } from "./useUserDeposits";
 import { useUserObligations } from "./useUserObligations";
 import { fromLamports } from "../utils/utils";
-import { useMint } from "../contexts/accounts";
+import { useMint } from "../app/contexts/accounts";
 
 // TODO: add option to decrease buying power by overcollateralization factor
 // TODO: add support for balance in the wallet

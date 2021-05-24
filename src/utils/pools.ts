@@ -7,13 +7,13 @@ import {
   TokenSwapLayout,
   TokenSwapLayoutLegacyV0 as TokenSwapLayoutV0,
   TokenSwapLayoutV1,
-} from "./../models";
-import { useConnection } from "../contexts/connection";
+} from "../app/models";
+import { useConnection } from "../app/contexts/connection";
 import {
   cache,
   getMultipleAccounts,
   TokenAccountParser,
-} from "../contexts/accounts";
+} from "../app/contexts/accounts";
 
 export const LIQUIDITY_PROVIDER_FEE = 0.003;
 export const SERUM_FEE = 0.0005;

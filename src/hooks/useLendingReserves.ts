@@ -1,8 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
-import { LendingReserve, LendingReserveParser } from "../models/lending";
-import { cache, ParsedAccount } from "./../contexts/accounts";
-import { useConnectionConfig } from "./../contexts/connection";
+import { LendingReserve, LendingReserveParser } from "../app/models/lending";
+import { cache, ParsedAccount } from "../app/contexts/accounts";
+import { useConnectionConfig } from "../app/contexts/connection";
 import { getTokenByName, KnownToken } from "../utils/utils";
 
 export const getLendingReserves = () => {

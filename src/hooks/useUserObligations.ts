@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useUserAccounts } from "./useUserAccounts";
 import { useEnrichedLendingObligations } from "./useEnrichedLendingObligations";
-import { TokenAccount } from "../models";
+import { TokenAccount } from "../app/models";
 
 export function useUserObligations() {
   const { userAccounts } = useUserAccounts();

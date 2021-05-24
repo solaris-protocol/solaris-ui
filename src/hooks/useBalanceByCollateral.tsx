@@ -1,7 +1,7 @@
 import { useUserDeposits } from "./useUserDeposits";
 import { useEffect, useState } from "react";
-import { cache, ParsedAccount } from "../contexts/accounts";
-import { LendingReserve, LendingReserveParser } from "../models";
+import { cache, ParsedAccount } from "../app/contexts/accounts";
+import { LendingReserve, LendingReserveParser } from "../app/models";
 
 export const useBalanceByCollateral = (collateralReserve?: string) => {
   const userDeposits = useUserDeposits();

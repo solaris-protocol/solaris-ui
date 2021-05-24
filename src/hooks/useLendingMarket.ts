@@ -1,7 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { useEffect, useState } from "react";
-import { LendingMarketParser, LendingMarket } from "../models/lending";
-import { cache, ParsedAccount } from "./../contexts/accounts";
+import { LendingMarketParser, LendingMarket } from "../app/models/lending";
+import { cache, ParsedAccount } from "../app/contexts/accounts";
 
 const getLendingMarkets = () => {
   return cache

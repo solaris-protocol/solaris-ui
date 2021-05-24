@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { MintInfo } from "@solana/spl-token";
 
-import { PoolInfo, TokenAccount } from "./../models";
+import { PoolInfo, TokenAccount } from "../app/models";
 import { PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import { LAMPORTS_PER_SOL, WAD, ZERO } from "../constants";

@@ -1,11 +1,11 @@
 import { HashRouter, Route, Switch } from "react-router-dom";
 import React from "react";
-import { WalletProvider } from "./contexts/wallet";
-import { ConnectionProvider } from "./contexts/connection";
-import { AccountsProvider } from "./contexts/accounts";
-import { MarketProvider } from "./contexts/market";
-import { LendingProvider } from "./contexts/lending";
-import { AppLayout } from "./components/Layout";
+import { WalletProvider } from "./app/contexts/wallet";
+import { ConnectionProvider } from "./app/contexts/connection";
+import { AccountsProvider } from "./app/contexts/accounts";
+import { MarketProvider } from "./app/contexts/market";
+import { LendingProvider } from "./app/contexts/lending";
+import { AppLayout } from "./old/components/Layout";
 
 import {
   BorrowReserveView,
@@ -22,8 +22,8 @@ import {
   LiquidateReserveView,
   MarginTrading,
   TransactionListView,
-} from "./views";
-import { NewPosition } from "./views/margin/newPosition";
+} from "./old/views";
+import { NewPosition } from "./old/views/margin/newPosition";
 
 export function Routes() {
   return (

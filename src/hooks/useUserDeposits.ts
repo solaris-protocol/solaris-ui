@@ -1,12 +1,12 @@
-import { cache, ParsedAccount } from "../contexts/accounts";
-import { calculateDepositAPY, LendingReserve } from "../models/lending";
+import { cache, ParsedAccount } from "../app/contexts/accounts";
+import { calculateDepositAPY, LendingReserve } from "../app/models/lending";
 import { useUserAccounts } from "./useUserAccounts";
 import { useLendingReserves } from "./useLendingReserves";
 import { useEffect, useMemo, useState } from "react";
-import { TokenAccount } from "../models";
-import { useMarkets } from "../contexts/market";
+import { TokenAccount } from "../app/models";
+import { useMarkets } from "../app/contexts/market";
 import { fromLamports, getTokenName } from "../utils/utils";
-import { useConnectionConfig } from "../contexts/connection";
+import { useConnectionConfig } from "../app/contexts/connection";
 import { calculateCollateralBalance } from "./useCollateralBalance";
 import { MintInfo } from "@solana/spl-token";
 

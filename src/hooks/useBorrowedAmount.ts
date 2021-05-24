@@ -8,8 +8,8 @@ import {
   MintParser,
   ParsedAccount,
   useMint,
-} from "../contexts/accounts";
-import { useConnection } from "../contexts/connection";
+} from "../app/contexts/accounts";
+import { useConnection } from "../app/contexts/connection";
 import { MintInfo } from "@solana/spl-token";
 import { useLendingReserve } from "./useLendingReserves";
 

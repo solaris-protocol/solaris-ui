@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { TokenSwapLayout, TokenSwapLayoutV1 } from "../models";
+import { TokenSwapLayout, TokenSwapLayoutV1 } from "../app/models";
 
 export const WRAPPED_SOL_MINT = new PublicKey(
   "So11111111111111111111111111111111111111112"
