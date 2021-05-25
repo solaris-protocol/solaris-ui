@@ -19,7 +19,8 @@
     "predeploy": "git pull --ff-only && yarn && yarn build",
     "deploy": "gh-pages -d build",
     "lint": "eslint --ext .ts,.tsx src/",
-    "format": "prettier --write \"**/*.+(js|jsx|ts|tsx|json|css|md)\""
+    "format": "prettier --write \"**/*.+(js|jsx|ts|tsx|json|css|md)\"",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@ant-design/pro-layout": "^6.7.0",
@@ -111,12 +112,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
   },
   "lint-staged": {
     "./src/**/*.{js,jsx,ts,tsx}": [
