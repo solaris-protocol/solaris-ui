@@ -1,8 +1,10 @@
-import React from "react";
-import "./App.less";
-import { Routes } from "./routes";
+import './App.less';
 
-function App() {
+import React, { ReactElement } from 'react';
+
+import { Routes } from './routes';
+
+function App(): ReactElement {
   return <Routes />;
 }
 

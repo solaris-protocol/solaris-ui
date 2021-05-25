@@ -1,21 +1,24 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import "./index.css";
-import App from "./App";
-import * as serviceWorker from "./serviceWorker";
+import './index.css';
 
-if (process.env.NODE_ENV === "development") {
-    const whyDidYouRender = require("@welldone-software/why-did-you-render");
-    whyDidYouRender(React, {
-        trackAllPureComponents: true,
-    });
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import App from './App';
+import * as serviceWorker from './serviceWorker';
+
+if (process.env.NODE_ENV === 'development') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const whyDidYouRender = require('@welldone-software/why-did-you-render');
+  whyDidYouRender(React, {
+    trackAllPureComponents: true,
+  });
 }
 
 ReactDOM.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-  document.getElementById("root")
+  document.getElementById('root')
 );
 
 // If you want your app to work offline and load faster, you can change

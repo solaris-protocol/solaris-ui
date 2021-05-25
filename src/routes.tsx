@@ -1,12 +1,7 @@
-import { HashRouter, Route, Switch } from "react-router-dom";
-import React from "react";
-import { WalletProvider } from "./app/contexts/wallet";
-import { ConnectionProvider } from "./app/contexts/connection";
-import { AccountsProvider } from "./app/contexts/accounts";
-import { MarketProvider } from "./app/contexts/market";
-import { LendingProvider } from "./app/contexts/lending";
-import { AppLayout } from "./old/components/Layout";
+import React, { FC } from 'react';
+import { HashRouter, Route, Switch } from 'react-router-dom';
 
+import { Layout } from './old/components/Layout';
 import {
   BorrowReserveView,
   BorrowView,
@@ -15,86 +10,74 @@ import {
   DepositView,
   FaucetView,
   HomeView,
+  LiquidateReserveView,
+  LiquidateView,
+  MarginTrading,
   RepayReserveView,
   ReserveView,
-  WithdrawView,
-  LiquidateView,
-  LiquidateReserveView,
-  MarginTrading,
   TransactionListView,
-} from "./old/views";
-import { NewPosition } from "./old/views/margin/newPosition";
+  WithdrawView,
+} from './old/views';
+import { NewPosition } from './old/views/margin/newPosition';
+import { Providers } from './Providers';
 
-export function Routes() {
+export const Routes: FC = () => {
   return (
     <>
-      <HashRouter basename={"/"}>
-        <ConnectionProvider>
-          <WalletProvider>
-            <AccountsProvider>
-              <MarketProvider>
-                <LendingProvider>
-                  <AppLayout>
-                    <Switch>
-                      <Route exact path="/" component={() => <HomeView />} />
-                      <Route
-                        exact
-                        path="/dashboard"
-                        children={<DashboardView />}
-                      />
-                      <Route
-                        exact
-                        path="/transactions"
-                        children={<TransactionListView />}
-                      />
-                      <Route path="/reserve/:id" children={<ReserveView />} />
-                      <Route
-                        exact
-                        path="/deposit"
-                        component={() => <DepositView />}
-                      />
-                      <Route
-                        path="/deposit/:id"
-                        children={<DepositReserveView />}
-                      />
-                      <Route path="/withdraw/:id" children={<WithdrawView />} />
-                      <Route exact path="/borrow" children={<BorrowView />} />
-                      <Route
-                        path="/borrow/:id"
-                        children={<BorrowReserveView />}
-                      />
-                      <Route
-                        path="/repay/loan/:obligation"
-                        children={<RepayReserveView />}
-                      />
-                      <Route
-                        path="/repay/:reserve"
-                        children={<RepayReserveView />}
-                      />
-                      <Route
-                        exact
-                        path="/liquidate"
-                        children={<LiquidateView />}
-                      />
-                      <Route
-                        path="/liquidate/:id"
-                        children={<LiquidateReserveView />}
-                      />
-                      <Route
-                        exact
-                        path="/margin"
-                        children={<MarginTrading />}
-                      />
-                      <Route path="/margin/:id" children={<NewPosition />} />
-                      <Route exact path="/faucet" children={<FaucetView />} />
-                    </Switch>
-                  </AppLayout>
-                </LendingProvider>
-              </MarketProvider>
-            </AccountsProvider>
-          </WalletProvider>
-        </ConnectionProvider>
+      <HashRouter basename={'/'}>
+        <Providers>
+          <Layout>
+            <Switch>
+              <Route exact path="/" component={() => <HomeView />} />
+              <Route exact path="/dashboard">
+                <DashboardView />
+              </Route>
+              <Route exact path="/transactions">
+                <TransactionListView />
+              </Route>
+              <Route path="/reserve/:id">
+                <ReserveView />
+              </Route>
+              <Route exact path="/deposit">
+                <DepositView />
+              </Route>
+              <Route path="/deposit/:id">
+                <DepositReserveView />
+              </Route>
+              <Route path="/withdraw/:id">
+                <WithdrawView />
+              </Route>
+              <Route exact path="/borrow">
+                <BorrowView />
+              </Route>
+              <Route path="/borrow/:id">
+                <BorrowReserveView />
+              </Route>
+              <Route path="/repay/loan/:obligation">
+                <RepayReserveView />
+              </Route>
+              <Route path="/repay/:reserve">
+                <RepayReserveView />
+              </Route>
+              <Route exact path="/liquidate">
+                <LiquidateView />
+              </Route>
+              <Route path="/liquidate/:id">
+                <LiquidateReserveView />
+              </Route>
+              <Route exact path="/margin">
+                <MarginTrading />
+              </Route>
+              <Route path="/margin/:id">
+                <NewPosition />
+              </Route>
+              <Route exact path="/faucet">
+                <FaucetView />
+              </Route>
+            </Switch>
+          </Layout>
+        </Providers>
       </HashRouter>
     </>
   );
-}
+};
