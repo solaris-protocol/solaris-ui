@@ -1,10 +1,11 @@
-import './index.css';
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 
 import App from './App';
 import * as serviceWorker from './serviceWorker';
+import { globalCss } from './styles/global';
+
+export const global = globalCss;
 
 if (process.env.NODE_ENV === 'development') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires

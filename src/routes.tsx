@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { HashRouter, Route, Switch } from 'react-router-dom';
 
-import { Layout } from './old/components/Layout';
+import { Layout } from './components/common/Layout';
 import {
   BorrowReserveView,
   BorrowView,

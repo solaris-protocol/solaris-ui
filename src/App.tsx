@@ -1,11 +1,11 @@
 import './App.less';
 
-import React, { ReactElement } from 'react';
+import React, { FC } from 'react';
 
 import { Routes } from './routes';
 
-function App(): ReactElement {
+const App: FC = () => {
   return <Routes />;
-}
+};
 
 export default App;

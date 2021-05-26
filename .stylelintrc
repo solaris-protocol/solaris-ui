@@ -7,5 +7,12 @@
     "stylelint-config-rational-order",
     "stylelint-prettier/recommended",
     "@linaria/stylelint"
-  ]
+  ],
+  "rules": {
+    "prettier/prettier": true,
+    "declaration-empty-line-before": null,
+    "plugin/rational-order": [true, {
+      "empty-line-between-groups": true
+    }]
+  }
 }

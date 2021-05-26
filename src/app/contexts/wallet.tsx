@@ -1,52 +1,53 @@
-import type { PublicKey } from "@solana/web3.js";
-
-import Wallet from "@project-serum/sol-wallet-adapter";
-import { Transaction } from "@solana/web3.js";
-import { Button, Modal } from "antd";
-import EventEmitter from "eventemitter3";
 import React, {
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-} from "react";
-import { notify } from "../../utils/notifications";
-import { useConnectionConfig } from "./connection";
-import { useLocalStorageState } from "../../utils/utils";
-import { LedgerWalletAdapter } from "../wallet-adapters/ledger";
-import { SolongWalletAdapter } from "../wallet-adapters/solong";
-import solletIcon from "../../assets/icons/sollet.svg";
-import solongIcon from "../../assets/icons/solong.png";
-import solflareIcon from "../../assets/icons/solflare.svg";
-import mathwalletIcon from "../../assets/icons/mathwallet.svg";
-import ledgerIcon from "../../assets/icons/ledger.svg";
+} from 'react';
+
+import Wallet from '@project-serum/sol-wallet-adapter';
+import type { PublicKey } from '@solana/web3.js';
+import { Transaction } from '@solana/web3.js';
+import { Button, Modal } from 'antd';
+import EventEmitter from 'eventemitter3';
+
+import ledgerIcon from '../../assets/icons/ledger.svg';
+import mathwalletIcon from '../../assets/icons/mathwallet.svg';
+import solflareIcon from '../../assets/icons/solflare.svg';
+import solletIcon from '../../assets/icons/sollet.svg';
+import solongIcon from '../../assets/icons/solong.png';
+import { notify } from '../../utils/notifications';
+import { useLocalStorageState } from '../../utils/utils';
+import { LedgerWalletAdapter } from '../wallet-adapters/ledger';
+import { SolongWalletAdapter } from '../wallet-adapters/solong';
+import { useConnectionConfig } from './connection';
 
 export const WALLET_PROVIDERS = [
   {
-    name: "Sollet",
-    url: "https://www.sollet.io",
+    name: 'Sollet',
+    url: 'https://www.sollet.io',
     icon: solletIcon,
   },
   {
-    name: "Solong",
-    url: "https://solongwallet.com",
+    name: 'Solong',
+    url: 'https://solongwallet.com',
     icon: solongIcon,
     adapter: SolongWalletAdapter,
   },
   {
-    name: "Solflare",
-    url: "https://solflare.com/access-wallet",
+    name: 'Solflare',
+    url: 'https://solflare.com/access-wallet',
     icon: solflareIcon,
   },
   {
-    name: "MathWallet",
-    url: "https://mathwallet.org",
+    name: 'MathWallet',
+    url: 'https://mathwallet.org',
     icon: mathwalletIcon,
   },
   {
-    name: "Ledger",
-    url: "https://www.ledger.com",
+    name: 'Ledger',
+    url: 'https://www.ledger.com',
     icon: ledgerIcon,
     adapter: LedgerWalletAdapter,
   },
@@ -75,7 +76,7 @@ export function WalletProvider({ children = null as any }) {
   const { endpoint } = useConnectionConfig();
 
   const [autoConnect, setAutoConnect] = useState(false);
-  const [providerUrl, setProviderUrl] = useLocalStorageState("walletProvider");
+  const [providerUrl, setProviderUrl] = useLocalStorageState('walletProvider');
 
   const provider = useMemo(
     () => WALLET_PROVIDERS.find(({ url }) => url === providerUrl),
@@ -98,7 +99,7 @@ export function WalletProvider({ children = null as any }) {
 
   useEffect(() => {
     if (wallet) {
-      wallet.on("connect", () => {
+      wallet.on('connect', () => {
         if (wallet.publicKey) {
           setConnected(true);
           const walletPublicKey = wallet.publicKey.toBase58();
@@ -114,17 +115,17 @@ export function WalletProvider({ children = null as any }) {
               : walletPublicKey;
 
           notify({
-            message: "Wallet update",
-            description: "Connected to wallet " + keyToDisplay,
+            message: 'Wallet update',
+            description: 'Connected to wallet ' + keyToDisplay,
           });
         }
       });
 
-      wallet.on("disconnect", () => {
+      wallet.on('disconnect', () => {
         setConnected(false);
         notify({
-          message: "Wallet update",
-          description: "Disconnected from wallet",
+          message: 'Wallet update',
+          description: 'Disconnected from wallet',
         });
       });
     }
@@ -165,7 +166,7 @@ export function WalletProvider({ children = null as any }) {
         title="Select Wallet"
         okText="Connect"
         visible={isModalVisible}
-        okButtonProps={{ style: { display: "none" } }}
+        okButtonProps={{ style: { display: 'none' } }}
         onCancel={close}
         width={400}
       >
@@ -178,8 +179,9 @@ export function WalletProvider({ children = null as any }) {
 
           return (
             <Button
+              key={provider.name}
               size="large"
-              type={providerUrl === provider.url ? "primary" : "ghost"}
+              type={providerUrl === provider.url ? 'primary' : 'ghost'}
               onClick={onClick}
               icon={
                 <img
@@ -191,9 +193,9 @@ export function WalletProvider({ children = null as any }) {
                 />
               }
               style={{
-                display: "block",
-                width: "100%",
-                textAlign: "left",
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
                 marginBottom: 8,
               }}
             >

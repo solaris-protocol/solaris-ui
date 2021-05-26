@@ -1,0 +1,129 @@
+import React, { FC, useState } from 'react';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
+
+import { styled } from '@linaria/react';
+import classNames from 'classnames';
+
+const WIDTH_CLOSED = 110;
+const WIDTH_OPENED = 260;
+const TRANSITION_DURATION = 400;
+const TRANSITION_DURATION_SMART = 300;
+
+const Wrapper = styled.div`
+  position: relative;
+
+  width: ${WIDTH_CLOSED}px;
+
+  background: #130e14;
+  border-right: 1px solid #201a22;
+
+  transition: width ${TRANSITION_DURATION}ms cubic-bezier(0.7, -0.4, 0.4, 1.4);
+
+  &.isOpen {
+    width: ${WIDTH_OPENED}px;
+  }
+`;
+
+const TransitionGroupWrapper = styled.div`
+  /* starting ENTER animation */
+  .transition-group-enter {
+    opacity: 0;
+  }
+
+  /* ending ENTER animation */
+  .transition-group-enter-active {
+    opacity: 1;
+
+    transition: opacity ${TRANSITION_DURATION_SMART}ms ease-in-out;
+  }
+
+  /* starting EXIT animation */
+  .transition-group-exit {
+    opacity: 1;
+  }
+
+  /* ending EXIT animation */
+  .transition-group-exit-active {
+    opacity: 0;
+
+    transition: opacity ${TRANSITION_DURATION_SMART}ms ease-in-out;
+  }
+`;
+
+const TransitionWrapper = styled.div`
+  position: absolute;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  width: ${WIDTH_CLOSED}px;
+  padding: 30px 26px;
+
+  &.isOpen {
+    width: ${WIDTH_OPENED}px;
+  }
+`;
+
+const Logo = styled.div`
+  width: 50px;
+  height: 50px;
+
+  background: url('./logo.svg') no-repeat 50% 50%;
+  background-size: 50px;
+
+  &.isOpen {
+    width: 60px;
+    height: 60px;
+
+    background-size: 60px;
+  }
+`;
+
+const Solaris = styled.div`
+  width: 162px;
+  height: 36px;
+  margin: 20px 0 40px;
+
+  background: url('./solaris-protocol.svg') no-repeat 50% 50%;
+`;
+
+const Delimiter = styled.div`
+  width: 25px;
+  height: 2px;
+  margin: 20px 0;
+
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+`;
+
+const Content = styled.div``;
+
+export const SideBar: FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSidebarToggleClick = () => {
+    setIsOpen(!isOpen);
+  };
+
+  return (
+    <Wrapper
+      className={classNames({ isOpen })}
+      onClick={handleSidebarToggleClick}
+    >
+      <TransitionGroup component={TransitionGroupWrapper}>
+        <CSSTransition
+          key={isOpen ? 'open' : 'close'}
+          timeout={300}
+          classNames="transition-group"
+        >
+          <TransitionWrapper className={classNames({ isOpen })}>
+            <Logo className={classNames({ isOpen })} />
+            {isOpen ? <Solaris /> : <Delimiter />}
+            <Content>1</Content>
+          </TransitionWrapper>
+        </CSSTransition>
+      </TransitionGroup>
+    </Wrapper>
+  );
+};
