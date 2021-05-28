@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { useWallet } from "../../../app/contexts/wallet";
-import { useConnection } from "../../../app/contexts/connection";
-import { cache, ParsedLocalTransaction } from "../../../app/contexts/accounts";
-import { LENDING_PROGRAM_ID } from "../../../utils/ids";
-import { TransactionListLookup } from "../../../app/models";
-import { Card } from "antd";
-import { LABELS } from "../../../constants";
-import { LoadingOutlined } from "@ant-design/icons";
-import { SingleTypeTransactionItem } from "./item";
+import React, { useEffect, useState } from 'react';
+
+import { LoadingOutlined } from '@ant-design/icons';
+import { Card } from 'antd';
+
+import { cache, ParsedLocalTransaction } from '../../../app/contexts/accounts';
+import { useConnection } from '../../../app/contexts/connection';
+import { useWallet } from '../../../app/contexts/wallet';
+import { TransactionListLookup } from '../../../app/models';
+import { LABELS } from '../../../constants';
+import { LENDING_PROGRAM_ID } from '../../../utils/ids';
+import { SingleTypeTransactionItem } from './item';
 
 export const TransactionListView = () => {
   const { connected, wallet } = useWallet();
@@ -19,18 +21,16 @@ export const TransactionListView = () => {
     const queryTxs = async () => {
       if (connected && wallet?.publicKey) {
         setLoading(true);
-        const signatureList = await connection.getConfirmedSignaturesForAddress2(
-          wallet.publicKey
-        );
+        const signatureList = await connection.getConfirmedSignaturesForAddress2(wallet.publicKey);
         const localTransactions = cache.getAllTransactions();
         const signaturesCache = [...localTransactions.keys()];
         const filteredSignatureList = signatureList.filter((signature) => {
           return !signaturesCache.includes(signature.signature);
         });
 
-        const txs: Array<ParsedLocalTransaction | null> = [
-          ...localTransactions.values(),
-        ].filter((val) => val !== null);
+        const txs: Array<ParsedLocalTransaction | null> = [...localTransactions.values()].filter(
+          (val) => val !== null
+        );
         if (txs.length > 0) {
           setConfirmedTxs(txs);
         }
@@ -39,14 +39,12 @@ export const TransactionListView = () => {
             // limited to 100 Lending transactions
             break;
           }
-          const confirmedTx = await connection.getConfirmedTransaction(
-            sig.signature
-          );
+          const confirmedTx = await connection.getConfirmedTransaction(sig.signature);
           const instructions = confirmedTx?.transaction.instructions;
           const filteredInstructions = instructions?.filter((ins) => {
             return ins.programId.toBase58() === LENDING_PROGRAM_ID.toBase58();
           });
-          let lendingInstructionFound: boolean = false;
+          let lendingInstructionFound = false;
           if (filteredInstructions && filteredInstructions.length > 0) {
             for (const ins of filteredInstructions) {
               const code = ins.data[0];
@@ -78,12 +76,12 @@ export const TransactionListView = () => {
   }, [connected, connection, wallet?.publicKey, setLoading]);
 
   return connected ? (
-    <div className={"flexColumn"}>
+    <div className={'flexColumn'}>
       <Card
-        style={{ marginBottom: "10px" }}
+        style={{ marginBottom: '10px' }}
         title={
           <div>
-            Transactions{" "}
+            Transactions{' '}
             {loading && (
               <span>
                 (Loading <LoadingOutlined />)
@@ -100,20 +98,13 @@ export const TransactionListView = () => {
           <div>Status</div>
         </div>
         {confirmedTxs.map((tx) => (
-          <SingleTypeTransactionItem
-            key={tx.signature.signature}
-            transaction={tx}
-          />
+          <SingleTypeTransactionItem key={tx.signature.signature} transaction={tx} />
         ))}
       </Card>
     </div>
   ) : (
     <div className="dashboard-info">
-      <img
-        src="splash.svg"
-        alt="connect your wallet"
-        className="dashboard-splash"
-      />
+      <img src="splash.svg" alt="connect your wallet" className="dashboard-splash" />
       {LABELS.TRANSACTIONS_INFO}
     </div>
   );

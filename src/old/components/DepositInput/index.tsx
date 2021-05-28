@@ -1,17 +1,20 @@
-import React, { useCallback, useState } from "react";
-import { InputType, useSliderInput, useUserBalance } from "../../../hooks";
-import { LendingReserve } from "../../../app/models/lending";
-import { Card, Slider } from "antd";
-import { useConnection } from "../../../app/contexts/connection";
-import { useWallet } from "../../../app/contexts/wallet";
-import { deposit } from "../../../app/actions/deposit";
-import { PublicKey } from "@solana/web3.js";
-import "./style.less";
-import { ActionConfirmation } from "../ActionConfirmation";
-import { LABELS, marks } from "../../../constants";
-import { ConnectButton } from "../ConnectButton";
-import CollateralInput from "../CollateralInput";
-import { notify } from "../../../utils/notifications";
+import './style.less';
+
+import React, { useCallback, useState } from 'react';
+
+import { PublicKey } from '@solana/web3.js';
+import { Card, Slider } from 'antd';
+
+import { deposit } from '../../../app/actions/deposit';
+import { useConnection } from '../../../app/contexts/connection';
+import { useWallet } from '../../../app/contexts/wallet';
+import { LendingReserve } from '../../../app/models/lending';
+import { LABELS, marks } from '../../../constants';
+import { InputType, useSliderInput, useUserBalance } from '../../../hooks';
+import { notify } from '../../../utils/notifications';
+import { ActionConfirmation } from '../ActionConfirmation';
+import CollateralInput from '../CollateralInput';
+import { ConnectButton } from '../ConnectButton';
 
 export const DepositInput = (props: {
   className?: string;
@@ -26,13 +29,15 @@ export const DepositInput = (props: {
   const reserve = props.reserve;
   const address = props.address;
 
-  const { accounts: fromAccounts, balance, balanceLamports } = useUserBalance(
-    reserve?.liquidityMint
-  );
+  const {
+    accounts: fromAccounts,
+    balance,
+    balanceLamports,
+  } = useUserBalance(reserve?.liquidityMint);
 
   const convert = useCallback(
     (val: string | number) => {
-      if (typeof val === "string") {
+      if (typeof val === 'string') {
         return (parseFloat(val) / balance) * 100;
       } else {
         return (val * balance) / 100;
@@ -63,14 +68,14 @@ export const DepositInput = (props: {
           wallet
         );
 
-        setValue("");
+        setValue('');
         setShowConfirmation(true);
       } catch (error) {
         // TODO:
         console.log(error);
         notify({
-          message: "Error in deposit.",
-          type: "error",
+          message: 'Error in deposit.',
+          type: 'error',
           description: error.message,
         });
       } finally {
@@ -92,11 +97,11 @@ export const DepositInput = (props: {
   ]);
 
   const bodyStyle: React.CSSProperties = {
-    display: "flex",
+    display: 'flex',
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100%",
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
   };
 
   return (
@@ -106,18 +111,18 @@ export const DepositInput = (props: {
       ) : (
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-around",
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-around',
           }}
         >
           <div className="deposit-input-title">{LABELS.DEPOSIT_QUESTION}</div>
           <div
             style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-              alignItems: "center",
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
             }}
           >
             <CollateralInput
@@ -125,7 +130,7 @@ export const DepositInput = (props: {
               reserve={reserve}
               amount={parseFloat(value) || 0}
               onInputChange={(val: number | null) => {
-                setValue(val?.toString() || "");
+                setValue(val?.toString() || '');
               }}
               disabled={true}
               hideBalance={true}

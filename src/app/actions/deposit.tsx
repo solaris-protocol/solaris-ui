@@ -1,26 +1,18 @@
-import {
-  Account,
-  Connection,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { sendTransaction } from "../contexts/connection";
-import { notify } from "../../utils/notifications";
+import { AccountLayout } from '@solana/spl-token';
+import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+
+import { LENDING_PROGRAM_ID } from '../../utils/ids';
+import { notify } from '../../utils/notifications';
+import { sendTransaction } from '../contexts/connection/connection';
+import { WalletAdapter } from '../contexts/wallet';
+import { approve, TokenAccount } from '../models';
 import {
   accrueInterestInstruction,
   depositInstruction,
   initReserveInstruction,
   LendingReserve,
-} from "../models/lending";
-import { AccountLayout } from "@solana/spl-token";
-import { LENDING_PROGRAM_ID } from "../../utils/ids";
-import {
-  createUninitializedAccount,
-  ensureSplAccount,
-  findOrCreateAccountByMint,
-} from "./account";
-import { approve, TokenAccount } from "../models";
-import { WalletAdapter } from "../contexts/wallet";
+} from '../models/lending';
+import { createUninitializedAccount, ensureSplAccount, findOrCreateAccountByMint } from './account';
 
 export const deposit = async (
   from: TokenAccount,
@@ -31,13 +23,13 @@ export const deposit = async (
   wallet: WalletAdapter
 ) => {
   if (!wallet.publicKey) {
-    throw new Error("Wallet is not connected");
+    throw new Error('Wallet is not connected');
   }
 
   notify({
-    message: "Depositing funds...",
-    description: "Please review transactions to approve.",
-    type: "warn",
+    message: 'Depositing funds...',
+    description: 'Please review transactions to approve.',
+    type: 'warn',
   });
 
   const isInitialized = true; // TODO: finish reserve init
@@ -47,9 +39,7 @@ export const deposit = async (
   const instructions: TransactionInstruction[] = [];
   const cleanupInstructions: TransactionInstruction[] = [];
 
-  const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
-    AccountLayout.span
-  );
+  const accountRentExempt = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
 
   const [authority] = await PublicKey.findProgramAddress(
     [reserve.lendingMarket.toBuffer()], // which account should be authority
@@ -111,7 +101,7 @@ export const deposit = async (
         reserve.collateralMint,
         reserve.lendingMarket,
         authority,
-        transferAuthority.publicKey,
+        transferAuthority.publicKey
       )
     );
   } else {
@@ -137,7 +127,7 @@ export const deposit = async (
   }
 
   try {
-    let tx = await sendTransaction(
+    const tx = await sendTransaction(
       connection,
       wallet,
       instructions.concat(cleanupInstructions),
@@ -146,8 +136,8 @@ export const deposit = async (
     );
 
     notify({
-      message: "Funds deposited.",
-      type: "success",
+      message: 'Funds deposited.',
+      type: 'success',
       description: `Transaction - ${tx}`,
     });
   } catch {

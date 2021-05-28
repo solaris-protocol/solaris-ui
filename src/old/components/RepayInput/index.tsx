@@ -1,25 +1,28 @@
-import React, { useCallback, useEffect, useState } from "react";
+import './style.less';
+
+import React, { useCallback, useEffect, useState } from 'react';
+
+import { Card, Slider } from 'antd';
+
+import { repay } from '../../../app/actions';
+import { ParsedAccount, useMint } from '../../../app/contexts/accounts';
+import { useConnection } from '../../../app/contexts/connection';
+import { useMidPriceInUSD } from '../../../app/contexts/market';
+import { useWallet } from '../../../app/contexts/wallet';
+import { LendingReserve } from '../../../app/models';
+import { LABELS, marks } from '../../../constants';
 import {
   EnrichedLendingObligation,
   InputType,
   useAccountByMint,
   useSliderInput,
   useUserBalance,
-} from "../../../hooks";
-import { LendingReserve } from "../../../app/models";
-import { Card, Slider } from "antd";
-import { ParsedAccount, useMint } from "../../../app/contexts/accounts";
-import { useConnection } from "../../../app/contexts/connection";
-import { useWallet } from "../../../app/contexts/wallet";
-import { repay } from "../../../app/actions";
-import "./style.less";
-import { LABELS, marks } from "../../../constants";
-import { ActionConfirmation } from "../ActionConfirmation";
-import { fromLamports, wadToLamports } from "../../../utils/utils";
-import { notify } from "../../../utils/notifications";
-import { ConnectButton } from "../ConnectButton";
-import CollateralInput from "../CollateralInput";
-import { useMidPriceInUSD } from "../../../app/contexts/market";
+} from '../../../hooks';
+import { notify } from '../../../utils/notifications';
+import { fromLamports, wadToLamports } from '../../../utils/utils';
+import { ActionConfirmation } from '../ActionConfirmation';
+import CollateralInput from '../CollateralInput';
+import { ConnectButton } from '../ConnectButton';
 
 export const RepayInput = (props: {
   className?: string;
@@ -29,36 +32,30 @@ export const RepayInput = (props: {
 }) => {
   const connection = useConnection();
   const { wallet } = useWallet();
-  const [lastTyped, setLastTyped] = useState("repay");
+  const [lastTyped, setLastTyped] = useState('repay');
   const [pendingTx, setPendingTx] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [collateralValue, setCollateralValue] = useState("");
+  const [collateralValue, setCollateralValue] = useState('');
 
   const repayReserve = props.borrowReserve;
   const obligation = props.obligation;
 
   const liquidityMint = useMint(repayReserve.info.liquidityMint);
-  const { balance: tokenBalance } = useUserBalance(
-    repayReserve.info.liquidityMint
-  );
+  const { balance: tokenBalance } = useUserBalance(repayReserve.info.liquidityMint);
 
-  const borrowAmountLamports = wadToLamports(
-    obligation.info.borrowAmountWad
-  ).toNumber();
+  const borrowAmountLamports = wadToLamports(obligation.info.borrowAmountWad).toNumber();
   const borrowAmount = fromLamports(borrowAmountLamports, liquidityMint);
   const collateralReserve = props.collateralReserve;
 
-  const { accounts: fromAccounts } = useUserBalance(
-    repayReserve.info.liquidityMint
-  );
+  const { accounts: fromAccounts } = useUserBalance(repayReserve.info.liquidityMint);
 
   const obligationAccount = useAccountByMint(obligation?.info.tokenMint);
 
   const convert = useCallback(
     (val: string | number) => {
       const minAmount = Math.min(tokenBalance || Infinity, borrowAmount);
-      setLastTyped("repay");
-      if (typeof val === "string") {
+      setLastTyped('repay');
+      if (typeof val === 'string') {
         return (parseFloat(val) / minAmount) * 100;
       } else {
         return (val * minAmount) / 100;
@@ -87,9 +84,7 @@ export const RepayInput = (props: {
         const toRepayLamports =
           type === InputType.Percent
             ? (pct * borrowAmountLamports) / 100
-            : Math.ceil(
-                borrowAmountLamports * (parseFloat(value) / borrowAmount)
-              );
+            : Math.ceil(borrowAmountLamports * (parseFloat(value) / borrowAmount));
         await repay(
           fromAccounts[0],
           toRepayLamports,
@@ -101,13 +96,13 @@ export const RepayInput = (props: {
           wallet
         );
 
-        setValue("");
-        setCollateralValue("");
+        setValue('');
+        setCollateralValue('');
         setShowConfirmation(true);
       } catch (error) {
         notify({
-          message: "Unable to repay loan.",
-          type: "error",
+          message: 'Unable to repay loan.',
+          type: 'error',
           description: error.message,
         });
       } finally {
@@ -130,12 +125,10 @@ export const RepayInput = (props: {
     wallet,
   ]);
 
-  const collateralPrice = useMidPriceInUSD(
-    collateralReserve?.info.liquidityMint.toBase58()
-  )?.price;
+  const collateralPrice = useMidPriceInUSD(collateralReserve?.info.liquidityMint.toBase58())?.price;
 
   useEffect(() => {
-    if (collateralReserve && lastTyped === "repay") {
+    if (collateralReserve && lastTyped === 'repay') {
       const collateralInQuote = obligation.info.collateralInQuote;
       const collateral = collateralInQuote / collateralPrice;
       if (value) {
@@ -143,7 +136,7 @@ export const RepayInput = (props: {
         const collateralAmount = (borrowRatio * collateral) / 100;
         setCollateralValue(collateralAmount.toString());
       } else {
-        setCollateralValue("");
+        setCollateralValue('');
       }
     }
   }, [
@@ -156,16 +149,15 @@ export const RepayInput = (props: {
   ]);
 
   useEffect(() => {
-    if (collateralReserve && lastTyped === "collateral") {
+    if (collateralReserve && lastTyped === 'collateral') {
       const collateralInQuote = obligation.info.collateralInQuote;
       const collateral = collateralInQuote / collateralPrice;
       if (collateralValue) {
-        const collateralRatio =
-          (parseFloat(collateralValue) / collateral) * 100;
+        const collateralRatio = (parseFloat(collateralValue) / collateral) * 100;
         const borrowValue = (collateralRatio * borrowAmount) / 100;
         setValue(borrowValue.toString());
       } else {
-        setValue("");
+        setValue('');
       }
     }
   }, [
@@ -179,11 +171,11 @@ export const RepayInput = (props: {
   ]);
 
   const bodyStyle: React.CSSProperties = {
-    display: "flex",
+    display: 'flex',
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100%",
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
   };
 
   return (
@@ -193,18 +185,18 @@ export const RepayInput = (props: {
       ) : (
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-around",
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-around',
           }}
         >
           <div className="repay-input-title">{LABELS.REPAY_QUESTION}</div>
           <div
             style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-              alignItems: "center",
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
             }}
           >
             <CollateralInput
@@ -212,8 +204,8 @@ export const RepayInput = (props: {
               reserve={repayReserve.info}
               amount={parseFloat(value) || 0}
               onInputChange={(val: number | null) => {
-                setValue(val?.toString() || "");
-                setLastTyped("repay");
+                setValue(val?.toString() || '');
+                setLastTyped('repay');
               }}
               disabled={true}
               useWalletBalance={true}
@@ -222,10 +214,10 @@ export const RepayInput = (props: {
           <Slider marks={marks} value={pct} onChange={setPct} />
           <div
             style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-              alignItems: "center",
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
               marginBottom: 20,
             }}
           >
@@ -234,8 +226,8 @@ export const RepayInput = (props: {
               reserve={collateralReserve?.info}
               amount={parseFloat(collateralValue) || 0}
               onInputChange={(val: number | null) => {
-                setCollateralValue(val?.toString() || "");
-                setLastTyped("collateral");
+                setCollateralValue(val?.toString() || '');
+                setLastTyped('collateral');
               }}
               disabled={true}
               hideBalance={true}

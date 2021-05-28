@@ -1,0 +1,1 @@
+export { SideModalWallet } from './SideModalWallet';

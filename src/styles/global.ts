@@ -19,18 +19,28 @@ export const globalCss = css`
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-        'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
-        'Helvetica Neue', sans-serif;
+      font-family: 'Montserrat', sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
 
       background: var(--colors-background);
     }
 
-    code {
-      font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-        monospace;
+    a {
+      transition: color 0.3s;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+
+      transition: color 0.3s;
+
+      appearance: none;
+
+      &:hover {
+        color: #fff;
+      }
     }
   }
 `;

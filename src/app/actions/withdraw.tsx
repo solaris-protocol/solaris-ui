@@ -1,21 +1,13 @@
-import {
-  Account,
-  Connection,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { AccountLayout } from "@solana/spl-token";
-import { sendTransaction } from "../contexts/connection";
-import { WalletAdapter } from "../contexts/wallet";
-import {
-  accrueInterestInstruction,
-  LendingReserve,
-  withdrawInstruction,
-} from "../models/lending";
-import { LENDING_PROGRAM_ID } from "../../utils/ids";
-import { notify } from "../../utils/notifications";
-import { findOrCreateAccountByMint } from "./account";
-import { approve, TokenAccount } from "../models";
+import { AccountLayout } from '@solana/spl-token';
+import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+
+import { LENDING_PROGRAM_ID } from '../../utils/ids';
+import { notify } from '../../utils/notifications';
+import { sendTransaction } from '../contexts/connection/connection';
+import { WalletAdapter } from '../contexts/wallet';
+import { approve, TokenAccount } from '../models';
+import { accrueInterestInstruction, LendingReserve, withdrawInstruction } from '../models/lending';
+import { findOrCreateAccountByMint } from './account';
 
 export const withdraw = async (
   from: TokenAccount, // CollateralAccount
@@ -26,13 +18,13 @@ export const withdraw = async (
   wallet: WalletAdapter
 ) => {
   if (!wallet.publicKey) {
-    throw new Error("Wallet is not connected");
+    throw new Error('Wallet is not connected');
   }
 
   notify({
-    message: "Withdrawing funds...",
-    description: "Please review transactions to approve.",
-    type: "warn",
+    message: 'Withdrawing funds...',
+    description: 'Please review transactions to approve.',
+    type: 'warn',
   });
 
   // user from account
@@ -40,9 +32,7 @@ export const withdraw = async (
   const instructions: TransactionInstruction[] = [];
   const cleanupInstructions: TransactionInstruction[] = [];
 
-  const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
-    AccountLayout.span
-  );
+  const accountRentExempt = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
 
   const [authority] = await PublicKey.findProgramAddress(
     [reserve.lendingMarket.toBuffer()],
@@ -90,7 +80,7 @@ export const withdraw = async (
   );
 
   try {
-    let tx = await sendTransaction(
+    const tx = await sendTransaction(
       connection,
       wallet,
       instructions.concat(cleanupInstructions),
@@ -99,8 +89,8 @@ export const withdraw = async (
     );
 
     notify({
-      message: "Funds deposited.",
-      type: "success",
+      message: 'Funds deposited.',
+      type: 'success',
       description: `Transaction - ${tx}`,
     });
   } catch {

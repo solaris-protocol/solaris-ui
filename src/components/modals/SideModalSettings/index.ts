@@ -1,0 +1,1 @@
+export { SideModalSettings } from './SideModalSettings';

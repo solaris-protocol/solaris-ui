@@ -1,31 +1,15 @@
-import {
-  Account,
-  Connection,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { sendTransaction } from "../contexts/connection";
-import { notify } from "../../utils/notifications";
-import {
-  accrueInterestInstruction,
-  LendingReserve,
-} from "../models/lending/reserve";
-import { liquidateInstruction } from "../models/lending/liquidate";
-import { AccountLayout } from "@solana/spl-token";
-import { LENDING_PROGRAM_ID } from "../../utils/ids";
-import {
-  createTempMemoryAccount,
-  ensureSplAccount,
-  findOrCreateAccountByMint,
-} from "./account";
-import {
-  approve,
-  LendingMarket,
-  LendingObligation,
-  TokenAccount,
-} from "../models";
-import { cache, ParsedAccount } from "../contexts/accounts";
-import { WalletAdapter } from "../contexts/wallet";
+import { AccountLayout } from '@solana/spl-token';
+import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+
+import { LENDING_PROGRAM_ID } from '../../utils/ids';
+import { notify } from '../../utils/notifications';
+import { cache, ParsedAccount } from '../contexts/accounts';
+import { sendTransaction } from '../contexts/connection/connection';
+import { WalletAdapter } from '../contexts/wallet';
+import { approve, LendingMarket, LendingObligation, TokenAccount } from '../models';
+import { liquidateInstruction } from '../models/lending/liquidate';
+import { accrueInterestInstruction, LendingReserve } from '../models/lending/reserve';
+import { createTempMemoryAccount, ensureSplAccount, findOrCreateAccountByMint } from './account';
 
 export const liquidate = async (
   connection: Connection,
@@ -41,13 +25,13 @@ export const liquidate = async (
   withdrawReserve: ParsedAccount<LendingReserve>
 ) => {
   if (!wallet.publicKey) {
-    throw new Error("Wallet is not connected");
+    throw new Error('Wallet is not connected');
   }
 
   notify({
-    message: "Repaying funds...",
-    description: "Please review transactions to approve.",
-    type: "warn",
+    message: 'Repaying funds...',
+    description: 'Please review transactions to approve.',
+    type: 'warn',
   });
 
   // user from account
@@ -55,9 +39,7 @@ export const liquidate = async (
   const instructions: TransactionInstruction[] = [];
   const cleanupInstructions: TransactionInstruction[] = [];
 
-  const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
-    AccountLayout.span
-  );
+  const accountRentExempt = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
 
   const [authority] = await PublicKey.findProgramAddress(
     [repayReserve.info.lendingMarket.toBuffer()],
@@ -103,13 +85,9 @@ export const liquidate = async (
     throw new Error(`Dex market doesn't exist.`);
   }
 
-  const market = cache.get(withdrawReserve.info.lendingMarket) as ParsedAccount<
-    LendingMarket
-  >;
+  const market = cache.get(withdrawReserve.info.lendingMarket) as ParsedAccount<LendingMarket>;
 
-  const dexOrderBookSide = market.info.quoteMint.equals(
-    repayReserve.info.liquidityMint
-  )
+  const dexOrderBookSide = market.info.quoteMint.equals(repayReserve.info.liquidityMint)
     ? dexMarket?.info.asks
     : dexMarket?.info.bids;
 
@@ -120,9 +98,7 @@ export const liquidate = async (
     LENDING_PROGRAM_ID
   );
 
-  instructions.push(
-    accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey)
-  );
+  instructions.push(accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey));
 
   instructions.push(
     liquidateInstruction(
@@ -143,7 +119,7 @@ export const liquidate = async (
     )
   );
 
-  let tx = await sendTransaction(
+  const tx = await sendTransaction(
     connection,
     wallet,
     instructions.concat(cleanupInstructions),
@@ -152,8 +128,8 @@ export const liquidate = async (
   );
 
   notify({
-    message: "Funds liquidated.",
-    type: "success",
+    message: 'Funds liquidated.',
+    type: 'success',
     description: `Transaction - ${tx}`,
   });
 };

@@ -31,6 +31,10 @@ module.exports = {
     },
   },
   rules: {
+    'prettier/prettier': 'off',
+
+    '@typescript-eslint/no-empty-function': 'off',
+
     // sort
     'sort-imports': 'off',
     'import/order': 'off',
@@ -41,9 +45,7 @@ module.exports = {
           ['^\\u0000'], // bare imports
           ['^react'], // react
           ['^[^\\.]'], // non-local imports
-          [
-            '^constants|^config|^lib|^utils|^types|^store|^api|^features|^pages|^components|^styles|^assets',
-          ], // internal
+          ['^constants|^utils|^types|^app|^hooks|^pages|^components|^styles|^assets'], // internal
           ['^\\.'], // local imports
         ],
       },

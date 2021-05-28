@@ -1,11 +1,13 @@
-import React from "react";
-import { useLendingReserves, UserDeposit, useUserDeposits } from "../../../hooks";
-import { LendingMarket, LendingReserve } from "../../../app/models";
-import { TokenIcon } from "../TokenIcon";
-import { formatAmount, getTokenName } from "../../../utils/utils";
-import { Select } from "antd";
-import { useConnectionConfig } from "../../../app/contexts/connection";
-import { cache, ParsedAccount } from "../../../app/contexts/accounts";
+import React from 'react';
+
+import { Select } from 'antd';
+
+import { cache, ParsedAccount } from '../../../app/contexts/accounts';
+import { useConnectionConfig } from '../../../app/contexts/connection';
+import { LendingMarket, LendingReserve } from '../../../app/models';
+import { useLendingReserves, UserDeposit, useUserDeposits } from '../../../hooks';
+import { formatAmount, getTokenName } from '../../../utils/utils';
+import { TokenIcon } from '../TokenIcon';
 
 const { Option } = Select;
 
@@ -19,11 +21,11 @@ export const CollateralItem = (props: {
 
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         <TokenIcon mintAddress={mint} />
         {name}
         <span className="token-balance">
-          &nbsp; {userDeposit ? formatAmount(userDeposit.info.amount) : "--"}
+          &nbsp; {userDeposit ? formatAmount(userDeposit.info.amount) : '--'}
         </span>
       </div>
     </>
@@ -40,21 +42,18 @@ export const CollateralSelector = (props: {
   const { tokenMap } = useConnectionConfig();
   const { userDeposits } = useUserDeposits();
 
-  const market = cache.get(props.reserve?.lendingMarket) as ParsedAccount<
-    LendingMarket
-  >;
+  const market = cache.get(props.reserve?.lendingMarket) as ParsedAccount<LendingMarket>;
   if (!market) return null;
 
   const quoteMintAddress = market?.info?.quoteMint?.toBase58();
 
-  const onlyQuoteAllowed =
-    props.reserve?.liquidityMint?.toBase58() !== quoteMintAddress;
+  const onlyQuoteAllowed = props.reserve?.liquidityMint?.toBase58() !== quoteMintAddress;
 
   return (
     <Select
       size="large"
       showSearch
-      style={{ minWidth: 300, margin: "5px 0px" }}
+      style={{ minWidth: 300, margin: '5px 0px' }}
       placeholder="Collateral"
       value={props.collateralReserve}
       disabled={props.disabled}
@@ -71,9 +70,7 @@ export const CollateralSelector = (props: {
       {reserveAccounts
         .filter((reserve) => reserve.info !== props.reserve)
         .filter(
-          (reserve) =>
-            !onlyQuoteAllowed ||
-            reserve.info.liquidityMint.equals(market.info.quoteMint)
+          (reserve) => !onlyQuoteAllowed || reserve.info.liquidityMint.equals(market.info.quoteMint)
         )
         .map((reserve) => {
           const mint = reserve.info.liquidityMint.toBase58();
@@ -84,9 +81,7 @@ export const CollateralSelector = (props: {
             <Option key={address} value={address} name={name} title={address}>
               <CollateralItem
                 reserve={reserve}
-                userDeposit={userDeposits.find(
-                  (dep) => dep.reserve.pubkey.toBase58() === address
-                )}
+                userDeposit={userDeposits.find((dep) => dep.reserve.pubkey.toBase58() === address)}
                 mint={mint}
                 name={name}
               />

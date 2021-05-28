@@ -28,7 +28,19 @@ export const Routes: FC = () => {
         <Providers>
           <Layout>
             <Switch>
-              <Route exact path="/" component={() => <HomeView />} />
+              <Route exact path={['/', '/deposit']}>
+                <DepositView />
+              </Route>
+              <Route exact path="/borrow">
+                <BorrowView />
+              </Route>
+              <Route path="/borrow/:id">
+                <BorrowReserveView />
+              </Route>
+
+              <Route exact path="/home">
+                <HomeView />
+              </Route>
               <Route exact path="/dashboard">
                 <DashboardView />
               </Route>
@@ -38,20 +50,12 @@ export const Routes: FC = () => {
               <Route path="/reserve/:id">
                 <ReserveView />
               </Route>
-              <Route exact path="/deposit">
-                <DepositView />
-              </Route>
+
               <Route path="/deposit/:id">
                 <DepositReserveView />
               </Route>
               <Route path="/withdraw/:id">
                 <WithdrawView />
-              </Route>
-              <Route exact path="/borrow">
-                <BorrowView />
-              </Route>
-              <Route path="/borrow/:id">
-                <BorrowReserveView />
               </Route>
               <Route path="/repay/loan/:obligation">
                 <RepayReserveView />

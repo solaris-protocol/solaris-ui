@@ -1,16 +1,19 @@
-import { MintInfo } from "@solana/spl-token";
-import { Card, Col, Row, Statistic } from "antd";
-import React, { useEffect, useState } from "react";
-import { GUTTER, LABELS } from "../../../constants";
-import { cache, ParsedAccount } from "../../../app/contexts/accounts";
-import { useConnectionConfig } from "../../../app/contexts/connection";
-import { useMarkets } from "../../../app/contexts/market";
-import { useLendingReserves } from "../../../hooks";
-import { reserveMarketCap, Totals } from "../../../app/models";
-import { fromLamports, getTokenName, wadToLamports } from "../../../utils/utils";
-import { LendingReserveItem } from "./item";
-import { BarChartStatistic } from "../../components/BarChartStatistic";
-import "./itemStyle.less";
+import './itemStyle.less';
+
+import React, { useEffect, useState } from 'react';
+
+import { MintInfo } from '@solana/spl-token';
+import { Card, Col, Row, Statistic } from 'antd';
+
+import { cache, ParsedAccount } from '../../../app/contexts/accounts';
+import { useConnectionConfig } from '../../../app/contexts/connection';
+import { useMarkets } from '../../../app/contexts/market';
+import { reserveMarketCap, Totals } from '../../../app/models';
+import { GUTTER, LABELS } from '../../../constants';
+import { useLendingReserves } from '../../../hooks';
+import { fromLamports, getTokenName, wadToLamports } from '../../../utils/utils';
+import { BarChartStatistic } from '../../components/BarChartStatistic';
+import { LendingReserveItem } from './item';
 
 export const HomeView = () => {
   const { reserveAccounts } = useLendingReserves();
@@ -25,7 +28,7 @@ export const HomeView = () => {
 
   useEffect(() => {
     const refreshTotal = () => {
-      let newTotals: Totals = {
+      const newTotals: Totals = {
         marketSize: 0,
         borrowed: 0,
         lentOutPct: 0,
@@ -46,10 +49,9 @@ export const HomeView = () => {
 
         const price = midPriceInUSD(liquidityMint?.pubkey.toBase58());
 
-        let leaf = {
+        const leaf = {
           key: item.pubkey.toBase58(),
-          marketSize:
-            fromLamports(marketCapLamports, liquidityMint?.info) * price,
+          marketSize: fromLamports(marketCapLamports, liquidityMint?.info) * price,
           borrowed:
             fromLamports(
               wadToLamports(item.info?.state.borrowedLiquidityWad).toNumber(),
@@ -65,12 +67,8 @@ export const HomeView = () => {
       });
 
       newTotals.lentOutPct = newTotals.borrowed / newTotals.marketSize;
-      newTotals.lentOutPct = Number.isFinite(newTotals.lentOutPct)
-        ? newTotals.lentOutPct
-        : 0;
-      newTotals.items = newTotals.items.sort(
-        (a, b) => b.marketSize - a.marketSize
-      );
+      newTotals.lentOutPct = Number.isFinite(newTotals.lentOutPct) ? newTotals.lentOutPct : 0;
+      newTotals.items = newTotals.items.sort((a, b) => b.marketSize - a.marketSize);
 
       setTotals(newTotals);
     };
@@ -95,19 +93,14 @@ export const HomeView = () => {
               title="Current market size"
               value={totals.marketSize}
               precision={2}
-              valueStyle={{ color: "#3fBB00" }}
+              valueStyle={{ color: '#3fBB00' }}
               prefix="$"
             />
           </Card>
         </Col>
         <Col xs={24} xl={5}>
           <Card>
-            <Statistic
-              title="Total borrowed"
-              value={totals.borrowed}
-              precision={2}
-              prefix="$"
-            />
+            <Statistic title="Total borrowed" value={totals.borrowed} precision={2} prefix="$" />
           </Card>
         </Col>
         <Col xs={24} xl={5}>
@@ -145,9 +138,7 @@ export const HomeView = () => {
             key={account.pubkey.toBase58()}
             reserve={account.info}
             address={account.pubkey}
-            item={totals.items.find(
-              (item) => item.key === account.pubkey.toBase58()
-            )}
+            item={totals.items.find((item) => item.key === account.pubkey.toBase58())}
           />
         ))}
       </Card>

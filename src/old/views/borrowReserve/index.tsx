@@ -1,29 +1,19 @@
-import React, { useMemo, useState } from "react";
-import {
-  useBorrowingPower,
-  useLendingReserve,
-  useUserObligations,
-} from "../../../hooks";
-import { useParams } from "react-router-dom";
-import "./style.less";
+import './style.less';
 
-import { BorrowInput } from "../../components/BorrowInput";
-import {
-  SideReserveOverview,
-  SideReserveOverviewMode,
-} from "../../components/SideReserveOverview";
-import { Card, Col, Row, Statistic } from "antd";
-import { BarChartStatistic } from "../../components/BarChartStatistic";
-import { GUTTER, LABELS } from "../../../constants";
-import {
-  cache,
-  ParsedAccount,
-  useAccountByMint,
-  useMint,
-} from "../../../app/contexts/accounts";
-import { LendingReserve, LendingReserveParser } from "../../../app/models";
-import { getTokenName } from "../../../utils/utils";
-import { useConnectionConfig } from "../../../app/contexts/connection";
+import React, { useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+
+import { Card, Col, Row, Statistic } from 'antd';
+
+import { cache, ParsedAccount, useAccountByMint, useMint } from '../../../app/contexts/accounts';
+import { useConnectionConfig } from '../../../app/contexts/connection';
+import { LendingReserve, LendingReserveParser } from '../../../app/models';
+import { GUTTER, LABELS } from '../../../constants';
+import { useBorrowingPower, useLendingReserve, useUserObligations } from '../../../hooks';
+import { getTokenName } from '../../../utils/utils';
+import { BarChartStatistic } from '../../components/BarChartStatistic';
+import { BorrowInput } from '../../components/BorrowInput';
+import { SideReserveOverview, SideReserveOverviewMode } from '../../components/SideReserveOverview';
 
 export const BorrowReserveView = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,12 +22,10 @@ export const BorrowReserveView = () => {
   const { tokenMap } = useConnectionConfig();
 
   const { totalInQuote: borrowingPower, utilization } = useBorrowingPower(id);
-  const [collateralReserveKey, setCollateralReserveKey] = useState<string>("");
+  const [collateralReserveKey, setCollateralReserveKey] = useState<string>('');
   const collateralReserve = useMemo(() => {
     const id: string =
-      cache
-        .byParser(LendingReserveParser)
-        .find((acc) => acc === collateralReserveKey) || "";
+      cache.byParser(LendingReserveParser).find((acc) => acc === collateralReserveKey) || '';
 
     return cache.get(id) as ParsedAccount<LendingReserve>;
   }, [collateralReserveKey]);
@@ -50,10 +38,9 @@ export const BorrowReserveView = () => {
   if (!lendingReserve) {
     return null;
   }
-  let balance: number = 0;
+  let balance = 0;
   if (tokenAccount && tokenMint) {
-    balance =
-      tokenAccount.info.amount.toNumber() / Math.pow(10, tokenMint.decimals);
+    balance = tokenAccount.info.amount.toNumber() / Math.pow(10, tokenMint.decimals);
   }
 
   return (
@@ -61,12 +48,7 @@ export const BorrowReserveView = () => {
       <Row gutter={GUTTER}>
         <Col xs={24} xl={4}>
           <Card>
-            <Statistic
-              title={LABELS.BORROWED_VALUE}
-              value={loansValue}
-              precision={2}
-              prefix="$"
-            />
+            <Statistic title={LABELS.BORROWED_VALUE} value={loansValue} precision={2} prefix="$" />
           </Card>
         </Col>
         <Col xs={24} xl={4}>
@@ -84,7 +66,7 @@ export const BorrowReserveView = () => {
             <Statistic
               title={LABELS.BORROWING_POWER_VALUE}
               value={borrowingPower}
-              valueStyle={{ color: "#3fBB00" }}
+              valueStyle={{ color: '#3fBB00' }}
               precision={2}
               prefix="$"
             />
@@ -95,7 +77,7 @@ export const BorrowReserveView = () => {
             <Statistic
               title={LABELS.WALLET_BALANCE}
               value={balance}
-              valueStyle={{ color: "#3fBB00" }}
+              valueStyle={{ color: '#3fBB00' }}
               precision={2}
               suffix={name}
             />
@@ -106,9 +88,7 @@ export const BorrowReserveView = () => {
             <BarChartStatistic
               title="Your Loans"
               items={userObligations}
-              getPct={(item) =>
-                item.obligation.info.borrowedInQuote / loansValue
-              }
+              getPct={(item) => item.obligation.info.borrowedInQuote / loansValue}
               name={(item) => item.obligation.info.repayName}
             />
           </Card>

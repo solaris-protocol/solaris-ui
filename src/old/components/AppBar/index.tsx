@@ -1,11 +1,13 @@
-import React from "react";
-import { Button, Popover } from "antd";
-import { useWallet } from "../../../app/contexts/wallet";
-import { CurrentUserBadge } from "../CurrentUserBadge";
-import { SettingOutlined } from "@ant-design/icons";
-import { Settings } from "../Settings";
-import { LABELS } from "../../../constants";
-import { ConnectButton } from "../ConnectButton";
+import React from 'react';
+
+import { SettingOutlined } from '@ant-design/icons';
+import { Button, Popover } from 'antd';
+
+import { useWallet } from '../../../app/contexts/wallet';
+import { LABELS } from '../../../constants';
+import { ConnectButton } from '../ConnectButton';
+import { CurrentUserBadge } from '../CurrentUserBadge';
+import { Settings } from '../Settings';
 
 export const AppBar = (props: { left?: JSX.Element; right?: JSX.Element }) => {
   const { connected } = useWallet();
@@ -19,7 +21,7 @@ export const AppBar = (props: { left?: JSX.Element; right?: JSX.Element }) => {
           type="text"
           size="large"
           allowWalletChange={true}
-          style={{ color: "#2abdd2" }}
+          style={{ color: '#2abdd2' }}
         />
       )}
       <Popover
@@ -28,12 +30,7 @@ export const AppBar = (props: { left?: JSX.Element; right?: JSX.Element }) => {
         content={<Settings />}
         trigger="click"
       >
-        <Button
-          shape="circle"
-          size="large"
-          type="text"
-          icon={<SettingOutlined />}
-        />
+        <Button shape="circle" size="large" type="text" icon={<SettingOutlined />} />
       </Popover>
       {props.right}
     </div>

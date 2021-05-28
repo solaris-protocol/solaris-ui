@@ -4,6 +4,9 @@ import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { styled } from '@linaria/react';
 import classNames from 'classnames';
 
+import { Closed } from './Closed';
+import { Opened } from './Opened';
+
 const WIDTH_CLOSED = 110;
 const WIDTH_OPENED = 260;
 const TRANSITION_DURATION = 400;
@@ -26,31 +29,31 @@ const Wrapper = styled.div`
 
 const TransitionGroupWrapper = styled.div`
   /* starting ENTER animation */
-  .transition-group-enter {
+  .transition-enter {
     opacity: 0;
   }
 
   /* ending ENTER animation */
-  .transition-group-enter-active {
+  .transition-enter-active {
     opacity: 1;
 
-    transition: opacity ${TRANSITION_DURATION_SMART}ms ease-in-out;
+    transition: opacity ${TRANSITION_DURATION}ms ease-in-out;
   }
 
   /* starting EXIT animation */
-  .transition-group-exit {
+  .transition-exit {
     opacity: 1;
   }
 
   /* ending EXIT animation */
-  .transition-group-exit-active {
+  .transition-exit-active {
     opacity: 0;
 
     transition: opacity ${TRANSITION_DURATION_SMART}ms ease-in-out;
   }
 `;
 
-const TransitionWrapper = styled.div`
+const Main = styled.div`
   position: absolute;
 
   display: flex;
@@ -58,6 +61,7 @@ const TransitionWrapper = styled.div`
   align-items: center;
 
   width: ${WIDTH_CLOSED}px;
+  height: 100%;
   padding: 30px 26px;
 
   &.isOpen {
@@ -97,33 +101,35 @@ const Delimiter = styled.div`
   border-radius: 20px;
 `;
 
-const Content = styled.div``;
-
 export const SideBar: FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleSidebarToggleClick = () => {
-    setIsOpen(!isOpen);
+  const handleSidebarToggleClick = (e: React.MouseEvent<HTMLElement>) => {
+    if (!(e.target as HTMLElement).closest('a') && !(e.target as HTMLElement).closest('button')) {
+      setIsOpen(!isOpen);
+    }
   };
 
   return (
-    <Wrapper
-      className={classNames({ isOpen })}
-      onClick={handleSidebarToggleClick}
-    >
+    <Wrapper className={classNames({ isOpen })}>
       <TransitionGroup component={TransitionGroupWrapper}>
-        <CSSTransition
-          key={isOpen ? 'open' : 'close'}
-          timeout={300}
-          classNames="transition-group"
-        >
-          <TransitionWrapper className={classNames({ isOpen })}>
+        <CSSTransition key={isOpen ? 'open' : 'close'} timeout={300} classNames="transition">
+          <Main className={classNames({ isOpen })} onClick={handleSidebarToggleClick}>
             <Logo className={classNames({ isOpen })} />
             {isOpen ? <Solaris /> : <Delimiter />}
-            <Content>1</Content>
-          </TransitionWrapper>
+            {isOpen ? <Opened /> : <Closed />}
+          </Main>
         </CSSTransition>
       </TransitionGroup>
+
+      {/*<SideModalWallet isOpen={sideModal === 'wallet'} close={handleSideModalClose} />*/}
+
+      {/*<SideModalSettings*/}
+      {/*  isOpen={sideModal === 'settings'}*/}
+      {/*  openSideModal={handleSideModalChange}*/}
+      {/*  close={handleSideModalClose}*/}
+      {/*/>*/}
+      {/*<SideModalNetwork isOpen={sideModal === 'network'} close={handleSideModalClose} />*/}
     </Wrapper>
   );
 };

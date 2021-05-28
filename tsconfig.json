@@ -1,5 +1,7 @@
 {
+  "extends": "./tsconfig.paths.json",
   "compilerOptions": {
+    "declaration": true,
     "target": "es5",
     "lib": [
       "dom",
@@ -18,7 +20,7 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "typeRoots": [
-      "./types"
+      "./src/types"
     ],
     "types": [
       "@types/jest"
@@ -27,7 +29,10 @@
     "isolatedModules": true,
     "noFallthroughCasesInSwitch": true
   },
+  "exclude": [
+    "node_modules"
+  ],
   "include": [
-    "src"
+    "./src/**/*"
   ]
 }

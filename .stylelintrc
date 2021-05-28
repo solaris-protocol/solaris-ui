@@ -11,6 +11,7 @@
   "rules": {
     "prettier/prettier": true,
     "declaration-empty-line-before": null,
+    "function-name-case": null,
     "plugin/rational-order": [true, {
       "empty-line-between-groups": true
     }]

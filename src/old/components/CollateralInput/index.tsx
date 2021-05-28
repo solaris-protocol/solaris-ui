@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { cache, ParsedAccount } from "../../../app/contexts/accounts";
-import { useConnectionConfig } from "../../../app/contexts/connection";
-import { useLendingReserves, useUserBalance } from "../../../hooks";
-import { LendingReserve, LendingMarket } from "../../../app/models";
-import { getTokenName } from "../../../utils/utils";
-import { Card, Select } from "antd";
-import { NumericInput } from "../Input/numeric";
-import "./style.less";
-import { TokenDisplay } from "../TokenDisplay";
-import { LABELS } from "../../../constants";
-import { useBalanceByCollateral } from "../../../hooks/useBalanceByCollateral";
+import './style.less';
+
+import React, { useEffect, useState } from 'react';
+
+import { Card, Select } from 'antd';
+
+import { cache, ParsedAccount } from '../../../app/contexts/accounts';
+import { useConnectionConfig } from '../../../app/contexts/connection';
+import { LendingMarket, LendingReserve } from '../../../app/models';
+import { LABELS } from '../../../constants';
+import { useLendingReserves, useUserBalance } from '../../../hooks';
+import { useBalanceByCollateral } from '../../../hooks/useBalanceByCollateral';
+import { getTokenName } from '../../../utils/utils';
+import { NumericInput } from '../Input/numeric';
+import { TokenDisplay } from '../TokenDisplay';
 
 const { Option } = Select;
 
@@ -35,7 +38,7 @@ export default function CollateralInput(props: {
 
   const [collateralReserve, setCollateralReserve] = useState<string>();
   const [balance, setBalance] = useState<number>(0);
-  const [lastAmount, setLastAmount] = useState<string>("");
+  const [lastAmount, setLastAmount] = useState<string>('');
   const [balanceType, setBalanceType] = useState<string>(LABELS.WALLET_BALANCE);
 
   const collateralBalance = useBalanceByCollateral(collateralReserve);
@@ -50,28 +53,18 @@ export default function CollateralInput(props: {
     }
   }, [tokenBalance, collateralBalance, props.useWalletBalance]);
 
-  const market = cache.get(props.reserve.lendingMarket) as ParsedAccount<
-    LendingMarket
-  >;
+  const market = cache.get(props.reserve.lendingMarket) as ParsedAccount<LendingMarket>;
   if (!market) return null;
 
-  const onlyQuoteAllowed = !props.reserve?.liquidityMint?.equals(
-    market?.info?.quoteMint
-  );
+  const onlyQuoteAllowed = !props.reserve?.liquidityMint?.equals(market?.info?.quoteMint);
 
   const filteredReserveAccounts = reserveAccounts
     .filter((reserve) => reserve.info !== props.reserve)
     .filter(
-      (reserve) =>
-        !onlyQuoteAllowed ||
-        reserve.info.liquidityMint.equals(market.info.quoteMint)
+      (reserve) => !onlyQuoteAllowed || reserve.info.liquidityMint.equals(market.info.quoteMint)
     );
 
-  if (
-    !collateralReserve &&
-    props.useFirstReserve &&
-    filteredReserveAccounts.length
-  ) {
+  if (!collateralReserve && props.useFirstReserve && filteredReserveAccounts.length) {
     const address = filteredReserveAccounts[0].pubkey.toBase58();
     setCollateralReserve(address);
     props.onCollateralReserve?.(address);
@@ -95,11 +88,7 @@ export default function CollateralInput(props: {
   });
 
   return (
-    <Card
-      className="ccy-input"
-      style={{ borderRadius: 20 }}
-      bodyStyle={{ padding: 0 }}
-    >
+    <Card className="ccy-input" style={{ borderRadius: 20 }} bodyStyle={{ padding: 0 }}>
       <div className="ccy-input-header">
         <div className="ccy-input-header-left">{props.title}</div>
 
@@ -112,10 +101,10 @@ export default function CollateralInput(props: {
           </div>
         )}
       </div>
-      <div className="ccy-input-header" style={{ padding: "0px 10px 5px 7px" }}>
+      <div className="ccy-input-header" style={{ padding: '0px 10px 5px 7px' }}>
         <NumericInput
           value={
-            parseFloat(lastAmount || "0.00") === props.amount
+            parseFloat(lastAmount || '0.00') === props.amount
               ? lastAmount
               : props.amount?.toFixed(6)?.toString()
           }
@@ -128,13 +117,13 @@ export default function CollateralInput(props: {
           }}
           style={{
             fontSize: 20,
-            boxShadow: "none",
-            borderColor: "transparent",
-            outline: "transparent",
+            boxShadow: 'none',
+            borderColor: 'transparent',
+            outline: 'transparent',
           }}
           placeholder="0.00"
         />
-        <div className="ccy-input-header-right" style={{ display: "flex" }}>
+        <div className="ccy-input-header-right" style={{ display: 'flex' }}>
           {props.showLeverageSelector && (
             <Select
               size="large"
@@ -156,17 +145,9 @@ export default function CollateralInput(props: {
               }
             >
               {[1, 2, 3, 4, 5].map((val) => (
-                <Option
-                  key={val}
-                  value={val}
-                  name={val + "x"}
-                  title={val + "x"}
-                >
-                  <div
-                    key={val}
-                    style={{ display: "flex", alignItems: "center" }}
-                  >
-                    {val + "x"}
+                <Option key={val} value={val} name={val + 'x'} title={val + 'x'}>
+                  <div key={val} style={{ display: 'flex', alignItems: 'center' }}>
+                    {val + 'x'}
                   </div>
                 </Option>
               ))}
@@ -192,10 +173,7 @@ export default function CollateralInput(props: {
           ) : (
             <TokenDisplay
               key={props.reserve.liquidityMint.toBase58()}
-              name={getTokenName(
-                tokenMap,
-                props.reserve.liquidityMint.toBase58()
-              )}
+              name={getTokenName(tokenMap, props.reserve.liquidityMint.toBase58())}
               mintAddress={props.reserve.liquidityMint.toBase58()}
               showBalance={false}
             />

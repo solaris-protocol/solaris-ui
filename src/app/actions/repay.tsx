@@ -1,22 +1,15 @@
-import {
-  Account,
-  Connection,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { sendTransaction } from "../contexts/connection";
-import { notify } from "../../utils/notifications";
-import {
-  accrueInterestInstruction,
-  LendingReserve,
-} from "../models/lending/reserve";
-import { repayInstruction } from "../models/lending/repay";
-import { AccountLayout, Token, NATIVE_MINT } from "@solana/spl-token";
-import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID } from "../../utils/ids";
-import { createTokenAccount, findOrCreateAccountByMint } from "./account";
-import { approve, LendingObligation, TokenAccount } from "../models";
-import { ParsedAccount } from "../contexts/accounts";
-import { WalletAdapter } from "../contexts/wallet";
+import { AccountLayout, NATIVE_MINT, Token } from '@solana/spl-token';
+import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+
+import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID } from '../../utils/ids';
+import { notify } from '../../utils/notifications';
+import { ParsedAccount } from '../contexts/accounts';
+import { sendTransaction } from '../contexts/connection/connection';
+import { WalletAdapter } from '../contexts/wallet';
+import { approve, LendingObligation, TokenAccount } from '../models';
+import { repayInstruction } from '../models/lending/repay';
+import { accrueInterestInstruction, LendingReserve } from '../models/lending/reserve';
+import { createTokenAccount, findOrCreateAccountByMint } from './account';
 
 export const repay = async (
   from: TokenAccount,
@@ -35,13 +28,13 @@ export const repay = async (
   wallet: WalletAdapter
 ) => {
   if (!wallet.publicKey) {
-    throw new Error("Wallet is not connected");
+    throw new Error('Wallet is not connected');
   }
 
   notify({
-    message: "Repaying funds...",
-    description: "Please review transactions to approve.",
-    type: "warn",
+    message: 'Repaying funds...',
+    description: 'Please review transactions to approve.',
+    type: 'warn',
   });
 
   // user from account
@@ -49,9 +42,7 @@ export const repay = async (
   const instructions: TransactionInstruction[] = [];
   const cleanupInstructions: TransactionInstruction[] = [];
 
-  const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
-    AccountLayout.span
-  );
+  const accountRentExempt = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
 
   const [authority] = await PublicKey.findProgramAddress(
     [repayReserve.info.lendingMarket.toBuffer()],
@@ -59,10 +50,7 @@ export const repay = async (
   );
 
   let fromAccount = from.pubkey;
-  if (
-    wallet.publicKey.equals(fromAccount) &&
-    repayReserve.info.liquidityMint.equals(NATIVE_MINT)
-  ) {
+  if (wallet.publicKey.equals(fromAccount) && repayReserve.info.liquidityMint.equals(NATIVE_MINT)) {
     fromAccount = createTokenAccount(
       instructions,
       wallet.publicKey,
@@ -115,9 +103,7 @@ export const repay = async (
     transferAuthority.publicKey
   );
 
-  instructions.push(
-    accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey)
-  );
+  instructions.push(accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey));
 
   instructions.push(
     repayInstruction(
@@ -137,7 +123,7 @@ export const repay = async (
     )
   );
 
-  let tx = await sendTransaction(
+  const tx = await sendTransaction(
     connection,
     wallet,
     instructions.concat(cleanupInstructions),
@@ -146,8 +132,8 @@ export const repay = async (
   );
 
   notify({
-    message: "Funds repaid.",
-    type: "success",
+    message: 'Funds repaid.',
+    type: 'success',
     description: `Transaction - ${tx}`,
   });
 };

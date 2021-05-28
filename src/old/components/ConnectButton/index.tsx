@@ -1,12 +1,12 @@
-import { Button, Dropdown, Menu } from "antd";
-import { ButtonProps } from "antd/lib/button";
-import React from "react";
-import { LABELS } from "../../../constants";
-import { useWallet } from "../../../app/contexts/wallet";
+import React from 'react';
 
-export interface ConnectButtonProps
-  extends ButtonProps,
-    React.RefAttributes<HTMLElement> {
+import { Button, Dropdown, Menu } from 'antd';
+import { ButtonProps } from 'antd/lib/button';
+
+import { useWallet } from '../../../app/contexts/wallet';
+import { LABELS } from '../../../constants';
+
+export interface ConnectButtonProps extends ButtonProps, React.RefAttributes<HTMLElement> {
   allowWalletChange?: boolean;
 }
 
@@ -26,11 +26,7 @@ export const ConnectButton = (props: ConnectButtonProps) => {
 
   if (!provider || !allowWalletChange) {
     return (
-      <Button
-        {...rest}
-        onClick={connected ? onClick : connect}
-        disabled={connected && disabled}
-      >
+      <Button {...rest} onClick={connected ? onClick : connect} disabled={connected && disabled}>
         {connected ? props.children : LABELS.CONNECT_LABEL}
       </Button>
     );

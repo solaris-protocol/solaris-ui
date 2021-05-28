@@ -1,30 +1,29 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import './style.less';
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { Alert, Card } from 'antd';
+
+import { borrow, deposit } from '../../../app/actions';
+import { cache, ParsedAccount, useMint } from '../../../app/contexts/accounts';
+import { useConnection } from '../../../app/contexts/connection';
+import { useMidPriceInUSD } from '../../../app/contexts/market';
+import { useWallet } from '../../../app/contexts/wallet';
+import { BorrowAmountType, LendingReserve, LendingReserveParser } from '../../../app/models';
+import { LABELS } from '../../../constants';
 import {
   useSliderInput,
   useUserBalance,
   useUserDeposits,
   useUserObligationByReserve,
-} from "../../../hooks";
-import {
-  BorrowAmountType,
-  LendingReserve,
-  LendingReserveParser,
-} from "../../../app/models";
-import { Alert, Card } from "antd";
-import { cache, ParsedAccount, useMint } from "../../../app/contexts/accounts";
-import { useConnection } from "../../../app/contexts/connection";
-import { useWallet } from "../../../app/contexts/wallet";
-import { borrow, deposit } from "../../../app/actions";
-import "./style.less";
-import { LABELS } from "../../../constants";
-import { ActionConfirmation } from "../ActionConfirmation";
-import { BackButton } from "../BackButton";
-import { ConnectButton } from "../ConnectButton";
-import CollateralInput from "../CollateralInput";
-import { useMidPriceInUSD } from "../../../app/contexts/market";
-import { RiskSlider } from "../RiskSlider";
-import { notify } from "../../../utils/notifications";
-import { fromLamports, toLamports } from "../../../utils/utils";
+} from '../../../hooks';
+import { notify } from '../../../utils/notifications';
+import { fromLamports, toLamports } from '../../../utils/utils';
+import { ActionConfirmation } from '../ActionConfirmation';
+import { BackButton } from '../BackButton';
+import CollateralInput from '../CollateralInput';
+import { ConnectButton } from '../ConnectButton';
+import { RiskSlider } from '../RiskSlider';
 
 export const BorrowInput = (props: {
   className?: string;
@@ -33,8 +32,8 @@ export const BorrowInput = (props: {
 }) => {
   const connection = useConnection();
   const { wallet } = useWallet();
-  const [value, setValue] = useState("");
-  const [lastTyped, setLastTyped] = useState("collateral");
+  const [value, setValue] = useState('');
+  const [lastTyped, setLastTyped] = useState('collateral');
   const [pendingTx, setPendingTx] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -44,19 +43,13 @@ export const BorrowInput = (props: {
 
   const collateralReserve = useMemo(() => {
     const id: string =
-      cache
-        .byParser(LendingReserveParser)
-        .find((acc) => acc === collateralReserveKey) || "";
+      cache.byParser(LendingReserveParser).find((acc) => acc === collateralReserveKey) || '';
 
     return cache.get(id) as ParsedAccount<LendingReserve>;
   }, [collateralReserveKey]);
 
-  const borrowPrice = useMidPriceInUSD(
-    borrowReserve.info.liquidityMint.toBase58()
-  ).price;
-  const collateralPrice = useMidPriceInUSD(
-    collateralReserve?.info.liquidityMint.toBase58()
-  )?.price;
+  const borrowPrice = useMidPriceInUSD(borrowReserve.info.liquidityMint.toBase58()).price;
+  const collateralPrice = useMidPriceInUSD(collateralReserve?.info.liquidityMint.toBase58())?.price;
 
   const include = useMemo(
     () => new Set([collateralReserve?.pubkey.toBase58()]),
@@ -67,18 +60,17 @@ export const BorrowInput = (props: {
 
   const { userDeposits: accountBalance } = useUserDeposits(exclude, include);
   const tokenBalance = accountBalance[0]?.info.amount || 0;
-  const {
-    accounts: fromAccountsDeposit,
-    balanceLamports: balanceDepositLamports,
-  } = useUserBalance(collateralReserve?.info.liquidityMint);
+  const { accounts: fromAccountsDeposit, balanceLamports: balanceDepositLamports } = useUserBalance(
+    collateralReserve?.info.liquidityMint
+  );
   const mintInfo = useMint(collateralReserve?.info.liquidityMint);
   const balance = fromLamports(balanceDepositLamports, mintInfo);
 
   const convert = useCallback(
     (val: string | number) => {
       const maxAmount = balance + tokenBalance;
-      setLastTyped("collateral");
-      if (typeof val === "string") {
+      setLastTyped('collateral');
+      if (typeof val === 'string') {
         return (parseFloat(val) / maxAmount) * 100;
       } else {
         return (val * maxAmount) / 100;
@@ -99,7 +91,7 @@ export const BorrowInput = (props: {
   }, [collateralValue, tokenBalance, mintInfo]);
 
   useEffect(() => {
-    if (collateralReserve && lastTyped === "collateral") {
+    if (collateralReserve && lastTyped === 'collateral') {
       const ltv = borrowReserve.info.config.loanToValueRatio / 100;
 
       if (collateralValue) {
@@ -108,7 +100,7 @@ export const BorrowInput = (props: {
         const borrowAmount = borrowInUSD / borrowPrice;
         setValue(borrowAmount.toString());
       } else {
-        setValue("");
+        setValue('');
       }
     }
   }, [
@@ -122,7 +114,7 @@ export const BorrowInput = (props: {
   ]);
 
   useEffect(() => {
-    if (collateralReserve && lastTyped === "borrow") {
+    if (collateralReserve && lastTyped === 'borrow') {
       const ltv = borrowReserve.info.config.loanToValueRatio / 100;
 
       if (value) {
@@ -131,25 +123,16 @@ export const BorrowInput = (props: {
         const collateralAmount = borrowInUSD / ltv / collateralPrice;
         setCollateralValue(collateralAmount.toString());
       } else {
-        setCollateralValue("");
+        setCollateralValue('');
       }
     }
-  }, [
-    lastTyped,
-    collateralReserve,
-    collateralPrice,
-    borrowPrice,
-    borrowReserve,
-    value,
-  ]);
+  }, [lastTyped, collateralReserve, collateralPrice, borrowPrice, borrowReserve, value]);
 
   const { userObligationsByReserve } = useUserObligationByReserve(
     borrowReserve?.pubkey,
     collateralReserve?.pubkey
   );
-  const { accounts: fromAccounts } = useUserBalance(
-    collateralReserve?.info.collateralMint
-  );
+  const { accounts: fromAccounts } = useUserBalance(collateralReserve?.info.collateralMint);
   const onBorrow = useCallback(() => {
     if (!collateralReserve || !wallet?.publicKey) {
       return;
@@ -191,14 +174,14 @@ export const BorrowInput = (props: {
             : undefined
         );
 
-        setValue("");
-        setCollateralValue("");
+        setValue('');
+        setCollateralValue('');
         setShowConfirmation(true);
       } catch (error) {
         // TODO:
         notify({
-          message: "Unable to borrow.",
-          type: "error",
+          message: 'Unable to borrow.',
+          type: 'error',
           description: error.message,
         });
       } finally {
@@ -223,11 +206,11 @@ export const BorrowInput = (props: {
   ]);
 
   const bodyStyle: React.CSSProperties = {
-    display: "flex",
+    display: 'flex',
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100%",
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
   };
 
   return (
@@ -237,33 +220,30 @@ export const BorrowInput = (props: {
       ) : (
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-around",
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-around',
           }}
         >
           {collateralDifference > 0 && (
             <div
               style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-evenly",
-                alignItems: "center",
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                alignItems: 'center',
               }}
             >
-              <Alert
-                message={`${LABELS.NO_ENOUGH_COLLATERAL_MESSAGE}`}
-                type="info"
-              />
+              <Alert message={`${LABELS.NO_ENOUGH_COLLATERAL_MESSAGE}`} type="info" />
             </div>
           )}
           <div className="borrow-input-title">{LABELS.BORROW_QUESTION}</div>
           <div
             style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-              alignItems: "center",
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
             }}
           >
             <CollateralInput
@@ -271,8 +251,8 @@ export const BorrowInput = (props: {
               reserve={borrowReserve.info}
               amount={parseFloat(collateralValue) || 0}
               onInputChange={(val: number | null) => {
-                setCollateralValue(val?.toString() || "");
-                setLastTyped("collateral");
+                setCollateralValue(val?.toString() || '');
+                setLastTyped('collateral');
               }}
               onCollateralReserve={(key) => {
                 if (props.onCollateralReserve) props.onCollateralReserve(key);
@@ -284,10 +264,10 @@ export const BorrowInput = (props: {
           <RiskSlider value={pct} onChange={(val) => setPct(val)} />
           <div
             style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-              alignItems: "center",
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
               marginBottom: 20,
             }}
           >
@@ -296,8 +276,8 @@ export const BorrowInput = (props: {
               reserve={borrowReserve.info}
               amount={parseFloat(value) || 0}
               onInputChange={(val: number | null) => {
-                setValue(val?.toString() || "");
-                setLastTyped("borrow");
+                setValue(val?.toString() || '');
+                setLastTyped('borrow');
               }}
               disabled={true}
               hideBalance={true}
@@ -310,9 +290,7 @@ export const BorrowInput = (props: {
             loading={pendingTx}
             disabled={fromAccounts.length === 0}
           >
-            {fromAccounts.length === 0
-              ? LABELS.NO_COLLATERAL
-              : LABELS.BORROW_ACTION}
+            {fromAccounts.length === 0 ? LABELS.NO_COLLATERAL : LABELS.BORROW_ACTION}
           </ConnectButton>
           <BackButton />
         </div>
