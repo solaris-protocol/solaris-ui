@@ -10,15 +10,15 @@ import { WalletProvider } from 'app/contexts/wallet';
 export const Providers: FC = ({ children }) => {
   return (
     <ConnectionProvider>
-      <ModalsProvider>
-        <WalletProvider>
+      <WalletProvider>
+        <ModalsProvider>
           <AccountsProvider>
             <MarketProvider>
               <LendingProvider>{children}</LendingProvider>
             </MarketProvider>
           </AccountsProvider>
-        </WalletProvider>
-      </ModalsProvider>
+        </ModalsProvider>
+      </WalletProvider>
     </ConnectionProvider>
   );
 };

@@ -5,8 +5,9 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 import EventEmitter from 'eventemitter3';
 
 import { useModals } from 'app/contexts/modals';
+import { SideModalType } from 'components/modals/types';
 import { notify } from 'utils/notifications';
-import { useLocalStorageState } from 'utils/utils';
+import { shortenAddress, useLocalStorageState } from 'utils/utils';
 
 import { useConnectionConfig } from '../connection/connection';
 import { WALLET_PROVIDERS } from './constants';
@@ -21,28 +22,22 @@ export interface WalletAdapter extends EventEmitter {
 const WalletContext = React.createContext<{
   wallet: WalletAdapter | undefined;
   connected: boolean;
-  select: () => void;
   selectWallet: (url: string) => void;
   provider: typeof WALLET_PROVIDERS[number] | undefined;
 }>({
   wallet: undefined,
   connected: false,
-  select: () => {},
   selectWallet: () => {},
   provider: undefined,
 });
 
 export function WalletProvider({ children = null as any }) {
-  const { openModal } = useModals();
   const { endpoint } = useConnectionConfig();
 
   const [autoConnect, setAutoConnect] = useState(false);
   const [providerUrl, setProviderUrl] = useLocalStorageState('walletProvider');
 
-  const provider = useMemo(
-    () => WALLET_PROVIDERS.find(({ url }) => url === providerUrl),
-    [providerUrl]
-  );
+  const provider = useMemo(() => WALLET_PROVIDERS.find(({ url }) => url === providerUrl), [providerUrl]);
 
   const wallet = useMemo(
     function () {
@@ -60,14 +55,9 @@ export function WalletProvider({ children = null as any }) {
       wallet.on('connect', () => {
         if (wallet.publicKey) {
           setConnected(true);
+
           const walletPublicKey = wallet.publicKey.toBase58();
-          const keyToDisplay =
-            walletPublicKey.length > 20
-              ? `${walletPublicKey.substring(0, 7)}.....${walletPublicKey.substring(
-                  walletPublicKey.length - 7,
-                  walletPublicKey.length
-                )}`
-              : walletPublicKey;
+          const keyToDisplay = walletPublicKey.length > 20 ? shortenAddress(walletPublicKey, 7) : walletPublicKey;
 
           notify({
             message: 'Wallet update',
@@ -102,8 +92,6 @@ export function WalletProvider({ children = null as any }) {
     return () => {};
   }, [wallet, autoConnect]);
 
-  const select = useCallback(() => openModal('wallet'), []);
-
   const selectWallet = useCallback((url: string) => {
     setProviderUrl(url);
     setAutoConnect(true);
@@ -114,7 +102,6 @@ export function WalletProvider({ children = null as any }) {
       value={{
         wallet,
         connected,
-        select,
         selectWallet,
         provider,
       }}
@@ -125,15 +112,16 @@ export function WalletProvider({ children = null as any }) {
 }
 
 export function useWallet() {
-  const { wallet, connected, provider, select, selectWallet } = useContext(WalletContext);
+  const { openModal } = useModals();
+  const { wallet, connected, provider, selectWallet } = useContext(WalletContext);
   return {
     wallet,
     connected,
     provider,
-    select,
+    select: () => openModal('wallet'),
     selectWallet,
     connect() {
-      wallet ? wallet.connect() : select();
+      wallet ? wallet.connect() : openModal('wallet');
     },
     disconnect() {
       wallet?.disconnect();
