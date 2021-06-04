@@ -5,6 +5,7 @@ import classNames from 'classnames';
 
 import { useWallet, WALLET_PROVIDERS } from 'app/contexts/wallet';
 import { SideModalPropsType } from 'components/modals/types';
+import useUpdateEffect from 'hooks/react/useUpdateEffect';
 import { shortenAddress } from 'utils/utils';
 
 import { Modal } from '../common/Modal';
@@ -82,7 +83,7 @@ export const SideModalWallet: FC<SideModalPropsType> = ({ close, ...props }) => 
   const { connected } = useWallet();
   const { wallet, selectWallet, provider } = useWallet();
 
-  useEffect(() => {
+  useUpdateEffect(() => {
     if (connected) {
       close();
     }
