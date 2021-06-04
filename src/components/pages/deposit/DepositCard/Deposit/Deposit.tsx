@@ -28,6 +28,7 @@ const MaxButton = styled.button`
   font-size: 12px;
   line-height: 15px;
   letter-spacing: 0.15em;
+  text-transform: uppercase;
 
   background-color: transparent;
   border: 1px solid #fff;
