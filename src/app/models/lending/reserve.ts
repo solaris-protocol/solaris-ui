@@ -1,137 +1,184 @@
-import {
-  AccountInfo,
-  PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import BN from "bn.js";
-import * as BufferLayout from "buffer-layout";
-import { TOKEN_PROGRAM_ID, LENDING_PROGRAM_ID } from "../../../utils/ids";
-import { wadToLamports } from "../../../utils/utils";
-import * as Layout from "../../../utils/layout";
-import { LendingInstruction } from "./lending";
+import { AccountInfo, PublicKey } from '@solana/web3.js';
+import BN from 'bn.js';
+import * as BufferLayout from 'buffer-layout';
 
-export const LendingReserveLayout: typeof BufferLayout.Structure = BufferLayout.struct(
-  [
-    BufferLayout.u8("version"),
-    Layout.uint64("lastUpdateSlot"),
+import * as Layout from 'utils/layout';
+import { wadToLamports } from 'utils/utils';
 
-    Layout.publicKey("lendingMarket"),
-    Layout.publicKey("liquidityMint"),
-    BufferLayout.u8("liquidityMintDecimals"),
-    Layout.publicKey("liquiditySupply"),
-    Layout.publicKey("collateralMint"),
-    Layout.publicKey("collateralSupply"),
-
-    Layout.publicKey("collateralFeesReceiver"),
-
-    // TODO: replace u32 option with generic quivalent
-    BufferLayout.u32("dexMarketOption"),
-    Layout.publicKey("dexMarket"),
-
-    BufferLayout.struct(
-      [
-        /// Optimal utilization rate as a percent
-        BufferLayout.u8("optimalUtilizationRate"),
-        /// The ratio of the loan to the value of the collateral as a percent
-        BufferLayout.u8("loanToValueRatio"),
-        /// The percent discount the liquidator gets when buying collateral for an unhealthy obligation
-        BufferLayout.u8("liquidationBonus"),
-        /// The percent at which an obligation is considered unhealthy
-        BufferLayout.u8("liquidationThreshold"),
-        /// Min borrow APY
-        BufferLayout.u8("minBorrowRate"),
-        /// Optimal (utilization) borrow APY
-        BufferLayout.u8("optimalBorrowRate"),
-        /// Max borrow APY
-        BufferLayout.u8("maxBorrowRate"),
-
-        BufferLayout.struct(
-          [
-            /// Fee assessed on `BorrowReserveLiquidity`, expressed as a Wad.
-            /// Must be between 0 and 10^18, such that 10^18 = 1.  A few examples for
-            /// clarity:
-            /// 1% = 10_000_000_000_000_000
-            /// 0.01% (1 basis point) = 100_000_000_000_000
-            /// 0.00001% (Aave borrow fee) = 100_000_000_000
-            Layout.uint64("borrowFeeWad"),
-
-            /// Amount of fee going to host account, if provided in liquidate and repay
-            BufferLayout.u8("hostFeePercentage"),
-          ],
-          "fees"
-        ),
-      ],
-      "config"
-    ),
-
-    BufferLayout.struct(
-      [
-        Layout.uint128("cumulativeBorrowRateWad"),
-        Layout.uint128("borrowedLiquidityWad"),
-        Layout.uint64("availableLiquidity"),
-        Layout.uint64("collateralMintSupply"),
-      ],
-      "state"
-    ),
-
-    // extra space for future contract changes
-    BufferLayout.blob(300, "padding"),
-  ]
-);
-
-export const isLendingReserve = (info: AccountInfo<Buffer>) => {
-  return info.data.length === LendingReserveLayout.span;
-};
-
-export interface LendingReserve {
-  version: number;
-
-  lastUpdateSlot: BN;
-
-  lendingMarket: PublicKey;
-  liquiditySupply: PublicKey;
-  liquidityMint: PublicKey;
-  collateralMint: PublicKey;
-  collateralSupply: PublicKey;
-  collateralFeesReceiver: PublicKey;
-
-  dexMarketOption: number;
-  dexMarket: PublicKey;
-
-  config: {
-    optimalUtilizationRate: number;
-    loanToValueRatio: number;
-    liquidationBonus: number;
-    liquidationThreshold: number;
-    minBorrowRate: number;
-    optimalBorrowRate: number;
-    maxBorrowRate: number;
-
-    fees: {
-      borrowFeeWad: BN;
-      hostFeePercentage: number;
-    };
-  };
-
-  state: {
-    cumulativeBorrowRateWad: BN;
-    borrowedLiquidityWad: BN;
-
-    availableLiquidity: BN;
-    collateralMintSupply: BN;
-  };
+// Instructions Params
+export interface depositReserveLiquidityParams {
+  liquidityAmount: number;
+  sourceLiquidityPubkey: PublicKey;
+  destinationCollateralPubkey: PublicKey;
+  reservePubkey: PublicKey;
+  reserveLiquiditySupplyPubkey: PublicKey;
+  reserveCollateralMintPubkey: PublicKey;
+  lendingMarketPubkey: PublicKey;
+  lendingMarketDerivedAuthorityPubkey: PublicKey;
+  userTransferAuthorityPubkey: PublicKey;
+  pythPricePubkey: PublicKey;
 }
 
-export const LendingReserveParser = (
-  pubKey: PublicKey,
-  info: AccountInfo<Buffer>
-) => {
-  const buffer = Buffer.from(info.data);
-  const data = LendingReserveLayout.decode(buffer) as LendingReserve;
+export interface redeemReserveCollateralParams {
+  collateralAmount: number;
+  sourceCollateralPubkey: PublicKey;
+  destinationLiquidityPubkey: PublicKey;
+  reservePubkey: PublicKey;
+  reserveCollateralMintPubkey: PublicKey;
+  reserveLiquiditySupplyPubkey: PublicKey;
+  lendingMarketPubkey: PublicKey;
+  lendingMarketDerivedAuthorityPubkey: PublicKey;
+  userTransferAuthorityPubkey: PublicKey;
+  pythPricePubkey: PublicKey;
+}
 
-  if (data.lastUpdateSlot.toNumber() === 0) {
+// Reserve
+type Decimal = BN;
+
+export interface LastUpdate {
+  /// Last slot when updated
+  slot: BN;
+  /// True when marked stale, false when slot updated
+  stale: boolean;
+}
+
+export interface ReserveLiquidity {
+  /// Reserve liquidity mint address
+  mintPubkey: PublicKey;
+  /// Reserve liquidity mint decimals
+  mintDecimals: number;
+  /// Reserve liquidity supply address
+  supplyPubkey: PublicKey;
+  /// Reserve liquidity fee receiver address
+  feeReceiver: PublicKey;
+  /// Reserve liquidity oracle account
+  oraclePubkey: PublicKey;
+  /// Reserve liquidity available
+  availableAmount: BN;
+  /// Reserve liquidity borrowed
+  borrowedAmountWads: Decimal;
+  /// Reserve liquidity cumulative borrow rate
+  cumulativeBorrowRateWads: Decimal;
+  // @TODO: make Decimal
+  /// Reserve liquidity market price in quote currency
+  marketPrice: BN;
+}
+
+export interface ReserveCollateral {
+  /// Reserve collateral mint address
+  mintPubkey: PublicKey;
+  /// Reserve collateral mint supply, used for exchange rate
+  mintTotalSupply: BN;
+  /// Reserve collateral supply address
+  supplyPubkey: PublicKey;
+}
+
+export interface ReserveFees {
+  /// Fee assessed on borrow, expressed as a Wad.
+  /// Must be between 0 and 10^18, such that 10^18 = 1.  A few examples for
+  /// clarity:
+  /// 1% = 10_000_000_000_000_000
+  /// 0.01% (1 basis point) = 100_000_000_000_000
+  /// 0.00001% (Aave borrow fee) = 100_000_000_000
+  borrowFeeWad: BN;
+  /// Fee for flash loan, expressed as a Wad.
+  flashLoanFeeWad: BN;
+  /// Amount of fee going to host account
+  hostFeePercentage: number;
+}
+
+export interface ReserveConfig {
+  /// Optimal utilization rate, as a percentage
+  optimalUtilizationRate: number;
+  /// Target ratio of the value of borrows to deposits, as a percentage
+  /// 0 if use as collateral is disabled
+  loanToValueRatio: number;
+  /// Bonus a liquidator gets when repaying part of an unhealthy obligation, as a percentage
+  liquidationBonus: number;
+  /// Loan to value ratio at which an obligation can be liquidated, as a percentage
+  liquidationThreshold: number;
+  /// Min borrow APY
+  minBorrowRate: number;
+  /// Optimal (utilization) borrow APY
+  optimalBorrowRate: number;
+  /// Max borrow APY
+  maxBorrowRate: number;
+  /// Program owner fees assessed, separate from gains due to interest accrual
+  fees: ReserveFees;
+}
+
+export interface Reserve {
+  /// Version of the struct
+  version: number;
+  /// Last slot when supply and rates updated
+  last_update: LastUpdate;
+  /// Lending market address
+  lendingMarket: PublicKey;
+  /// Reserve liquidity
+  liquidity: ReserveLiquidity;
+  /// Reserve collateral
+  collateral: ReserveCollateral;
+  /// Reserve configuration values
+  config: ReserveConfig;
+}
+
+export const ReserveLayout: typeof BufferLayout.Structure = BufferLayout.struct([
+  BufferLayout.u8('version'),
+  BufferLayout.struct([Layout.uint64('slot'), BufferLayout.u8('stale')], 'last_update'),
+
+  Layout.publicKey('lendingMarket'),
+
+  BufferLayout.struct(
+    [
+      Layout.publicKey('mintPubkey'),
+      BufferLayout.u8('mintDecimals'),
+      Layout.publicKey('supplyPubkey'),
+      Layout.publicKey('feeReceiver'),
+      Layout.publicKey('oraclePubkey'),
+      Layout.uint64('availableAmount'),
+      Layout.uint128('borrowedAmountWads'),
+      Layout.uint128('cumulativeBorrowRateWads'),
+      Layout.uint64('marketPrice'),
+    ],
+    'liquidity'
+  ),
+
+  BufferLayout.struct(
+    [Layout.publicKey('mintPubkey'), Layout.uint64('mintTotalSupply'), Layout.publicKey('supplyPubkey')],
+    'collateral'
+  ),
+
+  BufferLayout.struct(
+    [
+      BufferLayout.u8('optimalUtilizationRate'),
+      BufferLayout.u8('loanToValueRatio'),
+      BufferLayout.u8('liquidationBonus'),
+      BufferLayout.u8('liquidationThreshold'),
+      BufferLayout.u8('minBorrowRate'),
+      BufferLayout.u8('optimalBorrowRate'),
+      BufferLayout.u8('maxBorrowRate'),
+
+      BufferLayout.struct(
+        [Layout.uint64('borrowFeeWad'), Layout.uint64('flashLoanFeeWad'), BufferLayout.u8('hostFeePercentage')],
+        'fees'
+      ),
+    ],
+    'config'
+  ),
+  // extra space for future contract changes
+  BufferLayout.blob(248, 'padding'),
+]);
+
+export const isLendingReserve = (info: AccountInfo<Buffer>) => {
+  return info.data.length === ReserveLayout.span;
+};
+
+export const ReserveParser = (pubKey: PublicKey, info: AccountInfo<Buffer>) => {
+  const buffer = Buffer.from(info.data);
+  const data = ReserveLayout.decode(buffer) as Reserve;
+
+  // TODO: is it needed?
+  if (data.last_update.slot.toNumber() === 0) {
     return;
   }
 
@@ -146,164 +193,31 @@ export const LendingReserveParser = (
   return details;
 };
 
-/// Initializes a new lending market reserve.
-///
-///   0. `[writable]` Source liquidity token account.  $authority can transfer $liquidity_amount
-///   1. `[writable]` Destination collateral token account - uninitialized
-///   2. `[writable]` Reserve account.
-///   3. `[]` Reserve liquidity SPL Token mint
-///   4. `[writable]` Reserve liquidity supply SPL Token account - uninitialized
-///   5. `[writable]` Reserve collateral SPL Token mint - uninitialized
-///   6. `[writable]` Reserve collateral token supply - uninitialized
-///   7. `[writable]` Reserve collateral fees receiver - uninitialized.
-///                     Owner will be set to the lending market account.
-///   8. `[]` Lending market account.
-///   9. `[signer]` Lending market owner.
-///   10 `[]` Derived lending market authority.
-///   11 `[]` User transfer authority ($authority).
-///   12 `[]` Clock sysvar
-///   13 `[]` Rent sysvar
-///   14 '[]` Token program id
-///   15 `[optional]` Serum DEX market account. Not required for quote currency reserves.
-///                     Must be initialized and match quote and base currency.
-export const initReserveInstruction = (
-  liquidityAmount: number | BN,
-  // NOTE: InitReserve accepts ReserveConfig as second arg
-  maxUtilizationRate: number,
-  from: PublicKey,
-  to: PublicKey,
-  reserveAccount: PublicKey,
-  liquidityMint: PublicKey,
-  liquiditySupply: PublicKey,
-  collateralMint: PublicKey,
-  collateralSupply: PublicKey,
-  lendingMarket: PublicKey,
-  lendingMarketAuthority: PublicKey,
-  transferAuthority: PublicKey,
-  dexMarket?: PublicKey,
-): TransactionInstruction => {
-  const dataLayout = BufferLayout.struct([
-    BufferLayout.u8("instruction"),
-    Layout.uint64("liquidityAmount"),
-    BufferLayout.u8("maxUtilizationRate"),
-  ]);
-
-  const data = Buffer.alloc(dataLayout.span);
-  dataLayout.encode(
-    {
-      instruction: LendingInstruction.InitReserve,
-      liquidityAmount: new BN(liquidityAmount),
-      maxUtilizationRate: maxUtilizationRate,
-    },
-    data
-  );
-
-  const keys = [
-    { pubkey: from, isSigner: false, isWritable: true },
-    { pubkey: to, isSigner: false, isWritable: true },
-    { pubkey: reserveAccount, isSigner: false, isWritable: true },
-    { pubkey: liquidityMint, isSigner: false, isWritable: false },
-    { pubkey: liquiditySupply, isSigner: false, isWritable: true },
-    { pubkey: collateralMint, isSigner: false, isWritable: true },
-    { pubkey: collateralSupply, isSigner: false, isWritable: true },
-    // NOTE: Why lending market needs to be a signer?
-    { pubkey: lendingMarket, isSigner: true, isWritable: true },
-    { pubkey: lendingMarketAuthority, isSigner: false, isWritable: false },
-    { pubkey: transferAuthority, isSigner: true, isWritable: false },
-    { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
-    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
-    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-  ];
-
-  if (dexMarket) {
-    keys.push({ pubkey: dexMarket, isSigner: false, isWritable: false });
-  }
-
-  return new TransactionInstruction({
-    keys,
-    programId: LENDING_PROGRAM_ID,
-    data,
-  });
-};
-
-/// Accrue interest on reserves
-///
-///   0. `[]` Clock sysvar
-///   1. `[writable]` Reserve account.
-///   .. `[writable]` Additional reserve accounts.
-export const accrueInterestInstruction = (
-  ...reserveAccount: PublicKey[]
-): TransactionInstruction => {
-  const dataLayout = BufferLayout.struct([BufferLayout.u8("instruction")]);
-
-  const data = Buffer.alloc(dataLayout.span);
-  dataLayout.encode(
-    {
-      instruction: LendingInstruction.AccrueReserveInterest,
-    },
-    data
-  );
-
-  const keys = [
-    { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
-    ...reserveAccount.map((reserve) => ({
-      pubkey: reserve,
-      isSigner: false,
-      isWritable: true,
-    })),
-  ];
-  return new TransactionInstruction({
-    keys,
-    programId: LENDING_PROGRAM_ID,
-    data,
-  });
-};
-
-export const calculateUtilizationRatio = (reserve: LendingReserve) => {
-  const totalBorrows = wadToLamports(
-    reserve.state.borrowedLiquidityWad
-  ).toNumber();
-  const currentUtilization =
-    totalBorrows / (reserve.state.availableLiquidity.toNumber() + totalBorrows);
+export const calculateUtilizationRatio = (reserve: Reserve) => {
+  const totalBorrows = wadToLamports(reserve.liquidity.borrowedAmountWads).toNumber();
+  const currentUtilization = totalBorrows / (reserve.liquidity.availableAmount.toNumber() + totalBorrows);
 
   return currentUtilization;
 };
 
-export const reserveMarketCap = (reserve?: LendingReserve) => {
-  const available = reserve?.state.availableLiquidity.toNumber() || 0;
-  const borrowed = wadToLamports(
-    reserve?.state.borrowedLiquidityWad
-  ).toNumber();
+export const reserveMarketCap = (reserve?: Reserve) => {
+  const available = reserve?.liquidity.availableAmount.toNumber() || 0;
+  const borrowed = wadToLamports(reserve?.liquidity.borrowedAmountWads).toNumber();
   const total = available + borrowed;
 
   return total;
 };
 
-export const collateralExchangeRate = (reserve?: LendingReserve) => {
-  return (
-    (reserve?.state.collateralMintSupply.toNumber() || 1) /
-    reserveMarketCap(reserve)
-  );
+export const collateralExchangeRate = (reserve?: Reserve) => {
+  return (reserve?.collateral.mintTotalSupply.toNumber() || 1) / reserveMarketCap(reserve);
 };
 
-export const collateralToLiquidity = (
-  collateralAmount: BN | number,
-  reserve?: LendingReserve
-) => {
-  const amount =
-    typeof collateralAmount === "number"
-      ? collateralAmount
-      : collateralAmount.toNumber();
+export const collateralToLiquidity = (collateralAmount: BN | number, reserve?: Reserve) => {
+  const amount = typeof collateralAmount === 'number' ? collateralAmount : collateralAmount.toNumber();
   return Math.floor(amount / collateralExchangeRate(reserve));
 };
 
-export const liquidityToCollateral = (
-  liquidityAmount: BN | number,
-  reserve?: LendingReserve
-) => {
-  const amount =
-    typeof liquidityAmount === "number"
-      ? liquidityAmount
-      : liquidityAmount.toNumber();
+export const liquidityToCollateral = (liquidityAmount: BN | number, reserve?: Reserve) => {
+  const amount = typeof liquidityAmount === 'number' ? liquidityAmount : liquidityAmount.toNumber();
   return Math.floor(amount * collateralExchangeRate(reserve));
 };

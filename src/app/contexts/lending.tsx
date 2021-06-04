@@ -2,8 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 
-import { useLendingReserves } from '../../hooks';
-import { LENDING_PROGRAM_ID } from '../../utils/ids';
+import { useLendingReserves } from 'hooks';
+import { LENDING_PROGRAM_ID } from 'utils/ids';
+
 import { DexMarketParser } from '../models/dex';
 import {
   isLendingMarket,
@@ -11,8 +12,8 @@ import {
   isLendingReserve,
   LendingMarketParser,
   LendingObligationParser,
-  LendingReserve,
-  LendingReserveParser,
+  Reserve,
+  ReserveParser,
 } from '../models/lending';
 import { cache, getMultipleAccounts, MintParser, ParsedAccount } from './accounts';
 import { useConnection } from './connection/connection';
@@ -43,24 +44,21 @@ export const useLending = () => {
 
   // TODO: query for all the dex from reserves
 
-  const processAccount = useCallback(
-    (item: { pubkey: PublicKey; account: AccountInfo<Buffer> }) => {
-      if (isLendingReserve(item.account)) {
-        const reserve = cache.add(item.pubkey.toBase58(), item.account, LendingReserveParser);
+  const processAccount = useCallback((item: { pubkey: PublicKey; account: AccountInfo<Buffer> }) => {
+    if (isLendingReserve(item.account)) {
+      const reserve = cache.add(item.pubkey.toBase58(), item.account, ReserveParser);
 
-        return reserve;
-      } else if (isLendingMarket(item.account)) {
-        return cache.add(item.pubkey.toBase58(), item.account, LendingMarketParser);
-      } else if (isLendingObligation(item.account)) {
-        return cache.add(item.pubkey.toBase58(), item.account, LendingObligationParser);
-      }
-    },
-    []
-  );
+      return reserve;
+    } else if (isLendingMarket(item.account)) {
+      return cache.add(item.pubkey.toBase58(), item.account, LendingMarketParser);
+    } else if (isLendingObligation(item.account)) {
+      return cache.add(item.pubkey.toBase58(), item.account, LendingObligationParser);
+    }
+  }, []);
 
   useEffect(() => {
     if (reserveAccounts.length > 0) {
-      precacheMarkets(reserveAccounts.map((reserve) => reserve.info.liquidityMint.toBase58()));
+      precacheMarkets(reserveAccounts.map((reserve) => reserve.info.liquidity.mintPubkey.toBase58()));
     }
   }, [reserveAccounts, precacheMarkets]);
 
@@ -74,19 +72,17 @@ export const useLending = () => {
       const accounts = programAccounts.map(processAccount).filter((item) => item !== undefined);
 
       const lendingReserves = accounts
-        .filter((acc) => (acc?.info as LendingReserve).lendingMarket !== undefined)
-        .map((acc) => acc as ParsedAccount<LendingReserve>);
+        .filter((acc) => (acc?.info as Reserve).lendingMarket !== undefined)
+        .map((acc) => acc as ParsedAccount<Reserve>);
 
       const toQuery = [
         ...lendingReserves.map((acc) => {
           const result = [
-            cache.registerParser(acc?.info.collateralMint.toBase58(), MintParser),
-            cache.registerParser(acc?.info.liquidityMint.toBase58(), MintParser),
+            cache.registerParser(acc?.info.collateral.mintPubkey.toBase58(), MintParser),
+            cache.registerParser(acc?.info.liquidity.mintPubkey.toBase58(), MintParser),
             // ignore dex if its not set
-            cache.registerParser(
-              acc?.info.dexMarketOption ? acc?.info.dexMarket.toBase58() : '',
-              DexMarketParser
-            ),
+            // @ts-ignore
+            cache.registerParser(acc?.info.dexMarketOption ? acc?.info.dexMarket.toBase58() : '', DexMarketParser),
           ].filter((_) => _);
           return result;
         }),

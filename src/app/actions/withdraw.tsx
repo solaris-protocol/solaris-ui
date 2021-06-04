@@ -6,13 +6,13 @@ import { notify } from '../../utils/notifications';
 import { sendTransaction } from '../contexts/connection/connection';
 import { WalletAdapter } from '../contexts/wallet';
 import { approve, TokenAccount } from '../models';
-import { accrueInterestInstruction, LendingReserve, withdrawInstruction } from '../models/lending';
+import { redeemReserveCollateralInstruction, refreshReserveInstruction, Reserve } from '../models/lending';
 import { findOrCreateAccountByMint } from './account';
 
 export const withdraw = async (
   from: TokenAccount, // CollateralAccount
   amountLamports: number, // in collateral token (lamports)
-  reserve: LendingReserve,
+  reserve: Reserve,
   reserveAddress: PublicKey,
   connection: Connection,
   wallet: WalletAdapter
@@ -34,21 +34,12 @@ export const withdraw = async (
 
   const accountRentExempt = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
 
-  const [authority] = await PublicKey.findProgramAddress(
-    [reserve.lendingMarket.toBuffer()],
-    LENDING_PROGRAM_ID
-  );
+  const [authority] = await PublicKey.findProgramAddress([reserve.lendingMarket.toBuffer()], LENDING_PROGRAM_ID);
 
   const fromAccount = from.pubkey;
 
   // create approval for transfer transactions
-  const transferAuthority = approve(
-    instructions,
-    cleanupInstructions,
-    fromAccount,
-    wallet.publicKey,
-    amountLamports
-  );
+  const transferAuthority = approve(instructions, cleanupInstructions, fromAccount, wallet.publicKey, amountLamports);
 
   signers.push(transferAuthority);
 
@@ -59,41 +50,36 @@ export const withdraw = async (
     instructions,
     cleanupInstructions,
     accountRentExempt,
-    reserve.liquidityMint,
+    reserve.liquidity.mintPubkey,
     signers
   );
 
-  instructions.push(accrueInterestInstruction(reserveAddress));
-
+  instructions.push(refreshReserveInstruction(reserveAddress, reserve.liquidity.oraclePubkey));
   instructions.push(
-    withdrawInstruction(
-      amountLamports,
-      fromAccount,
-      toAccount,
-      reserveAddress,
-      reserve.collateralMint,
-      reserve.liquiditySupply,
-      reserve.lendingMarket,
-      authority,
-      transferAuthority.publicKey
-    )
+    redeemReserveCollateralInstruction({
+      collateralAmount: amountLamports,
+      sourceCollateralPubkey: fromAccount,
+      destinationLiquidityPubkey: toAccount,
+      reservePubkey: reserveAddress,
+      reserveCollateralMintPubkey: reserve.collateral.mintPubkey,
+      reserveLiquiditySupplyPubkey: reserve.liquidity.supplyPubkey,
+      lendingMarketPubkey: reserve.lendingMarket,
+      lendingMarketDerivedAuthorityPubkey: authority,
+      userTransferAuthorityPubkey: transferAuthority.publicKey,
+      pythPricePubkey: reserve.liquidity.oraclePubkey,
+    })
   );
 
   try {
-    const tx = await sendTransaction(
-      connection,
-      wallet,
-      instructions.concat(cleanupInstructions),
-      signers,
-      true
-    );
+    const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
     notify({
       message: 'Funds deposited.',
       type: 'success',
       description: `Transaction - ${tx}`,
     });
-  } catch {
+  } catch (error) {
     // TODO:
+    throw error;
   }
 };

@@ -3,7 +3,7 @@ import React, { FC } from 'react';
 import { styled } from '@linaria/react';
 import { rgba } from 'polished';
 
-import { calculateDepositAPY, LendingReserve } from 'app/models';
+import { calculateDepositAPY, Reserve } from 'app/models';
 import WalletIcon from 'assets/icons/wallet-icon.svg';
 import { TokenIcon } from 'components/common/TokenIcon';
 import { StateType } from 'components/pages/deposit/DepositCard/types';
@@ -71,20 +71,20 @@ const WalletIconStyled = styled(WalletIcon)`
 `;
 
 interface Props {
-  reserve: LendingReserve;
+  reserve: Reserve;
   state: StateType;
 }
 
 export const Top: FC<Props> = ({ reserve, state }) => {
-  const name = useTokenName(reserve.liquidityMint);
-  const { balance: tokenBalance } = useUserBalance(reserve.liquidityMint);
+  const name = useTokenName(reserve.liquidity.mintPubkey);
+  const { balance: tokenBalance } = useUserBalance(reserve.liquidity.mintPubkey);
 
   const apy = calculateDepositAPY(reserve);
 
   return (
     <Wrapper>
       <Left>
-        <TokenIconStyled mintAddress={reserve.liquidityMint} size={40} />
+        <TokenIconStyled mintAddress={reserve.liquidity.mintPubkey} size={40} />
         <Symbol>{name}</Symbol>
         <APY title={`${apy}%`}>
           {state === 'deposit' ? 'APY' : ''} {formatPct.format(apy)}

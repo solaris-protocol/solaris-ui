@@ -1,25 +1,24 @@
-import { AccountInfo, PublicKey } from "@solana/web3.js";
-import * as BufferLayout from "buffer-layout";
-import * as Layout from "../../../utils/layout";
+import { AccountInfo, PublicKey } from '@solana/web3.js';
+import * as BufferLayout from 'buffer-layout';
 
-export const LendingMarketLayout: typeof BufferLayout.Structure = BufferLayout.struct(
-  [
-    BufferLayout.u8("version"),
-    BufferLayout.u8("bumpSeed"),
-    Layout.publicKey("owner"),
-    Layout.publicKey("quoteMint"),
-    Layout.publicKey("tokenProgramId"),
+import * as Layout from 'utils/layout';
 
-    // extra space for future contract changes
-    BufferLayout.blob(62, "padding"),
-  ]
-);
+export const LendingMarketLayout: typeof BufferLayout.Structure = BufferLayout.struct([
+  BufferLayout.u8('version'),
+  BufferLayout.u8('bumpSeed'),
+  Layout.publicKey('owner'),
+  Layout.publicKey('quoteTokenMint'),
+  Layout.publicKey('tokenProgramId'),
+
+  // extra space for future contract changes
+  BufferLayout.blob(128, 'padding'),
+]);
 
 export interface LendingMarket {
   version: number;
-
-  isInitialized: boolean;
-  quoteMint: PublicKey;
+  bumpSeed: number;
+  owner: PublicKey;
+  quoteTokenMint: PublicKey;
   tokenProgramId: PublicKey;
 }
 
@@ -27,10 +26,7 @@ export const isLendingMarket = (info: AccountInfo<Buffer>) => {
   return info.data.length === LendingMarketLayout.span;
 };
 
-export const LendingMarketParser = (
-  pubKey: PublicKey,
-  info: AccountInfo<Buffer>
-) => {
+export const LendingMarketParser = (pubKey: PublicKey, info: AccountInfo<Buffer>) => {
   const buffer = Buffer.from(info.data);
   const data = LendingMarketLayout.decode(buffer);
 
@@ -44,11 +40,3 @@ export const LendingMarketParser = (
 
   return details;
 };
-
-// TODO: create instructions for init
-/// Initializes a new lending market.
-///
-///   0. `[writable]` Lending market account.
-///   1. `[]` Quote currency SPL Token mint. Must be initialized.
-///   2. `[]` Rent sysvar
-///   3. '[]` Token program id

@@ -8,7 +8,7 @@ import { sendTransaction } from '../contexts/connection/connection';
 import { WalletAdapter } from '../contexts/wallet';
 import { approve, LendingObligation, TokenAccount } from '../models';
 import { repayInstruction } from '../models/lending/repay';
-import { accrueInterestInstruction, LendingReserve } from '../models/lending/reserve';
+import { Reserve } from '../models/lending/reserve';
 import { createTokenAccount, findOrCreateAccountByMint } from './account';
 
 export const repay = async (
@@ -20,9 +20,9 @@ export const repay = async (
 
   obligationToken: TokenAccount,
 
-  repayReserve: ParsedAccount<LendingReserve>,
+  repayReserve: ParsedAccount<Reserve>,
 
-  withdrawReserve: ParsedAccount<LendingReserve>,
+  withdrawReserve: ParsedAccount<Reserve>,
 
   connection: Connection,
   wallet: WalletAdapter
@@ -50,7 +50,7 @@ export const repay = async (
   );
 
   let fromAccount = from.pubkey;
-  if (wallet.publicKey.equals(fromAccount) && repayReserve.info.liquidityMint.equals(NATIVE_MINT)) {
+  if (wallet.publicKey.equals(fromAccount) && repayReserve.info.liquidity.mintPubkey.equals(NATIVE_MINT)) {
     fromAccount = createTokenAccount(
       instructions,
       wallet.publicKey,
@@ -60,24 +60,12 @@ export const repay = async (
       signers
     );
     cleanupInstructions.push(
-      Token.createCloseAccountInstruction(
-        TOKEN_PROGRAM_ID,
-        fromAccount,
-        wallet.publicKey,
-        wallet.publicKey,
-        []
-      )
+      Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, fromAccount, wallet.publicKey, wallet.publicKey, [])
     );
   }
 
   // create approval for transfer transactions
-  const transferAuthority = approve(
-    instructions,
-    cleanupInstructions,
-    fromAccount,
-    wallet.publicKey,
-    repayAmount
-  );
+  const transferAuthority = approve(instructions, cleanupInstructions, fromAccount, wallet.publicKey, repayAmount);
   signers.push(transferAuthority);
 
   // get destination account
@@ -87,7 +75,7 @@ export const repay = async (
     instructions,
     cleanupInstructions,
     accountRentExempt,
-    withdrawReserve.info.collateralMint,
+    withdrawReserve.info.collateral.mintPubkey,
     signers
   );
 
@@ -103,7 +91,8 @@ export const repay = async (
     transferAuthority.publicKey
   );
 
-  instructions.push(accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey));
+  // TODO: rewrite
+  // instructions.push(accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey));
 
   instructions.push(
     repayInstruction(
@@ -111,9 +100,9 @@ export const repay = async (
       fromAccount,
       toAccount,
       repayReserve.pubkey,
-      repayReserve.info.liquiditySupply,
+      repayReserve.info.liquidity.supplyPubkey,
       withdrawReserve.pubkey,
-      withdrawReserve.info.collateralSupply,
+      withdrawReserve.info.collateral.supplyPubkey,
       obligation.pubkey,
       obligation.info.tokenMint,
       obligationToken.pubkey,
@@ -123,13 +112,7 @@ export const repay = async (
     )
   );
 
-  const tx = await sendTransaction(
-    connection,
-    wallet,
-    instructions.concat(cleanupInstructions),
-    signers,
-    true
-  );
+  const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
   notify({
     message: 'Funds repaid.',

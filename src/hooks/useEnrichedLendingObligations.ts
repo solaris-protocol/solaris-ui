@@ -6,7 +6,7 @@ import { PublicKey } from '@solana/web3.js';
 import { cache, ParsedAccount } from '../app/contexts/accounts';
 import { useConnectionConfig } from '../app/contexts/connection';
 import { simulateMarketOrderFill, useMarkets } from '../app/contexts/market';
-import { collateralToLiquidity, LendingObligation, LendingReserve } from '../app/models/lending';
+import { collateralToLiquidity, LendingObligation, Reserve } from '../app/models/lending';
 import { fromLamports, getTokenName, wadToLamports } from '../utils/utils';
 import { useLendingObligations } from './useLendingObligations';
 import { useLendingReserves } from './useLendingReserves';
@@ -36,7 +36,7 @@ export function useEnrichedLendingObligations() {
     return reserveAccounts.reduce((map, reserve) => {
       map.set(reserve.pubkey.toBase58(), reserve);
       return map;
-    }, new Map<string, ParsedAccount<LendingReserve>>());
+    }, new Map<string, ParsedAccount<Reserve>>());
   }, [reserveAccounts]);
 
   const enrichedFactory = useCallback(() => {
@@ -48,12 +48,10 @@ export function useEnrichedLendingObligations() {
       obligations
         .map((obligation) => ({
           obligation,
-          reserve: availableReserves.get(
-            obligation.info.borrowReserve.toBase58()
-          ) as ParsedAccount<LendingReserve>,
+          reserve: availableReserves.get(obligation.info.borrowReserve.toBase58()) as ParsedAccount<Reserve>,
           collateralReserve: availableReserves.get(
             obligation.info.collateralReserve.toBase58()
-          ) as ParsedAccount<LendingReserve>,
+          ) as ParsedAccount<Reserve>,
         }))
         // use obligations with reserves available
         .filter((item) => item.reserve)
@@ -63,14 +61,14 @@ export function useEnrichedLendingObligations() {
           const obligation = item.obligation;
           const reserve = item.reserve.info;
           const collateralReserve = item.reserve.info;
-          const liquidityMint = cache.get(reserve.liquidityMint) as ParsedAccount<MintInfo>;
+          const liquidityMint = cache.get(reserve.liquidity.mintPubkey) as ParsedAccount<MintInfo>;
           let ltv = 0;
           let health = 0;
           let borrowedInQuote = 0;
           let collateralInQuote = 0;
 
           if (liquidityMint) {
-            const collateralMint = cache.get(item.collateralReserve.info.liquidityMint);
+            const collateralMint = cache.get(item.collateralReserve.info.liquidity.mintPubkey);
 
             const collateral = fromLamports(
               collateralToLiquidity(obligation.info.depositedCollateral, item.reserve.info),
@@ -82,16 +80,14 @@ export function useEnrichedLendingObligations() {
             const borrowedAmount = simulateMarketOrderFill(
               borrowed,
               item.reserve.info,
-              item.reserve.info.dexMarketOption
-                ? item.reserve.info.dexMarket
-                : item.collateralReserve.info.dexMarket,
+              // @ts-ignore
+              item.reserve.info.dexMarketOption ? item.reserve.info.dexMarket : item.collateralReserve.info.dexMarket,
               true
             );
 
-            const liquidityMintAddress = item.reserve.info.liquidityMint.toBase58();
+            const liquidityMintAddress = item.reserve.info.liquidity.mintPubkey.toBase58();
             const liquidityMint = cache.get(liquidityMintAddress) as ParsedAccount<MintInfo>;
-            borrowedInQuote =
-              fromLamports(borrowed, liquidityMint.info) * midPriceInUSD(liquidityMintAddress);
+            borrowedInQuote = fromLamports(borrowed, liquidityMint.info) * midPriceInUSD(liquidityMintAddress);
             collateralInQuote = collateral * midPriceInUSD(collateralMint?.pubkey.toBase58() || '');
 
             ltv = (100 * borrowedAmount) / collateral;
@@ -109,8 +105,8 @@ export function useEnrichedLendingObligations() {
               borrowedInQuote,
               collateralInQuote,
               liquidationThreshold: item.reserve.info.config.liquidationThreshold,
-              repayName: getTokenName(tokenMap, reserve.liquidityMint),
-              collateralName: getTokenName(tokenMap, collateralReserve.liquidityMint),
+              repayName: getTokenName(tokenMap, reserve.liquidity.mintPubkey),
+              collateralName: getTokenName(tokenMap, collateralReserve.liquidity.mintPubkey),
             },
           } as EnrichedLendingObligation;
         })

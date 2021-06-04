@@ -4,10 +4,11 @@ import { useMemo } from 'react';
 import { Market, MARKETS, Orderbook, TOKEN_MINTS } from '@project-serum/serum';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 
-import { EventEmitter } from '../../utils/eventEmitter';
-import { LIQUIDITY_PROVIDER_FEE, SERUM_FEE } from '../../utils/pools';
-import { convert, fromLamports, getPoolName, getTokenName, KnownTokenMap, STABLE_COINS } from '../../utils/utils';
-import { LendingMarket, LendingReserve, PoolInfo } from '../models';
+import { EventEmitter } from 'utils/eventEmitter';
+import { LIQUIDITY_PROVIDER_FEE, SERUM_FEE } from 'utils/pools';
+import { convert, fromLamports, getPoolName, getTokenName, KnownTokenMap, STABLE_COINS } from 'utils/utils';
+
+import { LendingMarket, PoolInfo, Reserve } from '../models';
 import { POOLS_WITH_AIRDROP } from '../models/airdrops';
 import { DexMarketParser } from '../models/dex';
 import { MINT_TO_MARKET } from '../models/marketOverrides';
@@ -434,9 +435,9 @@ export const usePrecacheMarket = () => {
   return context.precacheMarkets;
 };
 
-export const simulateMarketOrderFill = (amount: number, reserve: LendingReserve, dex: PublicKey, useBBO = false) => {
-  const liquidityMint = cache.get(reserve.liquidityMint);
-  const collateralMint = cache.get(reserve.collateralMint);
+export const simulateMarketOrderFill = (amount: number, reserve: Reserve, dex: PublicKey, useBBO = false) => {
+  const liquidityMint = cache.get(reserve.liquidity.mintPubkey);
+  const collateralMint = cache.get(reserve.collateral.mintPubkey);
   if (!liquidityMint || !collateralMint) {
     return 0.0;
   }
@@ -463,7 +464,7 @@ export const simulateMarketOrderFill = (amount: number, reserve: LendingReserve,
   const bids = new Orderbook(dexMarket, bidInfo.accountFlags, bidInfo.slab);
   const asks = new Orderbook(dexMarket, askInfo.accountFlags, askInfo.slab);
 
-  const book = lendingMarket.info.quoteMint.equals(reserve.liquidityMint) ? bids : asks;
+  const book = lendingMarket.info.quoteTokenMint.equals(reserve.liquidity.mintPubkey) ? bids : asks;
 
   let cost = 0;
   let remaining = fromLamports(amount, liquidityMint.info);

@@ -8,7 +8,7 @@ import { sendTransaction } from '../contexts/connection/connection';
 import { WalletAdapter } from '../contexts/wallet';
 import { approve, LendingMarket, LendingObligation, TokenAccount } from '../models';
 import { liquidateInstruction } from '../models/lending/liquidate';
-import { accrueInterestInstruction, LendingReserve } from '../models/lending/reserve';
+import { Reserve } from '../models/lending/reserve';
 import { createTempMemoryAccount, ensureSplAccount, findOrCreateAccountByMint } from './account';
 
 export const liquidate = async (
@@ -20,9 +20,9 @@ export const liquidate = async (
   // which loan to repay
   obligation: ParsedAccount<LendingObligation>,
 
-  repayReserve: ParsedAccount<LendingReserve>,
+  repayReserve: ParsedAccount<Reserve>,
 
-  withdrawReserve: ParsedAccount<LendingReserve>
+  withdrawReserve: ParsedAccount<Reserve>
 ) => {
   if (!wallet.publicKey) {
     throw new Error('Wallet is not connected');
@@ -56,13 +56,7 @@ export const liquidate = async (
   );
 
   // create approval for transfer transactions
-  const transferAuthority = approve(
-    instructions,
-    cleanupInstructions,
-    fromAccount,
-    wallet.publicKey,
-    amountLamports
-  );
+  const transferAuthority = approve(instructions, cleanupInstructions, fromAccount, wallet.publicKey, amountLamports);
   signers.push(transferAuthority);
 
   // get destination account
@@ -72,13 +66,16 @@ export const liquidate = async (
     instructions,
     cleanupInstructions,
     accountRentExempt,
-    withdrawReserve.info.collateralMint,
+    withdrawReserve.info.collateral.mintPubkey,
     signers
   );
 
+  // @ts-ignore
   const dexMarketAddress = repayReserve.info.dexMarketOption
-    ? repayReserve.info.dexMarket
-    : withdrawReserve.info.dexMarket;
+    ? // @ts-ignore
+      repayReserve.info.dexMarket
+    : // @ts-ignore
+      withdrawReserve.info.dexMarket;
   const dexMarket = cache.get(dexMarketAddress);
 
   if (!dexMarket) {
@@ -87,18 +84,14 @@ export const liquidate = async (
 
   const market = cache.get(withdrawReserve.info.lendingMarket) as ParsedAccount<LendingMarket>;
 
-  const dexOrderBookSide = market.info.quoteMint.equals(repayReserve.info.liquidityMint)
+  const dexOrderBookSide = market.info.quoteTokenMint.equals(repayReserve.info.liquidity.mintPubkey)
     ? dexMarket?.info.asks
     : dexMarket?.info.bids;
 
-  const memory = createTempMemoryAccount(
-    instructions,
-    wallet.publicKey,
-    signers,
-    LENDING_PROGRAM_ID
-  );
+  const memory = createTempMemoryAccount(instructions, wallet.publicKey, signers, LENDING_PROGRAM_ID);
 
-  instructions.push(accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey));
+  // TODO: rewrite
+  // instructions.push(accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey));
 
   instructions.push(
     liquidateInstruction(
@@ -106,9 +99,9 @@ export const liquidate = async (
       fromAccount,
       toAccount,
       repayReserve.pubkey,
-      repayReserve.info.liquiditySupply,
+      repayReserve.info.liquidity.supplyPubkey,
       withdrawReserve.pubkey,
-      withdrawReserve.info.collateralSupply,
+      withdrawReserve.info.collateral.supplyPubkey,
       obligation.pubkey,
       repayReserve.info.lendingMarket,
       authority,
@@ -119,13 +112,7 @@ export const liquidate = async (
     )
   );
 
-  const tx = await sendTransaction(
-    connection,
-    wallet,
-    instructions.concat(cleanupInstructions),
-    signers,
-    true
-  );
+  const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
   notify({
     message: 'Funds liquidated.',

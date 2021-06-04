@@ -17,7 +17,7 @@ import {
   LendingObligationLayout,
   TokenAccount,
 } from '../models';
-import { accrueInterestInstruction, LendingReserve } from '../models/lending/reserve';
+import { Reserve } from '../models/lending/reserve';
 import {
   createTempMemoryAccount,
   createUninitializedAccount,
@@ -35,9 +35,9 @@ export const borrow = async (
   amount: number,
   amountType: BorrowAmountType,
 
-  borrowReserve: ParsedAccount<LendingReserve>,
+  borrowReserve: ParsedAccount<Reserve>,
 
-  depositReserve: ParsedAccount<LendingReserve>,
+  depositReserve: ParsedAccount<Reserve>,
 
   existingObligation?: ParsedAccount<LendingObligation>,
 
@@ -110,7 +110,7 @@ export const borrow = async (
         instructions,
         [],
         accountRentExempt,
-        depositReserve.info.collateralMint,
+        depositReserve.info.collateral.mintPubkey,
         signers
       )
     : undefined;
@@ -126,7 +126,7 @@ export const borrow = async (
 
     const mint = (await cache.query(
       connection,
-      borrowReserve.info.liquidityMint,
+      borrowReserve.info.collateral.mintPubkey,
       MintParser
     )) as ParsedAccount<MintInfo>;
 
@@ -134,7 +134,7 @@ export const borrow = async (
   } else if (amountType === BorrowAmountType.CollateralDepositAmount) {
     const mint = (await cache.query(
       connection,
-      depositReserve.info.collateralMint,
+      depositReserve.info.collateral.mintPubkey,
       MintParser
     )) as ParsedAccount<MintInfo>;
     amountLamports = toLamports(amount, mint?.info);
@@ -156,7 +156,7 @@ export const borrow = async (
     instructions,
     finalCleanupInstructions,
     accountRentExempt,
-    borrowReserve.info.liquidityMint,
+    borrowReserve.info.liquidity.mintPubkey,
     signers
   );
 
@@ -192,9 +192,12 @@ export const borrow = async (
   );
   signers.push(transferAuthority);
 
+  // @ts-ignore
   const dexMarketAddress = borrowReserve.info.dexMarketOption
-    ? borrowReserve.info.dexMarket
-    : depositReserve.info.dexMarket;
+    ? // @ts-ignore
+      borrowReserve.info.dexMarket
+    : // @ts-ignore
+      depositReserve.info.dexMarket;
   const dexMarket = cache.get(dexMarketAddress);
 
   if (!dexMarket) {
@@ -202,18 +205,15 @@ export const borrow = async (
   }
 
   const market = cache.get(depositReserve.info.lendingMarket) as ParsedAccount<LendingMarket>;
-  const dexOrderBookSide = market.info.quoteMint.equals(depositReserve.info.liquidityMint)
+  const dexOrderBookSide = market.info.quoteTokenMint.equals(depositReserve.info.liquidity.mintPubkey)
     ? dexMarket?.info.asks
     : dexMarket?.info.bids;
 
-  const memory = createTempMemoryAccount(
-    instructions,
-    wallet.publicKey,
-    signers,
-    LENDING_PROGRAM_ID
-  );
+  const memory = createTempMemoryAccount(instructions, wallet.publicKey, signers, LENDING_PROGRAM_ID);
 
-  instructions.push(accrueInterestInstruction(depositReserve.pubkey, borrowReserve.pubkey));
+  // TODO: rewrite
+  // instructions.push(accrueInterestInstruction(depositReserve.pubkey, borrowReserve.pubkey));
+
   // borrow
   instructions.push(
     borrowInstruction(
@@ -222,11 +222,11 @@ export const borrow = async (
       fromAccount,
       toAccount,
       depositReserve.pubkey,
-      depositReserve.info.collateralSupply,
-      depositReserve.info.collateralFeesReceiver,
+      depositReserve.info.collateral.supplyPubkey,
+      depositReserve.info.liquidity.feeReceiver,
 
       borrowReserve.pubkey,
-      borrowReserve.info.liquiditySupply,
+      borrowReserve.info.liquidity.supplyPubkey,
 
       obligation,
       obligationMint,
@@ -245,13 +245,7 @@ export const borrow = async (
     )
   );
   try {
-    const tx = await sendTransaction(
-      connection,
-      wallet,
-      instructions.concat(cleanupInstructions),
-      signers,
-      true
-    );
+    const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
     notify({
       message: 'Funds borrowed.',

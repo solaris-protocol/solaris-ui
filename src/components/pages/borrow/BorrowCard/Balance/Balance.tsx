@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 
 import { styled } from '@linaria/react';
 
-import { LendingReserve } from 'app/models';
+import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { CollateralBalance } from 'components/common/CollateralBalance';

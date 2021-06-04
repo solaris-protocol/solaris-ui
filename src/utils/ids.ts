@@ -5,7 +5,7 @@ import { TokenSwapLayout, TokenSwapLayoutV1 } from '../app/models';
 export const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 
-export let LENDING_PROGRAM_ID = new PublicKey('Fo1J5WWXeuD6t8sDXLDDRjrjA8FwB9VizV19CfutRU48');
+export let LENDING_PROGRAM_ID = new PublicKey('6h5geweHee42FbxZrYAcYJ8SGVAjG6sGow5dtzcKtrJw');
 
 let SWAP_PROGRAM_ID: PublicKey;
 let SWAP_PROGRAM_LEGACY_IDS: PublicKey[];
@@ -68,7 +68,7 @@ export const PROGRAM_IDS = [
 
 export const setProgramIds = (envName: string) => {
   if (envName === 'devnet') {
-    LENDING_PROGRAM_ID = new PublicKey('Fo1J5WWXeuD6t8sDXLDDRjrjA8FwB9VizV19CfutRU48');
+    LENDING_PROGRAM_ID = new PublicKey('6h5geweHee42FbxZrYAcYJ8SGVAjG6sGow5dtzcKtrJw');
   } else {
     throw new Error('only devnet supported currently');
   }

@@ -3,13 +3,7 @@ import { useEffect, useState } from 'react';
 import { MintInfo } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 
-import {
-  cache,
-  getMultipleAccounts,
-  MintParser,
-  ParsedAccount,
-  useMint,
-} from '../app/contexts/accounts';
+import { cache, getMultipleAccounts, MintParser, ParsedAccount, useMint } from '../app/contexts/accounts';
 import { useConnection } from '../app/contexts/connection';
 import { fromLamports, wadToLamports } from '../utils/utils';
 import { useLendingReserve } from './useLendingReserves';
@@ -26,7 +20,7 @@ export function useBorrowedAmount(address?: string | PublicKey) {
     health: 0,
   });
   const reserve = useLendingReserve(address);
-  const liquidityMint = useMint(reserve?.info.liquidityMint);
+  const liquidityMint = useMint(reserve?.info.liquidity.mintPubkey);
 
   useEffect(() => {
     setBorrowedInfo({
@@ -63,10 +57,7 @@ export function useBorrowedAmount(address?: string | PublicKey) {
       userObligationsByReserve.forEach((item) => {
         const borrowed = wadToLamports(item.obligation.info.borrowAmountWad).toNumber();
 
-        const owned = item.userAccounts.reduce(
-          (amount, acc) => (amount += acc.info.amount.toNumber()),
-          0
-        );
+        const owned = item.userAccounts.reduce((amount, acc) => (amount += acc.info.amount.toNumber()), 0);
         const obligationMint = cache.get(item.obligation.info.tokenMint) as ParsedAccount<MintInfo>;
 
         result.borrowedLamports += borrowed * (owned / obligationMint?.info.supply.toNumber());

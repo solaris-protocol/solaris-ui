@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 import classNames from 'classnames';
 
 import { cache, ParsedAccount, useMint } from 'app/contexts/accounts';
-import { LendingReserve } from 'app/models';
+import { Reserve } from 'app/models';
 import { Card } from 'components/common/Card';
 import { EnrichedLendingObligation, useUserCollateralBalance } from 'hooks';
 import { fromLamports, wadToLamports } from 'utils/utils';

@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 import { rgba } from 'polished';
 
-import { calculateDepositAPY, LendingReserve } from 'app/models';
+import { calculateDepositAPY, Reserve } from 'app/models';
 import WalletIcon from 'assets/icons/wallet-icon.svg';
 import { TokenIcon } from 'components/common/TokenIcon';
 import { StateType } from 'components/pages/deposit/DepositCard/types';

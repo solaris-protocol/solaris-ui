@@ -4,33 +4,32 @@ import {
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
-} from "@solana/web3.js";
-import BN from "bn.js";
-import * as BufferLayout from "buffer-layout";
-import { LendingInstruction } from "./index";
-import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID } from "../../../utils/ids";
-import * as Layout from "../../../utils/layout";
+} from '@solana/web3.js';
+import BN from 'bn.js';
+import * as BufferLayout from 'buffer-layout';
 
-export const LendingObligationLayout: typeof BufferLayout.Structure = BufferLayout.struct(
-  [
-    BufferLayout.u8("version"),
-    /// Amount of collateral tokens deposited for this obligation
-    Layout.uint64("depositedCollateral"),
-    /// Reserve which collateral tokens were deposited into
-    Layout.publicKey("collateralReserve"),
-    /// Borrow rate used for calculating interest.
-    Layout.uint128("cumulativeBorrowRateWad"),
-    /// Amount of tokens borrowed for this obligation plus interest
-    Layout.uint128("borrowAmountWad"),
-    /// Reserve which tokens were borrowed from
-    Layout.publicKey("borrowReserve"),
-    /// Mint address of the tokens for this obligation
-    Layout.publicKey("tokenMint"),
+import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID } from '../../../utils/ids';
+import * as Layout from '../../../utils/layout';
+import { LendingInstructions } from './index';
 
-    // extra space for future contract changes
-    BufferLayout.blob(128, "padding"),
-  ]
-);
+export const LendingObligationLayout: typeof BufferLayout.Structure = BufferLayout.struct([
+  BufferLayout.u8('version'),
+  /// Amount of collateral tokens deposited for this obligation
+  Layout.uint64('depositedCollateral'),
+  /// Reserve which collateral tokens were deposited into
+  Layout.publicKey('collateralReserve'),
+  /// Borrow rate used for calculating interest.
+  Layout.uint128('cumulativeBorrowRateWad'),
+  /// Amount of tokens borrowed for this obligation plus interest
+  Layout.uint128('borrowAmountWad'),
+  /// Reserve which tokens were borrowed from
+  Layout.publicKey('borrowReserve'),
+  /// Mint address of the tokens for this obligation
+  Layout.publicKey('tokenMint'),
+
+  // extra space for future contract changes
+  BufferLayout.blob(128, 'padding'),
+]);
 
 export const isLendingObligation = (info: AccountInfo<Buffer>) => {
   return info.data.length === LendingObligationLayout.span;
@@ -47,10 +46,7 @@ export interface LendingObligation {
   tokenMint: PublicKey;
 }
 
-export const LendingObligationParser = (
-  pubKey: PublicKey,
-  info: AccountInfo<Buffer>
-) => {
+export const LendingObligationParser = (pubKey: PublicKey, info: AccountInfo<Buffer>) => {
   const buffer = Buffer.from(info.data);
   const data = LendingObligationLayout.decode(buffer);
 
@@ -66,7 +62,7 @@ export const LendingObligationParser = (
 };
 
 export const healthFactorToRiskColor = (health: number) => {
-  return "";
+  return '';
 };
 
 /// Initializes a new loan obligation.
@@ -90,14 +86,14 @@ export const initObligationInstruction = (
   obligationTokenOutput: PublicKey,
   obligationTokenOwner: PublicKey,
   lendingMarket: PublicKey,
-  lendingMarketAuthority: PublicKey,
+  lendingMarketAuthority: PublicKey
 ): TransactionInstruction => {
-  const dataLayout = BufferLayout.struct([BufferLayout.u8("instruction")]);
+  const dataLayout = BufferLayout.struct([BufferLayout.u8('instruction')]);
 
   const data = Buffer.alloc(dataLayout.span);
   dataLayout.encode(
     {
-      instruction: LendingInstruction.InitObligation,
+      instruction: LendingInstructions.InitObligation,
     },
     data
   );

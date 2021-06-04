@@ -3,7 +3,7 @@ import React, { FC } from 'react';
 import { styled } from '@linaria/react';
 import classNames from 'classnames';
 
-import { LendingReserve } from 'app/models';
+import { Reserve } from 'app/models';
 import { useUserCollateralBalance } from 'hooks';
 import { formatNumber } from 'utils/utils';
 

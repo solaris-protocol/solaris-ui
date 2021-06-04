@@ -6,13 +6,13 @@ import { PublicKey } from '@solana/web3.js';
 import { deposit } from 'app/actions';
 import { useConnection } from 'app/contexts/connection';
 import { useWallet } from 'app/contexts/wallet';
-import { LendingReserve } from 'app/models';
+import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { CollateralInput } from 'components/common/CollateralInput';
 import { ButtonLoading } from 'components/pages/deposit/DepositCard/common/ButtonLoading';
 import { StateType } from 'components/pages/deposit/DepositCard/types';
-import { InputType, useUserBalance } from 'hooks';
+import { useUserBalance, useUserCollateralBalance } from 'hooks';
 import { notify } from 'utils/notifications';
 
 import { Bottom } from '../common/styled';
@@ -48,7 +48,7 @@ const MaxButton = styled.button`
 `;
 
 interface Props {
-  reserve: LendingReserve;
+  reserve: Reserve;
   address: PublicKey;
   setState: (state: StateType) => void;
 }
@@ -59,7 +59,7 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
 
   const connection = useConnection();
   const { wallet } = useWallet();
-  const { accounts: fromAccounts, balance, balanceLamports } = useUserBalance(reserve?.liquidityMint);
+  const { accounts: fromAccounts, balance, balanceLamports } = useUserBalance(reserve?.liquidity.mintPubkey);
 
   const handleValueChange = (nextValue: string) => {
     setValue(nextValue);
@@ -79,8 +79,6 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
     setIsLoading(true);
 
     try {
-      console.log(111, Math.ceil(balanceLamports * (parseFloat(value) / balance)));
-
       await deposit(
         fromAccounts[0],
         Math.ceil(balanceLamports * (parseFloat(value) / balance)),
@@ -108,7 +106,7 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
   return (
     <>
       <CollateralBalanceWrapper>
-        <CollateralInput mintAddress={reserve.liquidityMint} value={value} onChange={handleValueChange} />
+        <CollateralInput mintAddress={reserve.liquidity.mintPubkey} value={value} onChange={handleValueChange} />
         <MaxButton onClick={handleMaxClick}>Max</MaxButton>
       </CollateralBalanceWrapper>
       <Bottom>

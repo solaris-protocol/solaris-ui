@@ -1,23 +1,19 @@
 import { AccountLayout } from '@solana/spl-token';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-import { LENDING_PROGRAM_ID } from '../../utils/ids';
-import { notify } from '../../utils/notifications';
-import { sendTransaction } from '../contexts/connection/connection';
-import { WalletAdapter } from '../contexts/wallet';
-import { approve, TokenAccount } from '../models';
-import {
-  accrueInterestInstruction,
-  depositInstruction,
-  initReserveInstruction,
-  LendingReserve,
-} from '../models/lending';
+import { sendTransaction } from 'app/contexts/connection/connection';
+import { WalletAdapter } from 'app/contexts/wallet';
+import { approve, TokenAccount } from 'app/models';
+import { depositReserveLiquidityInstruction, refreshReserveInstruction, Reserve } from 'app/models/lending';
+import { LENDING_PROGRAM_ID } from 'utils/ids';
+import { notify } from 'utils/notifications';
+
 import { createUninitializedAccount, ensureSplAccount, findOrCreateAccountByMint } from './account';
 
 export const deposit = async (
   from: TokenAccount,
   amountLamports: number,
-  reserve: LendingReserve,
+  reserve: Reserve,
   reserveAddress: PublicKey,
   connection: Connection,
   wallet: WalletAdapter
@@ -69,7 +65,7 @@ export const deposit = async (
       instructions,
       cleanupInstructions,
       accountRentExempt,
-      reserve.collateralMint,
+      reserve.collateral.mintPubkey,
       signers
     );
   } else {
@@ -77,41 +73,20 @@ export const deposit = async (
   }
 
   if (isInitialized) {
-    instructions.push(accrueInterestInstruction(reserveAddress));
-
-    // deposit
+    instructions.push(refreshReserveInstruction(reserveAddress, reserve.liquidity.oraclePubkey));
     instructions.push(
-      depositInstruction(
-        amountLamports,
-        fromAccount,
-        toAccount,
-        reserveAddress,
-        reserve.liquiditySupply,
-        reserve.collateralMint,
-        reserve.lendingMarket,
-        authority,
-        transferAuthority.publicKey
-      )
-    );
-  } else {
-    // TODO: finish reserve init
-    const MAX_UTILIZATION_RATE = 80;
-    instructions.push(
-      initReserveInstruction(
-        amountLamports,
-        MAX_UTILIZATION_RATE,
-        fromAccount,
-        toAccount,
-        reserveAddress,
-        reserve.liquidityMint,
-        reserve.liquiditySupply,
-        reserve.collateralMint,
-        reserve.collateralSupply,
-        reserve.lendingMarket,
-        authority,
-        transferAuthority.publicKey,
-        reserve.dexMarket
-      )
+      depositReserveLiquidityInstruction({
+        liquidityAmount: amountLamports,
+        sourceLiquidityPubkey: fromAccount,
+        destinationCollateralPubkey: toAccount,
+        reservePubkey: reserveAddress,
+        reserveLiquiditySupplyPubkey: reserve.liquidity.supplyPubkey,
+        reserveCollateralMintPubkey: reserve.collateral.mintPubkey,
+        lendingMarketPubkey: reserve.lendingMarket,
+        lendingMarketDerivedAuthorityPubkey: authority,
+        userTransferAuthorityPubkey: transferAuthority.publicKey,
+        pythPricePubkey: reserve.liquidity.oraclePubkey,
+      })
     );
   }
 
