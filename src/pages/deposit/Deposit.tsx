@@ -22,7 +22,7 @@ export const Deposit: FC = () => {
       <TotalInfo type="deposit" />
       <CardsWrapper>
         {reserveAccounts.map((account) => (
-          <DepositCard key={account.pubkey.toBase58()} reserve={account.info} />
+          <DepositCard key={account.pubkey.toBase58()} reserve={account.info} address={account.pubkey} />
         ))}
       </CardsWrapper>
     </>

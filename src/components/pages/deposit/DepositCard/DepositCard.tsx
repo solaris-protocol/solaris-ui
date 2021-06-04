@@ -21,16 +21,17 @@ const Content = styled.div`
 
 interface Props {
   reserve: LendingReserve;
+  address: PublicKey;
 }
 
-export const DepositCard: FC<Props> = ({ reserve }) => {
+export const DepositCard: FC<Props> = ({ reserve, address }) => {
   const [state, setState] = useState<StateType>('balance');
   const { hasBalance } = useUserCollateralBalance(reserve);
 
   const renderContent = () => {
     switch (state) {
       case 'deposit':
-        return <Deposit reserve={reserve} setState={setState} />;
+        return <Deposit reserve={reserve} address={address} setState={setState} />;
       case 'balance':
       default:
         return <Balance reserve={reserve} setState={setState} />;

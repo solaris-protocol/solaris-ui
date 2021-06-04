@@ -1,14 +1,19 @@
 import React, { FC, useState } from 'react';
 
 import { styled } from '@linaria/react';
+import { PublicKey } from '@solana/web3.js';
 
+import { deposit } from 'app/actions';
+import { useConnection } from 'app/contexts/connection';
+import { useWallet } from 'app/contexts/wallet';
 import { LendingReserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { CollateralInput } from 'components/common/CollateralInput';
 import { ButtonLoading } from 'components/pages/deposit/DepositCard/common/ButtonLoading';
 import { StateType } from 'components/pages/deposit/DepositCard/types';
-import { useUserBalance } from 'hooks';
+import { InputType, useUserBalance } from 'hooks';
+import { notify } from 'utils/notifications';
 
 import { Bottom } from '../common/styled';
 
@@ -44,13 +49,17 @@ const MaxButton = styled.button`
 
 interface Props {
   reserve: LendingReserve;
+  address: PublicKey;
   setState: (state: StateType) => void;
 }
 
-export const Deposit: FC<Props> = ({ reserve, setState }) => {
+export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState('');
-  const { balance } = useUserBalance(reserve.liquidityMint);
+
+  const connection = useConnection();
+  const { wallet } = useWallet();
+  const { accounts: fromAccounts, balance, balanceLamports } = useUserBalance(reserve?.liquidityMint);
 
   const handleValueChange = (nextValue: string) => {
     setValue(nextValue);
@@ -61,10 +70,39 @@ export const Deposit: FC<Props> = ({ reserve, setState }) => {
   };
 
   const handleDepositClick = async () => {
-    setIsLoading(true);
     // TODO: deposit
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setState('balance');
+
+    if (!wallet?.publicKey) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      console.log(111, Math.ceil(balanceLamports * (parseFloat(value) / balance)));
+
+      await deposit(
+        fromAccounts[0],
+        Math.ceil(balanceLamports * (parseFloat(value) / balance)),
+        reserve,
+        address,
+        connection,
+        wallet
+      );
+
+      setValue('');
+      setState('balance');
+    } catch (error) {
+      // TODO:
+      console.log(error);
+      notify({
+        message: 'Error in deposit.',
+        type: 'error',
+        description: error.message,
+      });
+
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -78,7 +116,7 @@ export const Deposit: FC<Props> = ({ reserve, setState }) => {
           <ButtonLoading />
         ) : (
           <ButtonConnect>
-            <Button onClick={handleDepositClick} className="full">
+            <Button disabled={fromAccounts.length === 0} onClick={handleDepositClick} className="full">
               Deposit
             </Button>
             <Button onClick={() => setState('balance')}>Cancel</Button>

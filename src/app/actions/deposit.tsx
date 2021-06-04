@@ -56,13 +56,7 @@ export const deposit = async (
   );
 
   // create approval for transfer transactions
-  const transferAuthority = approve(
-    instructions,
-    cleanupInstructions,
-    fromAccount,
-    wallet.publicKey,
-    amountLamports
-  );
+  const transferAuthority = approve(instructions, cleanupInstructions, fromAccount, wallet.publicKey, amountLamports);
 
   signers.push(transferAuthority);
 
@@ -79,12 +73,7 @@ export const deposit = async (
       signers
     );
   } else {
-    toAccount = createUninitializedAccount(
-      instructions,
-      wallet.publicKey,
-      accountRentExempt,
-      signers
-    );
+    toAccount = createUninitializedAccount(instructions, wallet.publicKey, accountRentExempt, signers);
   }
 
   if (isInitialized) {
@@ -127,21 +116,15 @@ export const deposit = async (
   }
 
   try {
-    const tx = await sendTransaction(
-      connection,
-      wallet,
-      instructions.concat(cleanupInstructions),
-      signers,
-      true
-    );
+    const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
     notify({
       message: 'Funds deposited.',
       type: 'success',
       description: `Transaction - ${tx}`,
     });
-  } catch {
+  } catch (error) {
     // TODO:
-    throw new Error();
+    throw error;
   }
 };
