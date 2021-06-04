@@ -1,4 +1,5 @@
 import { LedgerWalletAdapter } from 'app/contexts/wallet/wallet-adapters/ledger';
+import { SolanaWalletAdapter } from 'app/contexts/wallet/wallet-adapters/sollet';
 import { SolongWalletAdapter } from 'app/contexts/wallet/wallet-adapters/solong';
 import ledgerIcon from 'assets/icons/ledger.svg';
 import mathwalletIcon from 'assets/icons/mathwallet.svg';
@@ -8,15 +9,21 @@ import solongIcon from 'assets/icons/solong.png';
 
 export const WALLET_PROVIDERS = [
   {
-    name: 'Sollet',
-    url: 'https://www.sollet.io',
-    icon: solletIcon,
-  },
-  {
     name: 'Solong',
     url: 'https://solongwallet.com',
     icon: solongIcon,
     adapter: SolongWalletAdapter,
+  },
+  {
+    name: 'Sollet Extension',
+    url: 'https://chrome.google.com/webstore/detail/sollet/fhmfendgdocmcbmfikdcogofphimnkno',
+    icon: solletIcon,
+    adapter: SolanaWalletAdapter,
+  },
+  {
+    name: 'Sollet',
+    url: 'https://www.sollet.io',
+    icon: solletIcon,
   },
   {
     name: 'Solflare',
@@ -24,14 +31,14 @@ export const WALLET_PROVIDERS = [
     icon: solflareIcon,
   },
   {
-    name: 'MathWallet',
-    url: 'https://mathwallet.org',
-    icon: mathwalletIcon,
-  },
-  {
     name: 'Ledger',
     url: 'https://www.ledger.com',
     icon: ledgerIcon,
     adapter: LedgerWalletAdapter,
+  },
+  {
+    name: 'MathWallet',
+    url: 'https://mathwallet.org',
+    icon: mathwalletIcon,
   },
 ];

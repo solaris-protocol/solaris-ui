@@ -1,21 +1,10 @@
 /* eslint-disable react-hooks/rules-of-hooks,@typescript-eslint/no-var-requires */
-const {
-  useBabelRc,
-  override,
-  addWebpackModuleRule,
-  addLessLoader,
-} = require('customize-cra');
+const { useBabelRc, override, addWebpackModuleRule } = require('customize-cra');
 
 const isDev = process.env.NODE_ENV === 'development';
 
 module.exports = override(
   useBabelRc(),
-  addLessLoader({
-    lessOptions: {
-      modifyVars: { '@primary-color': '#2abdd2' },
-      javascriptEnabled: true,
-    },
-  }),
   addWebpackModuleRule({
     test: /\.tsx?$/,
     exclude: /node_modules/,

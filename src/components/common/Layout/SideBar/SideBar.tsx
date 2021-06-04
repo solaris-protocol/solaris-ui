@@ -15,6 +15,7 @@ const TRANSITION_DURATION_SMART = 300;
 const Wrapper = styled.div`
   position: relative;
 
+  flex-shrink: 0;
   width: ${WIDTH_CLOSED}px;
 
   background: #130e14;

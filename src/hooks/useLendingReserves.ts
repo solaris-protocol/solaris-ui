@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@solana/web3.js';
+import { log } from 'util';
 
 import { cache, ParsedAccount } from '../app/contexts/accounts';
 import { useConnectionConfig } from '../app/contexts/connection';
@@ -15,9 +16,7 @@ export const getLendingReserves = () => {
 };
 
 export function useLendingReserves() {
-  const [reserveAccounts, setReserveAccounts] = useState<ParsedAccount<LendingReserve>[]>(
-    getLendingReserves()
-  );
+  const [reserveAccounts, setReserveAccounts] = useState<ParsedAccount<LendingReserve>[]>(getLendingReserves());
 
   useEffect(() => {
     const dispose = cache.emitter.onCache((args) => {
@@ -39,22 +38,19 @@ export function useLendingReserves() {
 export function useLendingReserve(address?: string | PublicKey) {
   const { tokenMap } = useConnectionConfig();
   const { reserveAccounts } = useLendingReserves();
+
   let addressName = address;
   if (typeof address === 'string') {
     const token: KnownToken | null = getTokenByName(tokenMap, address);
     if (token) {
-      const account = reserveAccounts.filter(
-        (acc) => acc.info.liquidityMint.toBase58() === token.mintAddress
-      )[0];
+      const account = reserveAccounts.filter((acc) => acc.info.liquidityMint.toBase58() === token.mintAddress)[0];
       if (account) {
         addressName = account.pubkey;
       }
     }
   }
-  const id = useMemo(
-    () => (typeof addressName === 'string' ? addressName : addressName?.toBase58()),
-    [addressName]
-  );
+
+  const id = useMemo(() => (typeof addressName === 'string' ? addressName : addressName?.toBase58()), [addressName]);
 
   const [reserveAccount, setReserveAccount] = useState<ParsedAccount<LendingReserve>>(
     cache.get(id || '') as ParsedAccount<LendingReserve>

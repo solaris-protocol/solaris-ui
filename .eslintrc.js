@@ -11,6 +11,7 @@ module.exports = {
       jsx: true, // Allows for the parsing of JSX
     },
     sourceType: 'module', // Allows for the use of imports
+    project: './tsconfig.json',
   },
   extends: [
     'react-app', // Use the recommended rules from eslint-config-react-app (bundled with Create React App)

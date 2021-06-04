@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { Account, Connection, Transaction, TransactionInstruction } from '@solana/web3.js';
 
-import LocalTokens from 'constants/tokens.json';
+import localTokens from 'constants/tokens.json';
 import { setProgramIds } from 'utils/ids';
 import { notify } from 'utils/notifications';
 import { KnownToken, useLocalStorageState } from 'utils/utils';
@@ -12,7 +12,7 @@ import { cache } from '../accounts';
 import { WalletAdapter } from '../wallet/wallet';
 import { ENDPOINTS } from './constants';
 
-export type ENV = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet' | 'lending';
+export type ENV = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet';
 
 const DEFAULT = ENDPOINTS[0].endpoint;
 const DEFAULT_SLIPPAGE = 0.25;
@@ -63,7 +63,7 @@ export function ConnectionProvider({ children = undefined as any }) {
       })
       .catch((err) => [])
       .then((list: KnownToken[]) => {
-        const knownMints = [...LocalTokens, ...list].reduce((map, item) => {
+        const knownMints = [...localTokens, ...list].reduce((map, item) => {
           map.set(item.mintAddress, item);
           return map;
         }, new Map<string, KnownToken>());
@@ -208,9 +208,7 @@ export const sendTransaction = async (
   const txid = await connection.sendRawTransaction(rawTransaction, options);
 
   if (awaitConfirmation) {
-    const status = (
-      await connection.confirmTransaction(txid, options && (options.commitment as any))
-    ).value;
+    const status = (await connection.confirmTransaction(txid, options && (options.commitment as any))).value;
 
     if (status?.err) {
       const errors = await getErrorForTransaction(connection, txid);

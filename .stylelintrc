@@ -10,6 +10,7 @@
   ],
   "rules": {
     "prettier/prettier": true,
+    "no-empty-source": null,
     "declaration-empty-line-before": null,
     "function-name-case": null,
     "plugin/rational-order": [true, {

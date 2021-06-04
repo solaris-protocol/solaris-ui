@@ -5,7 +5,6 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 import EventEmitter from 'eventemitter3';
 
 import { useModals } from 'app/contexts/modals';
-import { SideModalType } from 'components/modals/types';
 import { notify } from 'utils/notifications';
 import { shortenAddress, useLocalStorageState } from 'utils/utils';
 

@@ -8,9 +8,9 @@ import { useModals } from 'app/contexts/modals';
 import { useWallet } from 'app/contexts/wallet';
 import SettingsIcon from 'assets/icons/settings-icon.svg';
 import WalletIcon from 'assets/icons/wallet-icon.svg';
+import { SideModalType } from 'components/modals/types';
 import { shortenAddress } from 'utils/utils';
 
-import { SideModalType } from '../../../../modals/types';
 import { ButtonBottom, ButtonTopA, Wrapper } from '../common/styled';
 
 const TopWrapper = styled.div`

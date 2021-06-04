@@ -1,23 +1,25 @@
-import React from "react";
-import { useTokenName } from "../../../hooks";
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+import { Card, Typography } from 'antd';
+
+import { ParsedAccount, useMint } from '../../../app/contexts/accounts';
 import {
   calculateBorrowAPY,
   calculateDepositAPY,
   calculateUtilizationRatio,
   LendingReserve,
-} from "../../../app/models/lending";
-import { TokenIcon } from "../TokenIcon";
-import { formatNumber, formatPct, fromLamports } from "../../../utils/utils";
-import { Card, Typography } from "antd";
-import { ParsedAccount, useMint } from "../../../app/contexts/accounts";
-import { Link } from "react-router-dom";
-import { LABELS } from "../../../constants";
+} from '../../../app/models/lending';
+import { TokenIcon } from '../../../components/common/TokenIcon';
+import { LABELS } from '../../../constants';
+import { useTokenName } from '../../../hooks';
+import { formatNumber, formatPct, fromLamports } from '../../../utils/utils';
 
 const { Text } = Typography;
 
 export enum SideReserveOverviewMode {
-  Deposit = "deposit",
-  Borrow = "borrow",
+  Deposit = 'deposit',
+  Borrow = 'borrow',
 }
 
 export const SideReserveOverview = (props: {
@@ -30,10 +32,7 @@ export const SideReserveOverview = (props: {
   const name = useTokenName(reserve?.liquidityMint);
   const liquidityMint = useMint(reserve.liquidityMint);
 
-  const availableLiquidity = fromLamports(
-    reserve.state.availableLiquidity,
-    liquidityMint
-  );
+  const availableLiquidity = fromLamports(reserve.state.availableLiquidity, liquidityMint);
 
   const depositApy = calculateDepositAPY(reserve);
   const borrowApr = calculateBorrowAPY(reserve);
@@ -72,18 +71,14 @@ export const SideReserveOverview = (props: {
       title={
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            fontSize: "1.2rem",
-            justifyContent: "center",
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: '1.2rem',
+            justifyContent: 'center',
           }}
         >
           <Link to={`/reserve/${props.reserve.pubkey}`}>
-            <TokenIcon
-              mintAddress={reserve?.liquidityMint}
-              style={{ width: 30, height: 30 }}
-            />{" "}
-            {name} Reserve Overview
+            <TokenIcon mintAddress={reserve?.liquidityMint} style={{ width: 30, height: 30 }} /> {name} Reserve Overview
           </Link>
         </div>
       }
@@ -115,9 +110,7 @@ export const SideReserveOverview = (props: {
         <Text type="secondary" className="card-cell ">
           Liquidation threshold:
         </Text>
-        <div className="card-cell ">
-          {formatPct.format(liquidationThreshold)}
-        </div>
+        <div className="card-cell ">{formatPct.format(liquidationThreshold)}</div>
       </div>
 
       <div className="card-row">

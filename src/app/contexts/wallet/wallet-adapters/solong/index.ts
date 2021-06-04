@@ -1,7 +1,8 @@
 import { PublicKey, Transaction } from '@solana/web3.js';
 import EventEmitter from 'eventemitter3';
 
-import { notify } from '../../../../../utils/notifications';
+import { notify } from 'utils/notifications';
+
 import { WalletAdapter } from '../../wallet';
 
 export class SolongWalletAdapter extends EventEmitter implements WalletAdapter {
@@ -11,10 +12,9 @@ export class SolongWalletAdapter extends EventEmitter implements WalletAdapter {
     super();
     this._publicKey = null;
     this._onProcess = false;
-    this.connect = this.connect.bind(this);
   }
 
-  get publicKey() {
+  get publicKey(): PublicKey | null {
     return this._publicKey;
   }
 
@@ -22,7 +22,7 @@ export class SolongWalletAdapter extends EventEmitter implements WalletAdapter {
     return (window as any).solong.signTransaction(transaction);
   }
 
-  connect() {
+  connect = () => {
     if (this._onProcess) {
       return;
     }
@@ -48,9 +48,9 @@ export class SolongWalletAdapter extends EventEmitter implements WalletAdapter {
       .finally(() => {
         this._onProcess = false;
       });
-  }
+  };
 
-  disconnect() {
+  disconnect(): void {
     if (this._publicKey) {
       this._publicKey = null;
       this.emit('disconnect');

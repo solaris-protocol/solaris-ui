@@ -38,7 +38,7 @@ export class LedgerWalletAdapter extends EventEmitter implements WalletAdapter {
     return transaction;
   }
 
-  async connect() {
+  async connect(): Promise<void> {
     if (this._connecting) {
       return;
     }

@@ -81,10 +81,7 @@ export const usePools = () => {
                   getHoldings(connection, [result.data.tokenAccountA, result.data.tokenAccountB])
                 );
 
-                pool.pubkeys.holdingMints = [
-                  holdings[0].info.mint,
-                  holdings[1].info.mint,
-                ] as PublicKey[];
+                pool.pubkeys.holdingMints = [holdings[0].info.mint, holdings[1].info.mint] as PublicKey[];
               } catch (err) {
                 console.log(err);
               }
@@ -134,12 +131,11 @@ export const usePools = () => {
 
       return poolsArray;
     };
-    Promise.all([
-      queryPools(programIds().swap),
-      ...programIds().swap_legacy.map((leg) => queryPools(leg, true)),
-    ]).then((all) => {
-      setPools(all.flat());
-    });
+    Promise.all([queryPools(programIds().swap), ...programIds().swap_legacy.map((leg) => queryPools(leg, true))]).then(
+      (all) => {
+        setPools(all.flat());
+      }
+    );
   }, [connection]);
 
   useEffect(() => {
@@ -216,109 +212,109 @@ export const usePoolForBasket = (mints: (string | undefined)[]) => {
   return pool;
 };
 
-function estimateProceedsFromInput(
-  inputQuantityInPool: number,
-  proceedsQuantityInPool: number,
-  inputAmount: number
-): number {
-  return (proceedsQuantityInPool * inputAmount) / (inputQuantityInPool + inputAmount);
-}
+// function estimateProceedsFromInput(
+//   inputQuantityInPool: number,
+//   proceedsQuantityInPool: number,
+//   inputAmount: number
+// ): number {
+//   return (proceedsQuantityInPool * inputAmount) / (inputQuantityInPool + inputAmount);
+// }
+//
+// function estimateInputFromProceeds(
+//   inputQuantityInPool: number,
+//   proceedsQuantityInPool: number,
+//   proceedsAmount: number
+// ): number | string {
+//   if (proceedsAmount >= proceedsQuantityInPool) {
+//     return 'Not possible';
+//   }
+//
+//   return (inputQuantityInPool * proceedsAmount) / (proceedsQuantityInPool - proceedsAmount);
+// }
+//
+// export enum PoolOperation {
+//   Add,
+//   SwapGivenInput,
+//   SwapGivenProceeds,
+// }
 
-function estimateInputFromProceeds(
-  inputQuantityInPool: number,
-  proceedsQuantityInPool: number,
-  proceedsAmount: number
-): number | string {
-  if (proceedsAmount >= proceedsQuantityInPool) {
-    return 'Not possible';
-  }
-
-  return (inputQuantityInPool * proceedsAmount) / (proceedsQuantityInPool - proceedsAmount);
-}
-
-export enum PoolOperation {
-  Add,
-  SwapGivenInput,
-  SwapGivenProceeds,
-}
-
-export async function calculateDependentAmount(
-  connection: Connection,
-  independent: string,
-  amount: number,
-  pool: PoolInfo,
-  op: PoolOperation
-): Promise<number | string | undefined> {
-  const poolMint = await cache.queryMint(connection, pool.pubkeys.mint);
-  const accountA = await cache.query(connection, pool.pubkeys.holdingAccounts[0]);
-  const amountA = accountA.info.amount.toNumber();
-
-  const accountB = await cache.query(connection, pool.pubkeys.holdingAccounts[1]);
-  let amountB = accountB.info.amount.toNumber();
-
-  if (!poolMint.mintAuthority) {
-    throw new Error('Mint doesnt have authority');
-  }
-
-  if (poolMint.supply.eqn(0)) {
-    return;
-  }
-
-  let offsetAmount = 0;
-  const offsetCurve = pool.raw?.data?.curve?.offset;
-  if (offsetCurve) {
-    offsetAmount = offsetCurve.token_b_offset;
-    amountB = amountB + offsetAmount;
-  }
-
-  const mintA = await cache.queryMint(connection, accountA.info.mint);
-  const mintB = await cache.queryMint(connection, accountB.info.mint);
-
-  if (!mintA || !mintB) {
-    return;
-  }
-
-  const isFirstIndependent = accountA.info.mint.toBase58() === independent;
-  const depPrecision = Math.pow(10, isFirstIndependent ? mintB.decimals : mintA.decimals);
-  const indPrecision = Math.pow(10, isFirstIndependent ? mintA.decimals : mintB.decimals);
-  const indAdjustedAmount = amount * indPrecision;
-
-  const indBasketQuantity = isFirstIndependent ? amountA : amountB;
-
-  const depBasketQuantity = isFirstIndependent ? amountB : amountA;
-
-  let depAdjustedAmount;
-
-  const constantPrice = pool.raw?.data?.curve?.constantPrice;
-  if (constantPrice) {
-    depAdjustedAmount = (amount * depPrecision) / constantPrice.token_b_price;
-  } else {
-    switch (+op) {
-      case PoolOperation.Add:
-        depAdjustedAmount = (depBasketQuantity / indBasketQuantity) * indAdjustedAmount;
-        break;
-      case PoolOperation.SwapGivenProceeds:
-        depAdjustedAmount = estimateInputFromProceeds(
-          depBasketQuantity,
-          indBasketQuantity,
-          indAdjustedAmount
-        );
-        break;
-      case PoolOperation.SwapGivenInput:
-        depAdjustedAmount = estimateProceedsFromInput(
-          indBasketQuantity,
-          depBasketQuantity,
-          indAdjustedAmount
-        );
-        break;
-    }
-  }
-
-  if (typeof depAdjustedAmount === 'string') {
-    return depAdjustedAmount;
-  }
-  if (depAdjustedAmount === undefined) {
-    return undefined;
-  }
-  return depAdjustedAmount / depPrecision;
-}
+// export async function calculateDependentAmount(
+//   connection: Connection,
+//   independent: string,
+//   amount: number,
+//   pool: PoolInfo,
+//   op: PoolOperation
+// ): Promise<number | string | undefined> {
+//   const poolMint = await cache.queryMint(connection, pool.pubkeys.mint);
+//   const accountA = await cache.query(connection, pool.pubkeys.holdingAccounts[0]);
+//   const amountA = accountA.info.amount.toNumber();
+//
+//   const accountB = await cache.query(connection, pool.pubkeys.holdingAccounts[1]);
+//   let amountB = accountB.info.amount.toNumber();
+//
+//   if (!poolMint.mintAuthority) {
+//     throw new Error('Mint doesnt have authority');
+//   }
+//
+//   if (poolMint.supply.eqn(0)) {
+//     return;
+//   }
+//
+//   let offsetAmount = 0;
+//   const offsetCurve = pool.raw?.data?.curve?.offset;
+//   if (offsetCurve) {
+//     offsetAmount = offsetCurve.token_b_offset;
+//     amountB = amountB + offsetAmount;
+//   }
+//
+//   const mintA = await cache.queryMint(connection, accountA.info.mint);
+//   const mintB = await cache.queryMint(connection, accountB.info.mint);
+//
+//   if (!mintA || !mintB) {
+//     return;
+//   }
+//
+//   const isFirstIndependent = accountA.info.mint.toBase58() === independent;
+//   const depPrecision = Math.pow(10, isFirstIndependent ? mintB.decimals : mintA.decimals);
+//   const indPrecision = Math.pow(10, isFirstIndependent ? mintA.decimals : mintB.decimals);
+//   const indAdjustedAmount = amount * indPrecision;
+//
+//   const indBasketQuantity = isFirstIndependent ? amountA : amountB;
+//
+//   const depBasketQuantity = isFirstIndependent ? amountB : amountA;
+//
+//   let depAdjustedAmount;
+//
+//   const constantPrice = pool.raw?.data?.curve?.constantPrice;
+//   if (constantPrice) {
+//     depAdjustedAmount = (amount * depPrecision) / constantPrice.token_b_price;
+//   } else {
+//     switch (+op) {
+//       case PoolOperation.Add:
+//         depAdjustedAmount = (depBasketQuantity / indBasketQuantity) * indAdjustedAmount;
+//         break;
+//       case PoolOperation.SwapGivenProceeds:
+//         depAdjustedAmount = estimateInputFromProceeds(
+//           depBasketQuantity,
+//           indBasketQuantity,
+//           indAdjustedAmount
+//         );
+//         break;
+//       case PoolOperation.SwapGivenInput:
+//         depAdjustedAmount = estimateProceedsFromInput(
+//           indBasketQuantity,
+//           depBasketQuantity,
+//           indAdjustedAmount
+//         );
+//         break;
+//     }
+//   }
+//
+//   if (typeof depAdjustedAmount === 'string') {
+//     return depAdjustedAmount;
+//   }
+//   if (depAdjustedAmount === undefined) {
+//     return undefined;
+//   }
+//   return depAdjustedAmount / depPrecision;
+// }

@@ -1,0 +1,1 @@
+export { Identicon } from './Identicon';

@@ -27,10 +27,14 @@ export const globalCss = css`
     }
 
     a {
+      text-decoration: none;
+
       transition: color 0.3s;
     }
 
     button {
+      white-space: nowrap;
+
       border: none;
       cursor: pointer;
 
@@ -41,6 +45,20 @@ export const globalCss = css`
       &:hover {
         color: #fff;
       }
+    }
+
+    &::-webkit-scrollbar {
+      width: 8px !important;
+      height: 8px !important;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: none;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
     }
   }
 `;

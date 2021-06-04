@@ -1,57 +1,41 @@
-import React from "react";
-import { calculateDepositAPY, LendingReserve } from "../../../app/models/lending";
-import { Card, Col, Row, Statistic } from "antd";
-import { PublicKey } from "@solana/web3.js";
-import "./style.less";
-import { GUTTER, LABELS } from "../../../constants";
-import { ReserveUtilizationChart } from "../ReserveUtilizationChart";
-import { useMemo } from "react";
-import {
-  feeFormatter,
-  formatNumber,
-  fromLamports,
-  isSmallNumber,
-  wadToLamports,
-} from "../../../utils/utils";
-import { useMint } from "../../../app/contexts/accounts";
-import { useMidPriceInUSD } from "../../../app/contexts/market";
-import { TokenIcon } from "../TokenIcon";
+import './style.less';
 
-export const ReserveStatus = (props: {
-  className?: string;
-  reserve: LendingReserve;
-  address: PublicKey;
-}) => {
+import React from 'react';
+import { useMemo } from 'react';
+
+import { PublicKey } from '@solana/web3.js';
+import { Card, Col, Row, Statistic } from 'antd';
+
+import { useMint } from '../../../app/contexts/accounts';
+import { useMidPriceInUSD } from '../../../app/contexts/market';
+import { calculateDepositAPY, LendingReserve } from '../../../app/models/lending';
+import { TokenIcon } from '../../../components/common/TokenIcon';
+import { GUTTER, LABELS } from '../../../constants';
+import { feeFormatter, formatNumber, fromLamports, isSmallNumber, wadToLamports } from '../../../utils/utils';
+import { ReserveUtilizationChart } from '../ReserveUtilizationChart';
+
+export const ReserveStatus = (props: { className?: string; reserve: LendingReserve; address: PublicKey }) => {
   const bodyStyle: React.CSSProperties = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   };
 
   const mintAddress = props.reserve.liquidityMint?.toBase58();
   const liquidityMint = useMint(mintAddress);
   const { price } = useMidPriceInUSD(mintAddress);
-  const availableLiquidity = fromLamports(
-    props.reserve.state.availableLiquidity,
-    liquidityMint
-  );
+  const availableLiquidity = fromLamports(props.reserve.state.availableLiquidity, liquidityMint);
 
   const availableLiquidityInUSD = price * availableLiquidity;
 
   const totalBorrows = useMemo(
-    () =>
-      fromLamports(
-        wadToLamports(props.reserve.state.borrowedLiquidityWad),
-        liquidityMint
-      ),
+    () => fromLamports(wadToLamports(props.reserve.state.borrowedLiquidityWad), liquidityMint),
     [props.reserve, liquidityMint]
   );
 
   const totalBorrowsInUSD = price * totalBorrows;
 
-  const depositAPY = useMemo(() => calculateDepositAPY(props.reserve), [
-    props.reserve,
-  ]);
+  const depositAPY = useMemo(() => calculateDepositAPY(props.reserve), [props.reserve]);
 
   const liquidationThreshold = props.reserve.config.liquidationThreshold;
   const liquidationPenalty = props.reserve.config.liquidationBonus;
@@ -66,7 +50,7 @@ export const ReserveStatus = (props: {
             style={{
               marginRight: 0,
               marginTop: 0,
-              position: "absolute",
+              position: 'absolute',
               left: 15,
             }}
             mintAddress={mintAddress}
@@ -86,9 +70,7 @@ export const ReserveStatus = (props: {
               valueRender={(node) => (
                 <div>
                   {node}
-                  <div className="dashboard-amount-quote-stat">
-                    ${formatNumber.format(availableLiquidityInUSD)}
-                  </div>
+                  <div className="dashboard-amount-quote-stat">${formatNumber.format(availableLiquidityInUSD)}</div>
                 </div>
               )}
               precision={2}
@@ -101,9 +83,7 @@ export const ReserveStatus = (props: {
               valueRender={(node) => (
                 <div>
                   {node}
-                  <div className="dashboard-amount-quote-stat">
-                    ${formatNumber.format(totalBorrowsInUSD)}
-                  </div>
+                  <div className="dashboard-amount-quote-stat">${formatNumber.format(totalBorrowsInUSD)}</div>
                 </div>
               )}
               precision={2}
@@ -114,9 +94,9 @@ export const ReserveStatus = (props: {
           <Col
             span={24}
             style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-around",
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-around',
             }}
           >
             <ReserveUtilizationChart reserve={props.reserve} />
@@ -124,13 +104,7 @@ export const ReserveStatus = (props: {
         </Row>
         <Row gutter={GUTTER}>
           <Col span={6}>
-            <Statistic
-              title={LABELS.MAX_LTV}
-              className="small-statisitc"
-              value={maxLTV}
-              precision={2}
-              suffix="%"
-            />
+            <Statistic title={LABELS.MAX_LTV} className="small-statisitc" value={maxLTV} precision={2} suffix="%" />
           </Col>
           <Col span={6}>
             <Statistic
@@ -156,7 +130,7 @@ export const ReserveStatus = (props: {
               className="small-statisitc"
               value={formatNumber.format(depositAPY * 100, true)}
               precision={3}
-              prefix={isSmallNumber(depositAPY * 100) ? "<" : ""}
+              prefix={isSmallNumber(depositAPY * 100) ? '<' : ''}
               suffix="%"
             />
           </Col>

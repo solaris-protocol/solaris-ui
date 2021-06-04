@@ -6,14 +6,7 @@ import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 
 import { EventEmitter } from '../../utils/eventEmitter';
 import { LIQUIDITY_PROVIDER_FEE, SERUM_FEE } from '../../utils/pools';
-import {
-  convert,
-  fromLamports,
-  getPoolName,
-  getTokenName,
-  KnownTokenMap,
-  STABLE_COINS,
-} from '../../utils/utils';
+import { convert, fromLamports, getPoolName, getTokenName, KnownTokenMap, STABLE_COINS } from '../../utils/utils';
 import { LendingMarket, LendingReserve, PoolInfo } from '../models';
 import { POOLS_WITH_AIRDROP } from '../models/airdrops';
 import { DexMarketParser } from '../models/dex';
@@ -21,7 +14,7 @@ import { MINT_TO_MARKET } from '../models/marketOverrides';
 import { cache, getMultipleAccounts, ParsedAccount } from './accounts';
 import { useConnectionConfig } from './connection/connection';
 
-const INITAL_LIQUIDITY_DATE = new Date('2020-10-27');
+const INITAL_LIQUIDITY_DATE = new Date('2021-03-24');
 export const BONFIDA_POOL_INTERVAL = 30 * 60_000; // 30 min
 
 interface RecentPoolData {
@@ -62,10 +55,8 @@ export function MarketProvider({ children = null as any }) {
       const SERUM_TOKEN = TOKEN_MINTS.find((a) => a.address.toBase58() === mintAddress);
 
       const marketAddress = MINT_TO_MARKET[mintAddress];
-      const marketName = `${SERUM_TOKEN?.name}/USDC`;
-      const marketInfo = MARKETS.find(
-        (m) => m.name === marketName || m.address.toBase58() === marketAddress
-      );
+      const marketName = `${SERUM_TOKEN?.name}/USDT`;
+      const marketInfo = MARKETS.find((m) => m.name === marketName || m.address.toBase58() === marketAddress);
 
       if (marketInfo) {
         acc.set(mintAddress, {
@@ -299,16 +290,10 @@ function createEnrichedPools(
       const accountA = account0?.info.mint.toBase58() === mints[0] ? account0 : account1;
       const accountB = account1?.info.mint.toBase58() === mints[1] ? account1 : account0;
 
-      const baseMid = getMidPrice(
-        marketByMint.get(mints[0])?.marketInfo.address.toBase58() || '',
-        mints[0]
-      );
+      const baseMid = getMidPrice(marketByMint.get(mints[0])?.marketInfo.address.toBase58() || '', mints[0]);
       const baseReserveUSD = baseMid * convert(accountA, mintA);
 
-      const quote = getMidPrice(
-        marketByMint.get(mints[1])?.marketInfo.address.toBase58() || '',
-        mints[1]
-      );
+      const quote = getMidPrice(marketByMint.get(mints[1])?.marketInfo.address.toBase58() || '', mints[1]);
       const quoteReserveUSD = quote * convert(accountB, mintB);
 
       const poolMint = cache.getMint(p.pubkeys.mint);
@@ -327,11 +312,7 @@ function createEnrichedPools(
       if (p.pubkeys.feeAccount) {
         const feeAccount = cache.get(p.pubkeys.feeAccount);
 
-        if (
-          poolMint &&
-          feeAccount &&
-          feeAccount.info.mint.toBase58() === p.pubkeys.mint.toBase58()
-        ) {
+        if (poolMint && feeAccount && feeAccount.info.mint.toBase58() === p.pubkeys.mint.toBase58()) {
           const feeBalance = feeAccount?.info.amount.toNumber();
           const supply = poolMint?.supply.toNumber();
 
@@ -350,18 +331,13 @@ function createEnrichedPools(
               (TODAY.getTime() - INITAL_LIQUIDITY_DATE.getTime()) / (24 * 3600 * 1000)
             );
             const apy0 =
-              parseFloat(
-                ((baseVolume / daysSinceInception) * LIQUIDITY_PROVIDER_FEE * 356) as any
-              ) / baseReserveUSD;
+              parseFloat(((baseVolume / daysSinceInception) * LIQUIDITY_PROVIDER_FEE * 356) as any) / baseReserveUSD;
             const apy1 =
-              parseFloat(
-                ((quoteVolume / daysSinceInception) * LIQUIDITY_PROVIDER_FEE * 356) as any
-              ) / quoteReserveUSD;
+              parseFloat(((quoteVolume / daysSinceInception) * LIQUIDITY_PROVIDER_FEE * 356) as any) / quoteReserveUSD;
 
             apy = apy + Math.max(apy0, apy1);
 
-            const apy24h0 =
-              parseFloat((volume24h * LIQUIDITY_PROVIDER_FEE * 356) as any) / baseReserveUSD;
+            const apy24h0 = parseFloat((volume24h * LIQUIDITY_PROVIDER_FEE * 356) as any) / baseReserveUSD;
             apy24h = apy24h + apy24h0;
           }
         }
@@ -385,8 +361,7 @@ function createEnrichedPools(
         liquidityAinUsd: baseReserveUSD,
         liquidityB: convert(accountB, mintB),
         liquidityBinUsd: quoteReserveUSD,
-        supply:
-          lpMint && (lpMint?.supply.toNumber() / Math.pow(10, lpMint?.decimals || 0)).toFixed(9),
+        supply: lpMint && (lpMint?.supply.toNumber() / Math.pow(10, lpMint?.decimals || 0)).toFixed(9),
         fees,
         fees24h,
         liquidity: baseReserveUSD + quoteReserveUSD,
@@ -429,17 +404,16 @@ function calculateAirdropYield(
   return airdropYield;
 }
 
-export const useMidPriceInUSD = (mint: string) => {
-  const { midPriceInUSD, subscribeToMarket, marketEmitter } = useContext(
-    MarketsContext
-  ) as MarketsContextState;
+export const useMidPriceInUSD = (mint: string | PublicKey) => {
+  const mintAddress = typeof mint === 'string' ? mint : mint.toBase58();
+  const { midPriceInUSD, subscribeToMarket, marketEmitter } = useContext(MarketsContext) as MarketsContextState;
   const [price, setPrice] = useState<number>(0);
 
   useEffect(() => {
-    const subscription = subscribeToMarket(mint);
+    const subscription = subscribeToMarket(mintAddress);
     const update = () => {
       if (midPriceInUSD) {
-        setPrice(midPriceInUSD(mint));
+        setPrice(midPriceInUSD(mintAddress));
       }
     };
 
@@ -450,7 +424,7 @@ export const useMidPriceInUSD = (mint: string) => {
       subscription();
       dispose();
     };
-  }, [midPriceInUSD, mint, marketEmitter, subscribeToMarket]);
+  }, [midPriceInUSD, mintAddress, marketEmitter, subscribeToMarket]);
 
   return { price, isBase: price === 1.0 };
 };
@@ -460,12 +434,7 @@ export const usePrecacheMarket = () => {
   return context.precacheMarkets;
 };
 
-export const simulateMarketOrderFill = (
-  amount: number,
-  reserve: LendingReserve,
-  dex: PublicKey,
-  useBBO = false
-) => {
+export const simulateMarketOrderFill = (amount: number, reserve: LendingReserve, dex: PublicKey, useBBO = false) => {
   const liquidityMint = cache.get(reserve.liquidityMint);
   const collateralMint = cache.get(reserve.collateralMint);
   if (!liquidityMint || !collateralMint) {
@@ -483,13 +452,7 @@ export const simulateMarketOrderFill = (
 
   const lendingMarket = cache.get(reserve.lendingMarket) as ParsedAccount<LendingMarket>;
 
-  const dexMarket = new Market(
-    decodedMarket,
-    baseMintDecimals,
-    quoteMintDecimals,
-    undefined,
-    decodedMarket.programId
-  );
+  const dexMarket = new Market(decodedMarket, baseMintDecimals, quoteMintDecimals, undefined, decodedMarket.programId);
 
   const bidInfo = cache.get(decodedMarket?.bids)?.info;
   const askInfo = cache.get(decodedMarket?.asks)?.info;
@@ -563,13 +526,7 @@ const getMidPrice = (marketAddress?: string, mintAddress?: string) => {
   const baseMintDecimals = cache.get(decodedMarket.baseMint)?.info.decimals || 0;
   const quoteMintDecimals = cache.get(decodedMarket.quoteMint)?.info.decimals || 0;
 
-  const market = new Market(
-    decodedMarket,
-    baseMintDecimals,
-    quoteMintDecimals,
-    undefined,
-    decodedMarket.programId
-  );
+  const market = new Market(decodedMarket, baseMintDecimals, quoteMintDecimals, undefined, decodedMarket.programId);
 
   const bids = cache.get(decodedMarket.bids)?.info;
   const asks = cache.get(decodedMarket.asks)?.info;

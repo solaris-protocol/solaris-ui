@@ -56,11 +56,7 @@ export function shortenAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
 
-export function getTokenName(
-  map: KnownTokenMap,
-  mint?: string | PublicKey,
-  shorten = true
-): string {
+export function getTokenName(map: KnownTokenMap, mint?: string | PublicKey, shorten = true): string {
   const mintAddress = typeof mint === 'string' ? mint : mint?.toBase58();
 
   if (!mintAddress) {
@@ -86,10 +82,7 @@ export function getTokenByName(tokenMap: KnownTokenMap, name: string) {
   return token;
 }
 
-export function getTokenIcon(
-  map: KnownTokenMap,
-  mintAddress?: string | PublicKey
-): string | undefined {
+export function getTokenIcon(map: KnownTokenMap, mintAddress?: string | PublicKey): string | undefined {
   const address = typeof mintAddress === 'string' ? mintAddress : mintAddress?.toBase58();
   if (!address) {
     return;
@@ -105,8 +98,8 @@ export function isKnownMint(map: KnownTokenMap, mintAddress: string) {
 export const STABLE_COINS = new Set(['USDC', 'wUSDC', 'USDT']);
 
 export function chunks<T>(array: T[], size: number): T[][] {
-  return Array.apply<number, T[], T[][]>(0, new Array(Math.ceil(array.length / size))).map(
-    (_, index) => array.slice(index * size, (index + 1) * size)
+  return Array.apply<number, T[], T[][]>(0, new Array(Math.ceil(array.length / size))).map((_, index) =>
+    array.slice(index * size, (index + 1) * size)
   );
 }
 
@@ -125,21 +118,13 @@ export function wadToLamports(amount?: BN): BN {
   return amount?.div(WAD) || ZERO;
 }
 
-export function fromLamports(
-  account?: TokenAccount | number | BN,
-  mint?: MintInfo,
-  rate = 1.0
-): number {
+export function fromLamports(account?: TokenAccount | number | BN, mint?: MintInfo, rate = 1.0): number {
   if (!account) {
     return 0;
   }
 
   const amount = Math.floor(
-    typeof account === 'number'
-      ? account
-      : BN.isBN(account)
-      ? account.toNumber()
-      : account.info.amount.toNumber()
+    typeof account === 'number' ? account : BN.isBN(account) ? account.toNumber() : account.info.amount.toNumber()
   );
 
   const precision = Math.pow(10, mint?.decimals || 0);
@@ -195,11 +180,8 @@ export const isSmallNumber = (val: number) => {
 };
 
 export const formatNumber = {
-  format: (val?: number, useSmall?: boolean) => {
-    if (!val) {
-      return '--';
-    }
-    if (useSmall && isSmallNumber(val)) {
+  format: (val = 0, useSmall?: boolean) => {
+    if (val && useSmall && isSmallNumber(val)) {
       return 0.001;
     }
 

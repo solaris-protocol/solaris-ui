@@ -5,9 +5,9 @@ import { Select } from 'antd';
 import { cache, ParsedAccount } from '../../../app/contexts/accounts';
 import { useConnectionConfig } from '../../../app/contexts/connection';
 import { LendingMarket, LendingReserve } from '../../../app/models';
+import { TokenIcon } from '../../../components/common/TokenIcon';
 import { useLendingReserves, UserDeposit, useUserDeposits } from '../../../hooks';
 import { formatAmount, getTokenName } from '../../../utils/utils';
-import { TokenIcon } from '../TokenIcon';
 
 const { Option } = Select;
 
@@ -24,9 +24,7 @@ export const CollateralItem = (props: {
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <TokenIcon mintAddress={mint} />
         {name}
-        <span className="token-balance">
-          &nbsp; {userDeposit ? formatAmount(userDeposit.info.amount) : '--'}
-        </span>
+        <span className="token-balance">&nbsp; {userDeposit ? formatAmount(userDeposit.info.amount) : '--'}</span>
       </div>
     </>
   );
@@ -63,15 +61,11 @@ export const CollateralSelector = (props: {
           props.onCollateralReserve(item);
         }
       }}
-      filterOption={(input, option) =>
-        option?.name?.toLowerCase().indexOf(input.toLowerCase()) >= 0
-      }
+      filterOption={(input, option) => option?.name?.toLowerCase().indexOf(input.toLowerCase()) >= 0}
     >
       {reserveAccounts
         .filter((reserve) => reserve.info !== props.reserve)
-        .filter(
-          (reserve) => !onlyQuoteAllowed || reserve.info.liquidityMint.equals(market.info.quoteMint)
-        )
+        .filter((reserve) => !onlyQuoteAllowed || reserve.info.liquidityMint.equals(market.info.quoteMint))
         .map((reserve) => {
           const mint = reserve.info.liquidityMint.toBase58();
           const address = reserve.pubkey.toBase58();

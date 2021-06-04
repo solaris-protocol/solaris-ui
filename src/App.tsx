@@ -1,5 +1,3 @@
-import './App.less';
-
 import React, { FC } from 'react';
 
 import { Routes } from './routes';

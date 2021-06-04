@@ -1,16 +1,11 @@
-import { PublicKey } from "@solana/web3.js";
-import { TokenSwapLayout, TokenSwapLayoutV1 } from "../app/models";
+import { PublicKey } from '@solana/web3.js';
 
-export const WRAPPED_SOL_MINT = new PublicKey(
-  "So11111111111111111111111111111111111111112"
-);
-export let TOKEN_PROGRAM_ID = new PublicKey(
-  "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-);
+import { TokenSwapLayout, TokenSwapLayoutV1 } from '../app/models';
 
-export let LENDING_PROGRAM_ID = new PublicKey(
-  "TokenLending1111111111111111111111111111111"
-);
+export const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
+export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+
+export let LENDING_PROGRAM_ID = new PublicKey('Fo1J5WWXeuD6t8sDXLDDRjrjA8FwB9VizV19CfutRU48');
 
 let SWAP_PROGRAM_ID: PublicKey;
 let SWAP_PROGRAM_LEGACY_IDS: PublicKey[];
@@ -27,10 +22,10 @@ export const ENABLE_FEES_INPUT = false;
 // legacy pools are used to show users contributions in those pools to allow for withdrawals of funds
 export const PROGRAM_IDS = [
   {
-    name: "mainnet-beta",
+    name: 'mainnet-beta',
     swap: () => ({
       current: {
-        pubkey: new PublicKey("9qvG1zUp8xF1Bi4m6UdRNby1BAAuaDrUxSpv4CmRRMjL"),
+        pubkey: new PublicKey('9qvG1zUp8xF1Bi4m6UdRNby1BAAuaDrUxSpv4CmRRMjL'),
         layout: TokenSwapLayoutV1,
       },
       legacy: [
@@ -40,30 +35,30 @@ export const PROGRAM_IDS = [
     }),
   },
   {
-    name: "testnet",
+    name: 'testnet',
     swap: () => ({
       current: {
-        pubkey: new PublicKey("2n2dsFSgmPcZ8jkmBZLGUM2nzuFqcBGQ3JEEj6RJJcEg"),
+        pubkey: new PublicKey('2n2dsFSgmPcZ8jkmBZLGUM2nzuFqcBGQ3JEEj6RJJcEg'),
         layout: TokenSwapLayoutV1,
       },
       legacy: [],
     }),
   },
   {
-    name: "devnet",
+    name: 'devnet',
     swap: () => ({
       current: {
-        pubkey: new PublicKey("6Cust2JhvweKLh4CVo1dt21s2PJ86uNGkziudpkNPaCj"),
+        pubkey: new PublicKey('6Cust2JhvweKLh4CVo1dt21s2PJ86uNGkziudpkNPaCj'),
         layout: TokenSwapLayout,
       },
-      legacy: [new PublicKey("BSfTAcBdqmvX5iE2PW88WFNNp2DHhLUaBKk5WrnxVkcJ")],
+      legacy: [new PublicKey('BSfTAcBdqmvX5iE2PW88WFNNp2DHhLUaBKk5WrnxVkcJ')],
     }),
   },
   {
-    name: "localnet",
+    name: 'localnet',
     swap: () => ({
       current: {
-        pubkey: new PublicKey("369YmCWHGxznT7GGBhcLZDRcRoGWmGKFWdmtiPy78yj7"),
+        pubkey: new PublicKey('369YmCWHGxznT7GGBhcLZDRcRoGWmGKFWdmtiPy78yj7'),
         layout: TokenSwapLayoutV1,
       },
       legacy: [],
@@ -72,22 +67,18 @@ export const PROGRAM_IDS = [
 ];
 
 export const setProgramIds = (envName: string) => {
-  if (envName === "mainnet-beta") {
-    LENDING_PROGRAM_ID = new PublicKey(
-      "LendZqTs7gn5CTSJU1jWKhKuVpjJGom45nnwPb2AMTi"
-    );
-  } else if (envName === "Lending") {
-    LENDING_PROGRAM_ID = new PublicKey(
-      "TokenLending1111111111111111111111111111111"
-    );
+  if (envName === 'devnet') {
+    LENDING_PROGRAM_ID = new PublicKey('Fo1J5WWXeuD6t8sDXLDDRjrjA8FwB9VizV19CfutRU48');
+  } else {
+    throw new Error('only devnet supported currently');
   }
 
-  let instance = PROGRAM_IDS.find((env) => env.name === envName);
+  const instance = PROGRAM_IDS.find((env) => env.name === envName);
   if (!instance) {
     return;
   }
 
-  let swap = instance.swap();
+  const swap = instance.swap();
 
   SWAP_PROGRAM_ID = swap.current.pubkey;
   SWAP_PROGRAM_LAYOUT = swap.current.layout;

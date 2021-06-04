@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 
 import { styled } from '@linaria/react';
 import classNames from 'classnames';
@@ -79,11 +79,17 @@ const Address = styled.span`
 `;
 
 export const SideModalWallet: FC<SideModalPropsType> = ({ close, ...props }) => {
+  const { connected } = useWallet();
   const { wallet, selectWallet, provider } = useWallet();
+
+  useEffect(() => {
+    if (connected) {
+      close();
+    }
+  }, [connected]);
 
   const handleWalletClick = (url: string) => () => {
     selectWallet(url);
-    close();
   };
 
   const renderWalletAddress = (url: string) => {
