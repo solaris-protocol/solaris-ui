@@ -39,9 +39,7 @@ export const HomeView = () => {
         const marketCapLamports = reserveMarketCap(item.info);
 
         const localCache = cache;
-        const liquidityMint = localCache.get(
-          item.info.liquidityMint.toBase58()
-        ) as ParsedAccount<MintInfo>;
+        const liquidityMint = localCache.get(item.info.liquidity.mintPubkey.toBase58()) as ParsedAccount<MintInfo>;
 
         if (!liquidityMint) {
           return;
@@ -53,11 +51,8 @@ export const HomeView = () => {
           key: item.pubkey.toBase58(),
           marketSize: fromLamports(marketCapLamports, liquidityMint?.info) * price,
           borrowed:
-            fromLamports(
-              wadToLamports(item.info?.state.borrowedLiquidityWad).toNumber(),
-              liquidityMint.info
-            ) * price,
-          name: getTokenName(tokenMap, item.info.liquidityMint.toBase58()),
+            fromLamports(wadToLamports(item.info?.liquidity.borrowedAmountWads).toNumber(), liquidityMint.info) * price,
+          name: getTokenName(tokenMap, item.info.liquidity.mintPubkey.toBase58()),
         };
 
         newTotals.items.push(leaf);
@@ -105,12 +100,7 @@ export const HomeView = () => {
         </Col>
         <Col xs={24} xl={5}>
           <Card>
-            <Statistic
-              title="% Lent out"
-              value={totals.lentOutPct * 100}
-              precision={2}
-              suffix="%"
-            />
+            <Statistic title="% Lent out" value={totals.lentOutPct * 100} precision={2} suffix="%" />
           </Card>
         </Col>
         <Col xs={24} xl={9}>

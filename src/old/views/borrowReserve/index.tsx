@@ -7,7 +7,7 @@ import { Card, Col, Row, Statistic } from 'antd';
 
 import { cache, ParsedAccount, useAccountByMint, useMint } from '../../../app/contexts/accounts';
 import { useConnectionConfig } from '../../../app/contexts/connection';
-import { LendingReserve, LendingReserveParser } from '../../../app/models';
+import { Reserve, ReserveParser } from '../../../app/models';
 import { GUTTER, LABELS } from '../../../constants';
 import { useBorrowingPower, useLendingReserve, useUserObligations } from '../../../hooks';
 import { getTokenName } from '../../../utils/utils';
@@ -24,13 +24,12 @@ export const BorrowReserveView = () => {
   const { totalInQuote: borrowingPower, utilization } = useBorrowingPower(id);
   const [collateralReserveKey, setCollateralReserveKey] = useState<string>('');
   const collateralReserve = useMemo(() => {
-    const id: string =
-      cache.byParser(LendingReserveParser).find((acc) => acc === collateralReserveKey) || '';
+    const id: string = cache.byParser(ReserveParser).find((acc) => acc === collateralReserveKey) || '';
 
-    return cache.get(id) as ParsedAccount<LendingReserve>;
+    return cache.get(id) as ParsedAccount<Reserve>;
   }, [collateralReserveKey]);
 
-  const mintAddress = collateralReserve?.info.liquidityMint.toBase58();
+  const mintAddress = collateralReserve?.info.liquidity.mintPubkey.toBase58();
 
   const tokenMint = useMint(mintAddress);
   const tokenAccount = useAccountByMint(mintAddress);
@@ -53,12 +52,7 @@ export const BorrowReserveView = () => {
         </Col>
         <Col xs={24} xl={4}>
           <Card>
-            <Statistic
-              title={LABELS.BORROWING_POWER_USED}
-              value={utilization * 100}
-              precision={2}
-              suffix="%"
-            />
+            <Statistic title={LABELS.BORROWING_POWER_USED} value={utilization * 100} precision={2} suffix="%" />
           </Card>
         </Col>
         <Col xs={24} xl={4}>
@@ -96,18 +90,10 @@ export const BorrowReserveView = () => {
       </Row>
       <Row gutter={GUTTER} style={{ flex: 1 }}>
         <Col xs={24} xl={16}>
-          <BorrowInput
-            onCollateralReserve={setCollateralReserveKey}
-            className="card-fill"
-            reserve={lendingReserve}
-          />
+          <BorrowInput onCollateralReserve={setCollateralReserveKey} className="card-fill" reserve={lendingReserve} />
         </Col>
         <Col xs={24} xl={8}>
-          <SideReserveOverview
-            className="card-fill"
-            reserve={lendingReserve}
-            mode={SideReserveOverviewMode.Borrow}
-          />
+          <SideReserveOverview className="card-fill" reserve={lendingReserve} mode={SideReserveOverviewMode.Borrow} />
         </Col>
       </Row>
     </div>

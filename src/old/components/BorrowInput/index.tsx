@@ -9,14 +9,9 @@ import { cache, ParsedAccount, useMint } from '../../../app/contexts/accounts';
 import { useConnection } from '../../../app/contexts/connection';
 import { useMidPriceInUSD } from '../../../app/contexts/market';
 import { useWallet } from '../../../app/contexts/wallet';
-import { BorrowAmountType, LendingReserve, LendingReserveParser } from '../../../app/models';
+import { BorrowAmountType, Reserve, ReserveParser } from '../../../app/models';
 import { LABELS } from '../../../constants';
-import {
-  useSliderInput,
-  useUserBalance,
-  useUserDeposits,
-  useUserObligationByReserve,
-} from '../../../hooks';
+import { useSliderInput, useUserBalance, useUserDeposits, useUserObligationByReserve } from '../../../hooks';
 import { notify } from '../../../utils/notifications';
 import { fromLamports, toLamports } from '../../../utils/utils';
 import { ActionConfirmation } from '../ActionConfirmation';
@@ -28,7 +23,7 @@ import { RiskSlider } from '../RiskSlider';
 export const BorrowInput = (props: {
   className?: string;
   onCollateralReserve?: (id: string) => void;
-  reserve: ParsedAccount<LendingReserve>;
+  reserve: ParsedAccount<Reserve>;
 }) => {
   const connection = useConnection();
   const { wallet } = useWallet();
@@ -42,28 +37,24 @@ export const BorrowInput = (props: {
   const [collateralReserveKey, setCollateralReserveKey] = useState<string>();
 
   const collateralReserve = useMemo(() => {
-    const id: string =
-      cache.byParser(LendingReserveParser).find((acc) => acc === collateralReserveKey) || '';
+    const id: string = cache.byParser(ReserveParser).find((acc) => acc === collateralReserveKey) || '';
 
-    return cache.get(id) as ParsedAccount<LendingReserve>;
+    return cache.get(id) as ParsedAccount<Reserve>;
   }, [collateralReserveKey]);
 
-  const borrowPrice = useMidPriceInUSD(borrowReserve.info.liquidityMint.toBase58()).price;
-  const collateralPrice = useMidPriceInUSD(collateralReserve?.info.liquidityMint.toBase58())?.price;
+  const borrowPrice = useMidPriceInUSD(borrowReserve.info.liquidity.mintPubkey.toBase58()).price;
+  const collateralPrice = useMidPriceInUSD(collateralReserve?.info.liquidity.mintPubkey.toBase58())?.price;
 
-  const include = useMemo(
-    () => new Set([collateralReserve?.pubkey.toBase58()]),
-    [collateralReserve]
-  );
+  const include = useMemo(() => new Set([collateralReserve?.pubkey.toBase58()]), [collateralReserve]);
 
   const exclude = useMemo(() => new Set([]), []);
 
   const { userDeposits: accountBalance } = useUserDeposits(exclude, include);
   const tokenBalance = accountBalance[0]?.info.amount || 0;
   const { accounts: fromAccountsDeposit, balanceLamports: balanceDepositLamports } = useUserBalance(
-    collateralReserve?.info.liquidityMint
+    collateralReserve?.info.liquidity.mintPubkey
   );
-  const mintInfo = useMint(collateralReserve?.info.liquidityMint);
+  const mintInfo = useMint(collateralReserve?.info.liquidity.mintPubkey);
   const balance = fromLamports(balanceDepositLamports, mintInfo);
 
   const convert = useCallback(
@@ -79,12 +70,7 @@ export const BorrowInput = (props: {
     [tokenBalance, balance]
   );
 
-  const {
-    value: collateralValue,
-    setValue: setCollateralValue,
-    pct,
-    setPct,
-  } = useSliderInput(convert);
+  const { value: collateralValue, setValue: setCollateralValue, pct, setPct } = useSliderInput(convert);
 
   const collateralDifference = useMemo(() => {
     return toLamports(parseFloat(collateralValue) - tokenBalance, mintInfo);
@@ -103,15 +89,7 @@ export const BorrowInput = (props: {
         setValue('');
       }
     }
-  }, [
-    lastTyped,
-    collateralReserve,
-    collateralPrice,
-    borrowPrice,
-    borrowReserve,
-    collateralValue,
-    setValue,
-  ]);
+  }, [lastTyped, collateralReserve, collateralPrice, borrowPrice, borrowReserve, collateralValue, setValue]);
 
   useEffect(() => {
     if (collateralReserve && lastTyped === 'borrow') {
@@ -128,11 +106,8 @@ export const BorrowInput = (props: {
     }
   }, [lastTyped, collateralReserve, collateralPrice, borrowPrice, borrowReserve, value]);
 
-  const { userObligationsByReserve } = useUserObligationByReserve(
-    borrowReserve?.pubkey,
-    collateralReserve?.pubkey
-  );
-  const { accounts: fromAccounts } = useUserBalance(collateralReserve?.info.collateralMint);
+  const { userObligationsByReserve } = useUserObligationByReserve(borrowReserve?.pubkey, collateralReserve?.pubkey);
+  const { accounts: fromAccounts } = useUserBalance(collateralReserve?.info.collateral.mintPubkey);
   const onBorrow = useCallback(() => {
     if (!collateralReserve || !wallet?.publicKey) {
       return;
@@ -165,13 +140,9 @@ export const BorrowInput = (props: {
           collateralReserve,
 
           // TODO: select exsisting obligations by collateral reserve
-          userObligationsByReserve.length > 0
-            ? userObligationsByReserve[0].obligation.account
-            : undefined,
+          userObligationsByReserve.length > 0 ? userObligationsByReserve[0].obligation.account : undefined,
 
-          userObligationsByReserve.length > 0
-            ? userObligationsByReserve[0].userAccounts[0].pubkey
-            : undefined
+          userObligationsByReserve.length > 0 ? userObligationsByReserve[0].userAccounts[0].pubkey : undefined
         );
 
         setValue('');

@@ -8,7 +8,7 @@ import {
   calculateBorrowAPY,
   calculateDepositAPY,
   calculateUtilizationRatio,
-  LendingReserve,
+  Reserve,
 } from '../../../app/models/lending';
 import { TokenIcon } from '../../../components/common/TokenIcon';
 import { LABELS } from '../../../constants';
@@ -24,15 +24,15 @@ export enum SideReserveOverviewMode {
 
 export const SideReserveOverview = (props: {
   className?: string;
-  reserve: ParsedAccount<LendingReserve>;
+  reserve: ParsedAccount<Reserve>;
   mode: SideReserveOverviewMode;
 }) => {
   const reserve = props.reserve.info;
   const mode = props.mode;
-  const name = useTokenName(reserve?.liquidityMint);
-  const liquidityMint = useMint(reserve.liquidityMint);
+  const name = useTokenName(reserve?.liquidity.mintPubkey);
+  const liquidityMint = useMint(reserve.liquidity.mintPubkey);
 
-  const availableLiquidity = fromLamports(reserve.state.availableLiquidity, liquidityMint);
+  const availableLiquidity = fromLamports(reserve.liquidity.availableAmount, liquidityMint);
 
   const depositApy = calculateDepositAPY(reserve);
   const borrowApr = calculateBorrowAPY(reserve);
@@ -78,7 +78,8 @@ export const SideReserveOverview = (props: {
           }}
         >
           <Link to={`/reserve/${props.reserve.pubkey}`}>
-            <TokenIcon mintAddress={reserve?.liquidityMint} style={{ width: 30, height: 30 }} /> {name} Reserve Overview
+            <TokenIcon mintAddress={reserve?.liquidity.mintPubkey} style={{ width: 30, height: 30 }} /> {name} Reserve
+            Overview
           </Link>
         </div>
       }

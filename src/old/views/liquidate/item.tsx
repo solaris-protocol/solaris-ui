@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from 'antd';
 
 import { cache, ParsedAccount, useMint } from '../../../app/contexts/accounts';
-import { calculateBorrowAPY, collateralToLiquidity, LendingReserve } from '../../../app/models/lending';
+import { calculateBorrowAPY, collateralToLiquidity, Reserve } from '../../../app/models/lending';
 import { TokenIcon } from '../../../components/common/TokenIcon';
 import { LABELS } from '../../../constants';
 import { EnrichedLendingObligation, useTokenName } from '../../../hooks';
@@ -13,12 +13,12 @@ import { formatNumber, formatPct, fromLamports, wadToLamports } from '../../../u
 export const LiquidateItem = (props: { item: EnrichedLendingObligation }) => {
   const obligation = props.item.info;
 
-  const borrowReserve = cache.get(obligation.borrowReserve) as ParsedAccount<LendingReserve>;
+  const borrowReserve = cache.get(obligation.borrowReserve) as ParsedAccount<Reserve>;
 
-  const collateralReserve = cache.get(obligation.collateralReserve) as ParsedAccount<LendingReserve>;
+  const collateralReserve = cache.get(obligation.collateralReserve) as ParsedAccount<Reserve>;
 
-  const liquidityMint = useMint(borrowReserve.info.liquidityMint);
-  const collateralMint = useMint(collateralReserve.info.liquidityMint);
+  const liquidityMint = useMint(borrowReserve.info.liquidity.mintPubkey);
+  const collateralMint = useMint(collateralReserve.info.liquidity.mintPubkey);
 
   const borrowAmount = fromLamports(wadToLamports(obligation.borrowAmountWad), liquidityMint);
 
@@ -27,16 +27,16 @@ export const LiquidateItem = (props: { item: EnrichedLendingObligation }) => {
   const collateralLamports = collateralToLiquidity(obligation.depositedCollateral, borrowReserve.info);
   const collateral = fromLamports(collateralLamports, collateralMint);
 
-  const borrowName = useTokenName(borrowReserve?.info.liquidityMint);
-  const collateralName = useTokenName(collateralReserve?.info.liquidityMint);
+  const borrowName = useTokenName(borrowReserve?.info.liquidity.mintPubkey);
+  const collateralName = useTokenName(collateralReserve?.info.liquidity.mintPubkey);
 
   return (
     <Link to={`/liquidate/${props.item.account.pubkey.toBase58()}`}>
       <div className="liquidate-item">
         <span style={{ display: 'flex' }}>
           <div style={{ display: 'flex' }}>
-            <TokenIcon mintAddress={collateralReserve?.info.liquidityMint} style={{ marginRight: '-0.5rem' }} />
-            <TokenIcon mintAddress={borrowReserve?.info.liquidityMint} />
+            <TokenIcon mintAddress={collateralReserve?.info.liquidity.mintPubkey} style={{ marginRight: '-0.5rem' }} />
+            <TokenIcon mintAddress={borrowReserve?.info.liquidity.mintPubkey} />
           </div>
           {collateralName}→{borrowName}
         </span>

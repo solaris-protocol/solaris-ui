@@ -8,28 +8,28 @@ import { Card, Col, Row, Statistic } from 'antd';
 
 import { useMint } from '../../../app/contexts/accounts';
 import { useMidPriceInUSD } from '../../../app/contexts/market';
-import { calculateDepositAPY, LendingReserve } from '../../../app/models/lending';
+import { calculateDepositAPY, Reserve } from '../../../app/models/lending';
 import { TokenIcon } from '../../../components/common/TokenIcon';
 import { GUTTER, LABELS } from '../../../constants';
 import { feeFormatter, formatNumber, fromLamports, isSmallNumber, wadToLamports } from '../../../utils/utils';
 import { ReserveUtilizationChart } from '../ReserveUtilizationChart';
 
-export const ReserveStatus = (props: { className?: string; reserve: LendingReserve; address: PublicKey }) => {
+export const ReserveStatus = (props: { className?: string; reserve: Reserve; address: PublicKey }) => {
   const bodyStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   };
 
-  const mintAddress = props.reserve.liquidityMint?.toBase58();
+  const mintAddress = props.reserve.liquidity.mintPubkey?.toBase58();
   const liquidityMint = useMint(mintAddress);
   const { price } = useMidPriceInUSD(mintAddress);
-  const availableLiquidity = fromLamports(props.reserve.state.availableLiquidity, liquidityMint);
+  const availableLiquidity = fromLamports(props.reserve.liquidity.availableAmount, liquidityMint);
 
   const availableLiquidityInUSD = price * availableLiquidity;
 
   const totalBorrows = useMemo(
-    () => fromLamports(wadToLamports(props.reserve.state.borrowedLiquidityWad), liquidityMint),
+    () => fromLamports(wadToLamports(props.reserve.liquidity.borrowedAmountWads), liquidityMint),
     [props.reserve, liquidityMint]
   );
 

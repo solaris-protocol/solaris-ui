@@ -11,14 +11,9 @@ import { ParsedAccount, useMint } from '../../../app/contexts/accounts';
 import { useConnection } from '../../../app/contexts/connection';
 import { useMidPriceInUSD } from '../../../app/contexts/market';
 import { useWallet } from '../../../app/contexts/wallet';
-import { LendingReserve } from '../../../app/models';
+import { Reserve } from '../../../app/models';
 import { LABELS, marks } from '../../../constants';
-import {
-  EnrichedLendingObligation,
-  InputType,
-  useSliderInput,
-  useUserBalance,
-} from '../../../hooks';
+import { EnrichedLendingObligation, InputType, useSliderInput, useUserBalance } from '../../../hooks';
 import { notify } from '../../../utils/notifications';
 import { fromLamports, wadToLamports } from '../../../utils/utils';
 import { ActionConfirmation } from '../ActionConfirmation';
@@ -27,8 +22,8 @@ import { ConnectButton } from '../ConnectButton';
 
 export const LiquidateInput = (props: {
   className?: string;
-  repayReserve: ParsedAccount<LendingReserve>;
-  withdrawReserve: ParsedAccount<LendingReserve>;
+  repayReserve: ParsedAccount<Reserve>;
+  withdrawReserve: ParsedAccount<Reserve>;
   obligation: EnrichedLendingObligation;
 }) => {
   const connection = useConnection();
@@ -39,10 +34,8 @@ export const LiquidateInput = (props: {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [collateralValue, setCollateralValue] = useState('');
 
-  const liquidityMint = useMint(repayReserve.info.liquidityMint);
-  const { accounts: fromAccounts, balance: tokenBalance } = useUserBalance(
-    repayReserve?.info.liquidityMint
-  );
+  const liquidityMint = useMint(repayReserve.info.liquidity.mintPubkey);
+  const { accounts: fromAccounts, balance: tokenBalance } = useUserBalance(repayReserve?.info.liquidity.mintPubkey);
   const borrowAmountLamports = wadToLamports(obligation.info.borrowAmountWad).toNumber();
 
   const borrowAmount = fromLamports(borrowAmountLamports, liquidityMint);
@@ -116,7 +109,7 @@ export const LiquidateInput = (props: {
     type,
   ]);
 
-  const collateralPrice = useMidPriceInUSD(withdrawReserve?.info.liquidityMint.toBase58())?.price;
+  const collateralPrice = useMidPriceInUSD(withdrawReserve?.info.liquidity.mintPubkey.toBase58())?.price;
 
   useEffect(() => {
     if (withdrawReserve && lastTyped === 'liquidate') {
@@ -130,14 +123,7 @@ export const LiquidateInput = (props: {
         setCollateralValue('');
       }
     }
-  }, [
-    borrowAmount,
-    collateralPrice,
-    withdrawReserve,
-    lastTyped,
-    obligation.info.collateralInQuote,
-    value,
-  ]);
+  }, [borrowAmount, collateralPrice, withdrawReserve, lastTyped, obligation.info.collateralInQuote, value]);
 
   useEffect(() => {
     if (withdrawReserve && lastTyped === 'collateral') {

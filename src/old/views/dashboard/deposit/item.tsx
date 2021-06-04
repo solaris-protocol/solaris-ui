@@ -11,7 +11,7 @@ import { formatNumber, formatPct } from '../../../../utils/utils';
 
 export const DepositItem = (props: { userDeposit: UserDeposit }) => {
   const { reserve, info } = props.userDeposit;
-  const mintAddress = reserve.info.liquidityMint;
+  const mintAddress = reserve.info.liquidity.mintPubkey;
   const name = useTokenName(mintAddress);
 
   const depositAPY = useMemo(() => calculateDepositAPY(reserve.info), [reserve]);

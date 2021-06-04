@@ -9,15 +9,9 @@ import { ParsedAccount, useMint } from '../../../app/contexts/accounts';
 import { useConnection } from '../../../app/contexts/connection';
 import { useMidPriceInUSD } from '../../../app/contexts/market';
 import { useWallet } from '../../../app/contexts/wallet';
-import { LendingReserve } from '../../../app/models';
+import { Reserve } from '../../../app/models';
 import { LABELS, marks } from '../../../constants';
-import {
-  EnrichedLendingObligation,
-  InputType,
-  useAccountByMint,
-  useSliderInput,
-  useUserBalance,
-} from '../../../hooks';
+import { EnrichedLendingObligation, InputType, useAccountByMint, useSliderInput, useUserBalance } from '../../../hooks';
 import { notify } from '../../../utils/notifications';
 import { fromLamports, wadToLamports } from '../../../utils/utils';
 import { ActionConfirmation } from '../ActionConfirmation';
@@ -26,8 +20,8 @@ import { ConnectButton } from '../ConnectButton';
 
 export const RepayInput = (props: {
   className?: string;
-  borrowReserve: ParsedAccount<LendingReserve>;
-  collateralReserve: ParsedAccount<LendingReserve>;
+  borrowReserve: ParsedAccount<Reserve>;
+  collateralReserve: ParsedAccount<Reserve>;
   obligation: EnrichedLendingObligation;
 }) => {
   const connection = useConnection();
@@ -40,14 +34,14 @@ export const RepayInput = (props: {
   const repayReserve = props.borrowReserve;
   const obligation = props.obligation;
 
-  const liquidityMint = useMint(repayReserve.info.liquidityMint);
-  const { balance: tokenBalance } = useUserBalance(repayReserve.info.liquidityMint);
+  const liquidityMint = useMint(repayReserve.info.liquidity.mintPubkey);
+  const { balance: tokenBalance } = useUserBalance(repayReserve.info.liquidity.mintPubkey);
 
   const borrowAmountLamports = wadToLamports(obligation.info.borrowAmountWad).toNumber();
   const borrowAmount = fromLamports(borrowAmountLamports, liquidityMint);
   const collateralReserve = props.collateralReserve;
 
-  const { accounts: fromAccounts } = useUserBalance(repayReserve.info.liquidityMint);
+  const { accounts: fromAccounts } = useUserBalance(repayReserve.info.liquidity.mintPubkey);
 
   const obligationAccount = useAccountByMint(obligation?.info.tokenMint);
 
@@ -67,13 +61,7 @@ export const RepayInput = (props: {
   const { value, setValue, pct, setPct, type } = useSliderInput(convert);
 
   const onRepay = useCallback(() => {
-    if (
-      !collateralReserve ||
-      !obligation ||
-      !repayReserve ||
-      !obligationAccount ||
-      !wallet?.publicKey
-    ) {
+    if (!collateralReserve || !obligation || !repayReserve || !obligationAccount || !wallet?.publicKey) {
       return;
     }
 
@@ -125,7 +113,7 @@ export const RepayInput = (props: {
     wallet,
   ]);
 
-  const collateralPrice = useMidPriceInUSD(collateralReserve?.info.liquidityMint.toBase58())?.price;
+  const collateralPrice = useMidPriceInUSD(collateralReserve?.info.liquidity.mintPubkey.toBase58())?.price;
 
   useEffect(() => {
     if (collateralReserve && lastTyped === 'repay') {
@@ -139,14 +127,7 @@ export const RepayInput = (props: {
         setCollateralValue('');
       }
     }
-  }, [
-    borrowAmount,
-    collateralPrice,
-    collateralReserve,
-    lastTyped,
-    obligation.info.collateralInQuote,
-    value,
-  ]);
+  }, [borrowAmount, collateralPrice, collateralReserve, lastTyped, obligation.info.collateralInQuote, value]);
 
   useEffect(() => {
     if (collateralReserve && lastTyped === 'collateral') {

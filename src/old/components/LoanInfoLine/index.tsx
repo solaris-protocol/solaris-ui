@@ -1,49 +1,30 @@
-import { Card, Col, Row, Statistic } from "antd";
-import {
-  formatNumber,
-  formatPct,
-  fromLamports,
-  wadToLamports,
-} from "../../../utils/utils";
-import React, { useMemo } from "react";
-import {
-  EnrichedLendingObligation,
-  useLendingReserve,
-  useTokenName,
-} from "../../../hooks";
-import { useMint } from "../../../app/contexts/accounts";
-import { calculateBorrowAPY, collateralToLiquidity } from "../../../app/models";
-import { GUTTER } from "../../../constants";
+import React, { useMemo } from 'react';
 
-export const LoanInfoLine = (props: {
-  className?: string;
-  obligation: EnrichedLendingObligation;
-}) => {
+import { Card, Col, Row, Statistic } from 'antd';
+
+import { useMint } from '../../../app/contexts/accounts';
+import { calculateBorrowAPY, collateralToLiquidity } from '../../../app/models';
+import { GUTTER } from '../../../constants';
+import { EnrichedLendingObligation, useLendingReserve, useTokenName } from '../../../hooks';
+import { formatNumber, formatPct, fromLamports, wadToLamports } from '../../../utils/utils';
+
+export const LoanInfoLine = (props: { className?: string; obligation: EnrichedLendingObligation }) => {
   const obligation = props.obligation;
 
   const repayReserve = useLendingReserve(obligation?.info.borrowReserve);
   const withdrawReserve = useLendingReserve(obligation?.info.collateralReserve);
 
-  const liquidityMint = useMint(repayReserve?.info.liquidityMint);
-  const collateralMint = useMint(withdrawReserve?.info.liquidityMint);
-  const repayName = useTokenName(repayReserve?.info.liquidityMint);
-  const withdrawName = useTokenName(withdrawReserve?.info.liquidityMint);
+  const liquidityMint = useMint(repayReserve?.info.liquidity.mintPubkey);
+  const collateralMint = useMint(withdrawReserve?.info.liquidity.mintPubkey);
+  const repayName = useTokenName(repayReserve?.info.liquidity.mintPubkey);
+  const withdrawName = useTokenName(withdrawReserve?.info.liquidity.mintPubkey);
 
-  const borrowAPY = useMemo(
-    () => (repayReserve ? calculateBorrowAPY(repayReserve?.info) : 0),
-    [repayReserve]
-  );
+  const borrowAPY = useMemo(() => (repayReserve ? calculateBorrowAPY(repayReserve?.info) : 0), [repayReserve]);
   if (!obligation || !repayReserve) {
     return null;
   }
-  const borrowAmount = fromLamports(
-    wadToLamports(obligation?.info.borrowAmountWad),
-    liquidityMint
-  );
-  const collateralLamports = collateralToLiquidity(
-    obligation?.info.depositedCollateral,
-    repayReserve.info
-  );
+  const borrowAmount = fromLamports(wadToLamports(obligation?.info.borrowAmountWad), liquidityMint);
+  const collateralLamports = collateralToLiquidity(obligation?.info.depositedCollateral, repayReserve.info);
   const collateral = fromLamports(collateralLamports, collateralMint);
 
   return (
@@ -58,9 +39,7 @@ export const LoanInfoLine = (props: {
                 <div>
                   <em>{formatNumber.format(borrowAmount)}</em> {repayName}
                 </div>
-                <div className="dashboard-amount-quote">
-                  ${formatNumber.format(parseFloat(val.toString()))}
-                </div>
+                <div className="dashboard-amount-quote">${formatNumber.format(parseFloat(val.toString()))}</div>
               </div>
             )}
           />
@@ -76,9 +55,7 @@ export const LoanInfoLine = (props: {
                 <div>
                   <em>{formatNumber.format(collateral)}</em> {withdrawName}
                 </div>
-                <div className="dashboard-amount-quote">
-                  ${formatNumber.format(parseFloat(val.toString()))}
-                </div>
+                <div className="dashboard-amount-quote">${formatNumber.format(parseFloat(val.toString()))}</div>
               </div>
             )}
           />
@@ -91,10 +68,7 @@ export const LoanInfoLine = (props: {
       </Col>
       <Col xs={24} xl={9}>
         <Card className={props.className}>
-          <Statistic
-            title="Health Factor"
-            value={obligation.info.health.toFixed(2)}
-          />
+          <Statistic title="Health Factor" value={obligation.info.health.toFixed(2)} />
         </Card>
       </Col>
     </Row>

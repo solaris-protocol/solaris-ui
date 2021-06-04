@@ -4,7 +4,7 @@ import { Select } from 'antd';
 
 import { cache, ParsedAccount } from '../../../app/contexts/accounts';
 import { useConnectionConfig } from '../../../app/contexts/connection';
-import { LendingMarket, LendingReserve } from '../../../app/models';
+import { LendingMarket, Reserve } from '../../../app/models';
 import { TokenIcon } from '../../../components/common/TokenIcon';
 import { useLendingReserves, UserDeposit, useUserDeposits } from '../../../hooks';
 import { formatAmount, getTokenName } from '../../../utils/utils';
@@ -13,7 +13,7 @@ const { Option } = Select;
 
 export const CollateralItem = (props: {
   mint: string;
-  reserve: ParsedAccount<LendingReserve>;
+  reserve: ParsedAccount<Reserve>;
   userDeposit?: UserDeposit;
   name: string;
 }) => {
@@ -31,7 +31,7 @@ export const CollateralItem = (props: {
 };
 
 export const CollateralSelector = (props: {
-  reserve: LendingReserve;
+  reserve: Reserve;
   collateralReserve?: string;
   disabled?: boolean;
   onCollateralReserve?: (id: string) => void;
@@ -43,9 +43,9 @@ export const CollateralSelector = (props: {
   const market = cache.get(props.reserve?.lendingMarket) as ParsedAccount<LendingMarket>;
   if (!market) return null;
 
-  const quoteMintAddress = market?.info?.quoteMint?.toBase58();
+  const quoteMintAddress = market?.info?.quoteTokenMint?.toBase58();
 
-  const onlyQuoteAllowed = props.reserve?.liquidityMint?.toBase58() !== quoteMintAddress;
+  const onlyQuoteAllowed = props.reserve?.liquidity.mintPubkey?.toBase58() !== quoteMintAddress;
 
   return (
     <Select
@@ -65,9 +65,9 @@ export const CollateralSelector = (props: {
     >
       {reserveAccounts
         .filter((reserve) => reserve.info !== props.reserve)
-        .filter((reserve) => !onlyQuoteAllowed || reserve.info.liquidityMint.equals(market.info.quoteMint))
+        .filter((reserve) => !onlyQuoteAllowed || reserve.info.liquidity.mintPubkey.equals(market.info.quoteTokenMint))
         .map((reserve) => {
-          const mint = reserve.info.liquidityMint.toBase58();
+          const mint = reserve.info.liquidity.mintPubkey.toBase58();
           const address = reserve.pubkey.toBase58();
           const name = getTokenName(tokenMap, mint);
 

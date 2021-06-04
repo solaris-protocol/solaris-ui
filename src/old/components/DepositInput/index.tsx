@@ -8,7 +8,7 @@ import { Card, Slider } from 'antd';
 import { deposit } from '../../../app/actions/deposit';
 import { useConnection } from '../../../app/contexts/connection';
 import { useWallet } from '../../../app/contexts/wallet';
-import { LendingReserve } from '../../../app/models/lending';
+import { Reserve } from '../../../app/models/lending';
 import { LABELS, marks } from '../../../constants';
 import { InputType, useSliderInput, useUserBalance } from '../../../hooks';
 import { notify } from '../../../utils/notifications';
@@ -16,11 +16,7 @@ import { ActionConfirmation } from '../ActionConfirmation';
 import CollateralInput from '../CollateralInput';
 import { ConnectButton } from '../ConnectButton';
 
-export const DepositInput = (props: {
-  className?: string;
-  reserve: LendingReserve;
-  address: PublicKey;
-}) => {
+export const DepositInput = (props: { className?: string; reserve: Reserve; address: PublicKey }) => {
   const connection = useConnection();
   const { wallet } = useWallet();
   const [pendingTx, setPendingTx] = useState(false);
@@ -29,11 +25,7 @@ export const DepositInput = (props: {
   const reserve = props.reserve;
   const address = props.address;
 
-  const {
-    accounts: fromAccounts,
-    balance,
-    balanceLamports,
-  } = useUserBalance(reserve?.liquidityMint);
+  const { accounts: fromAccounts, balance, balanceLamports } = useUserBalance(reserve?.liquidity.mintPubkey);
 
   const convert = useCallback(
     (val: string | number) => {
@@ -82,19 +74,7 @@ export const DepositInput = (props: {
         setPendingTx(false);
       }
     })();
-  }, [
-    connection,
-    setValue,
-    balanceLamports,
-    balance,
-    wallet,
-    value,
-    pct,
-    type,
-    reserve,
-    fromAccounts,
-    address,
-  ]);
+  }, [connection, setValue, balanceLamports, balance, wallet, value, pct, type, reserve, fromAccounts, address]);
 
   const bodyStyle: React.CSSProperties = {
     display: 'flex',

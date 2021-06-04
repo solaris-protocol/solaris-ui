@@ -8,7 +8,7 @@ import {
   calculateBorrowAPY,
   collateralToLiquidity,
   healthFactorToRiskColor,
-  LendingReserve,
+  Reserve,
 } from '../../../../app/models/lending';
 import { TokenIcon } from '../../../../components/common/TokenIcon';
 import { EnrichedLendingObligation, useTokenName } from '../../../../hooks';
@@ -17,12 +17,12 @@ import { formatNumber, formatPct, fromLamports, wadToLamports } from '../../../.
 export const ObligationItem = (props: { obligation: EnrichedLendingObligation }) => {
   const { obligation } = props;
 
-  const borrowReserve = cache.get(obligation.info.borrowReserve) as ParsedAccount<LendingReserve>;
+  const borrowReserve = cache.get(obligation.info.borrowReserve) as ParsedAccount<Reserve>;
 
-  const collateralReserve = cache.get(obligation.info.collateralReserve) as ParsedAccount<LendingReserve>;
+  const collateralReserve = cache.get(obligation.info.collateralReserve) as ParsedAccount<Reserve>;
 
-  const liquidityMint = useMint(borrowReserve.info.liquidityMint);
-  const collateralMint = useMint(collateralReserve.info.liquidityMint);
+  const liquidityMint = useMint(borrowReserve.info.liquidity.mintPubkey);
+  const collateralMint = useMint(collateralReserve.info.liquidity.mintPubkey);
 
   const borrowAmount = fromLamports(wadToLamports(obligation.info.borrowAmountWad), liquidityMint);
 
@@ -31,15 +31,15 @@ export const ObligationItem = (props: { obligation: EnrichedLendingObligation })
   const collateralLamports = collateralToLiquidity(obligation.info.depositedCollateral, borrowReserve.info);
   const collateral = fromLamports(collateralLamports, collateralMint);
 
-  const borrowName = useTokenName(borrowReserve?.info.liquidityMint);
-  const collateralName = useTokenName(collateralReserve?.info.liquidityMint);
+  const borrowName = useTokenName(borrowReserve?.info.liquidity.mintPubkey);
+  const collateralName = useTokenName(collateralReserve?.info.liquidity.mintPubkey);
 
   return (
     <div className="dashboard-item">
       <span style={{ display: 'flex', marginLeft: 5 }}>
         <div style={{ display: 'flex' }} title={`${collateralName}→${borrowName}`}>
-          <TokenIcon mintAddress={collateralReserve?.info.liquidityMint} style={{ marginRight: '-0.5rem' }} />
-          <TokenIcon mintAddress={borrowReserve?.info.liquidityMint} />
+          <TokenIcon mintAddress={collateralReserve?.info.liquidity.mintPubkey} style={{ marginRight: '-0.5rem' }} />
+          <TokenIcon mintAddress={borrowReserve?.info.liquidity.mintPubkey} />
         </div>
       </span>
       <div>

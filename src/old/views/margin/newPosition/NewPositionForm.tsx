@@ -5,7 +5,7 @@ import { Button, Card } from 'antd';
 
 import { cache, ParsedAccount } from '../../../../app/contexts/accounts';
 import { useWallet } from '../../../../app/contexts/wallet';
-import { LendingReserve, LendingReserveParser } from '../../../../app/models/lending/reserve';
+import { Reserve, ReserveParser } from '../../../../app/models/lending/reserve';
 import { LABELS } from '../../../../constants';
 import { UserDeposit } from '../../../../hooks';
 import { ActionConfirmation } from '../../../components/ActionConfirmation';
@@ -15,17 +15,13 @@ import { useLeverage } from './leverage';
 import { usePoolAndTradeInfoFrom } from './utils';
 
 interface NewPositionFormProps {
-  lendingReserve: ParsedAccount<LendingReserve>;
+  lendingReserve: ParsedAccount<Reserve>;
   newPosition: Position;
   setNewPosition: (pos: Position) => void;
 }
 
 export const generateActionLabel = (connected: boolean, newPosition: Position) => {
-  return !connected
-    ? LABELS.CONNECT_LABEL
-    : newPosition.error
-    ? newPosition.error
-    : LABELS.TRADING_ADD_POSITION;
+  return !connected ? LABELS.CONNECT_LABEL : newPosition.error ? newPosition.error : LABELS.TRADING_ADD_POSITION;
 };
 
 function onUserChangesLeverageOrCollateralValue({
@@ -43,8 +39,7 @@ function onUserChangesLeverageOrCollateralValue({
   // if user changes leverage, we need to adjust the amount they desire up.
   if (collateralDeposit && enrichedPools.length) {
     const exchangeRate = enrichedPools[0].liquidityB / enrichedPools[0].liquidityA;
-    const convertedAmount =
-      (newPosition.collateral.value || 0) * newPosition.leverage * exchangeRate;
+    const convertedAmount = (newPosition.collateral.value || 0) * newPosition.leverage * exchangeRate;
     setNewPosition({
       ...newPosition,
       asset: { ...newPosition.asset, value: convertedAmount },
@@ -74,11 +69,7 @@ function onUserChangesAssetValue({
   }
 }
 
-export default function NewPositionForm({
-  lendingReserve,
-  newPosition,
-  setNewPosition,
-}: NewPositionFormProps) {
+export default function NewPositionForm({ lendingReserve, newPosition, setNewPosition }: NewPositionFormProps) {
   const bodyStyle: React.CSSProperties = {
     display: 'flex',
     flex: 1,
@@ -128,9 +119,8 @@ export default function NewPositionForm({
                 });
               }}
               onCollateralReserve={(key) => {
-                const id: string =
-                  cache.byParser(LendingReserveParser).find((acc) => acc === key) || '';
-                const parser = cache.get(id) as ParsedAccount<LendingReserve>;
+                const id: string = cache.byParser(ReserveParser).find((acc) => acc === key) || '';
+                const parser = cache.get(id) as ParsedAccount<Reserve>;
                 const newPos = {
                   ...newPosition,
                   collateral: {

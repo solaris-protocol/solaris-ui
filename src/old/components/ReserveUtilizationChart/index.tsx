@@ -1,29 +1,19 @@
-import React, { useMemo } from "react";
-import { LendingReserve } from "../../../app/models/lending";
-import {
-  formatNumber,
-  fromLamports,
-  isSmallNumber,
-  wadToLamports,
-} from "../../../utils/utils";
-import { useMint } from "../../../app/contexts/accounts";
-import { WaterWave } from "../WaterWave";
-import { Statistic } from "antd";
+import React, { useMemo } from 'react';
 
-export const ReserveUtilizationChart = (props: { reserve: LendingReserve }) => {
-  const mintAddress = props.reserve.liquidityMint?.toBase58();
+import { Statistic } from 'antd';
+
+import { useMint } from '../../../app/contexts/accounts';
+import { Reserve } from '../../../app/models/lending';
+import { formatNumber, fromLamports, isSmallNumber, wadToLamports } from '../../../utils/utils';
+import { WaterWave } from '../WaterWave';
+
+export const ReserveUtilizationChart = (props: { reserve: Reserve }) => {
+  const mintAddress = props.reserve.liquidity.mintPubkey?.toBase58();
   const liquidityMint = useMint(mintAddress);
-  const availableLiquidity = fromLamports(
-    props.reserve.state.availableLiquidity,
-    liquidityMint
-  );
+  const availableLiquidity = fromLamports(props.reserve.liquidity.availableAmount, liquidityMint);
 
   const totalBorrows = useMemo(
-    () =>
-      fromLamports(
-        wadToLamports(props.reserve.state.borrowedLiquidityWad),
-        liquidityMint
-      ),
+    () => fromLamports(wadToLamports(props.reserve.liquidity.borrowedAmountWads), liquidityMint),
     [props.reserve, liquidityMint]
   );
 
@@ -40,7 +30,7 @@ export const ReserveUtilizationChart = (props: { reserve: LendingReserve }) => {
           suffix="%"
           value={formatNumber.format(percent, true)}
           precision={3}
-          prefix={isSmallNumber(percent) ? "<" : ""}
+          prefix={isSmallNumber(percent) ? '<' : ''}
         />
       }
       percent={percent}

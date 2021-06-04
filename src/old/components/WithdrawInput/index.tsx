@@ -8,24 +8,15 @@ import { Card, Slider } from 'antd';
 import { withdraw } from '../../../app/actions';
 import { useConnection } from '../../../app/contexts/connection';
 import { useWallet } from '../../../app/contexts/wallet';
-import { LendingReserve } from '../../../app/models/lending';
+import { Reserve } from '../../../app/models/lending';
 import { LABELS, marks } from '../../../constants';
-import {
-  InputType,
-  useSliderInput,
-  useUserBalance,
-  useUserCollateralBalance,
-} from '../../../hooks';
+import { InputType, useSliderInput, useUserBalance, useUserCollateralBalance } from '../../../hooks';
 import { notify } from '../../../utils/notifications';
 import { ActionConfirmation } from '../ActionConfirmation';
 import CollateralInput from '../CollateralInput';
 import { ConnectButton } from '../ConnectButton';
 
-export const WithdrawInput = (props: {
-  className?: string;
-  reserve: LendingReserve;
-  address: PublicKey;
-}) => {
+export const WithdrawInput = (props: { className?: string; reserve: Reserve; address: PublicKey }) => {
   const connection = useConnection();
   const { wallet } = useWallet();
   const [pendingTx, setPendingTx] = useState(false);
@@ -35,7 +26,7 @@ export const WithdrawInput = (props: {
   const address = props.address;
 
   const { balanceLamports: collateralBalanceLamports, accounts: fromAccounts } = useUserBalance(
-    reserve?.collateralMint
+    reserve?.collateral.mintPubkey
   );
   const { balance: collateralBalanceInLiquidity } = useUserCollateralBalance(reserve);
 
@@ -64,9 +55,7 @@ export const WithdrawInput = (props: {
         const withdrawAmount = Math.min(
           type === InputType.Percent
             ? (pct * collateralBalanceLamports) / 100
-            : Math.ceil(
-                collateralBalanceLamports * (parseFloat(value) / collateralBalanceInLiquidity)
-              ),
+            : Math.ceil(collateralBalanceLamports * (parseFloat(value) / collateralBalanceInLiquidity)),
           collateralBalanceLamports
         );
         await withdraw(fromAccounts[0], withdrawAmount, reserve, address, connection, wallet);

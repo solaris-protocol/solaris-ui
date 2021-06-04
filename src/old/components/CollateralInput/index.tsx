@@ -6,7 +6,7 @@ import { Card, Select } from 'antd';
 
 import { cache, ParsedAccount } from '../../../app/contexts/accounts';
 import { useConnectionConfig } from '../../../app/contexts/connection';
-import { LendingMarket, LendingReserve } from '../../../app/models';
+import { LendingMarket, Reserve } from '../../../app/models';
 import { LABELS } from '../../../constants';
 import { useLendingReserves, useUserBalance } from '../../../hooks';
 import { useBalanceByCollateral } from '../../../hooks/useBalanceByCollateral';
@@ -21,7 +21,7 @@ const { Option } = Select;
 export default function CollateralInput(props: {
   title: string;
   amount?: number | null;
-  reserve: LendingReserve;
+  reserve: Reserve;
   disabled?: boolean;
   onCollateralReserve?: (id: string) => void;
   onLeverage?: (leverage: number) => void;
@@ -32,7 +32,7 @@ export default function CollateralInput(props: {
   showLeverageSelector?: boolean;
   leverage?: number;
 }) {
-  const { balance: tokenBalance } = useUserBalance(props.reserve.liquidityMint);
+  const { balance: tokenBalance } = useUserBalance(props.reserve.liquidity.mintPubkey);
   const { reserveAccounts } = useLendingReserves();
   const { tokenMap } = useConnectionConfig();
 
@@ -56,13 +56,11 @@ export default function CollateralInput(props: {
   const market = cache.get(props.reserve.lendingMarket) as ParsedAccount<LendingMarket>;
   if (!market) return null;
 
-  const onlyQuoteAllowed = !props.reserve?.liquidityMint?.equals(market?.info?.quoteMint);
+  const onlyQuoteAllowed = !props.reserve?.liquidity.mintPubkey?.equals(market?.info?.quoteTokenMint);
 
   const filteredReserveAccounts = reserveAccounts
     .filter((reserve) => reserve.info !== props.reserve)
-    .filter(
-      (reserve) => !onlyQuoteAllowed || reserve.info.liquidityMint.equals(market.info.quoteMint)
-    );
+    .filter((reserve) => !onlyQuoteAllowed || reserve.info.liquidity.mintPubkey.equals(market.info.quoteTokenMint));
 
   if (!collateralReserve && props.useFirstReserve && filteredReserveAccounts.length) {
     const address = filteredReserveAccounts[0].pubkey.toBase58();
@@ -70,15 +68,15 @@ export default function CollateralInput(props: {
     props.onCollateralReserve?.(address);
   }
   const renderReserveAccounts = filteredReserveAccounts.map((reserve) => {
-    const mint = reserve.info.liquidityMint.toBase58();
+    const mint = reserve.info.liquidity.mintPubkey.toBase58();
     const address = reserve.pubkey.toBase58();
     const name = getTokenName(tokenMap, mint);
     return (
       <Option key={address} value={address} name={name} title={address}>
         <TokenDisplay
-          key={reserve.info.liquidityMint.toBase58()}
-          name={getTokenName(tokenMap, reserve.info.liquidityMint.toBase58())}
-          mintAddress={reserve.info.liquidityMint.toBase58()}
+          key={reserve.info.liquidity.mintPubkey.toBase58()}
+          name={getTokenName(tokenMap, reserve.info.liquidity.mintPubkey.toBase58())}
+          mintAddress={reserve.info.liquidity.mintPubkey.toBase58()}
           showBalance={true}
           reserve={address}
           useWalletBalance={false}
@@ -93,21 +91,14 @@ export default function CollateralInput(props: {
         <div className="ccy-input-header-left">{props.title}</div>
 
         {!props.hideBalance && (
-          <div
-            className="ccy-input-header-right"
-            onClick={(e) => props.onInputChange && props.onInputChange(balance)}
-          >
+          <div className="ccy-input-header-right" onClick={(e) => props.onInputChange && props.onInputChange(balance)}>
             {balanceType}: {balance.toFixed(6)}
           </div>
         )}
       </div>
       <div className="ccy-input-header" style={{ padding: '0px 10px 5px 7px' }}>
         <NumericInput
-          value={
-            parseFloat(lastAmount || '0.00') === props.amount
-              ? lastAmount
-              : props.amount?.toFixed(6)?.toString()
-          }
+          value={parseFloat(lastAmount || '0.00') === props.amount ? lastAmount : props.amount?.toFixed(6)?.toString()}
           onChange={(val: string) => {
             if (props.onInputChange && parseFloat(val) !== props.amount) {
               if (!val || !parseFloat(val)) props.onInputChange(null);
@@ -140,9 +131,7 @@ export default function CollateralInput(props: {
                   props.onLeverage(parseFloat(item));
                 }
               }}
-              filterOption={(input, option) =>
-                option?.name?.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }
+              filterOption={(input, option) => option?.name?.toLowerCase().indexOf(input.toLowerCase()) >= 0}
             >
               {[1, 2, 3, 4, 5].map((val) => (
                 <Option key={val} value={val} name={val + 'x'} title={val + 'x'}>
@@ -164,17 +153,15 @@ export default function CollateralInput(props: {
                 if (props.onCollateralReserve) props.onCollateralReserve(item);
                 setCollateralReserve(item);
               }}
-              filterOption={(input, option) =>
-                option?.name?.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }
+              filterOption={(input, option) => option?.name?.toLowerCase().indexOf(input.toLowerCase()) >= 0}
             >
               {renderReserveAccounts}
             </Select>
           ) : (
             <TokenDisplay
-              key={props.reserve.liquidityMint.toBase58()}
-              name={getTokenName(tokenMap, props.reserve.liquidityMint.toBase58())}
-              mintAddress={props.reserve.liquidityMint.toBase58()}
+              key={props.reserve.liquidity.mintPubkey.toBase58()}
+              name={getTokenName(tokenMap, props.reserve.liquidity.mintPubkey.toBase58())}
+              mintAddress={props.reserve.liquidity.mintPubkey.toBase58()}
               showBalance={false}
             />
           )}
