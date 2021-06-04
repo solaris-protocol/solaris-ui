@@ -26,7 +26,7 @@ export class SolanaWalletAdapter extends EventEmitter implements WalletAdapter {
   }
 
   async signTransaction(transaction: Transaction) {
-    return (window as any).solong.signTransaction(transaction);
+    return this._provider.signTransaction(transaction);
   }
 
   connect = () => {
@@ -34,7 +34,7 @@ export class SolanaWalletAdapter extends EventEmitter implements WalletAdapter {
       return;
     }
 
-    if ((window as any).solana === undefined) {
+    if ((window as any).sollet === undefined) {
       notify({
         message: 'Solana Extension Error',
         description: 'Please install Solana Extension from Chrome ',
