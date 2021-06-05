@@ -10,7 +10,8 @@ import { EnrichedLendingObligation, useUserCollateralBalance } from 'hooks';
 import { fromLamports, wadToLamports } from 'utils/utils';
 
 import { Balance } from './Balance';
-import { Deposit } from './Deposit';
+import { Borrow } from './Borrow';
+import { Repay } from './Repay';
 import { Top } from './Top';
 import { StateType } from './types';
 
@@ -29,8 +30,10 @@ export const BorrowCard: FC<Props> = ({ obligation }) => {
 
   const renderContent = () => {
     switch (state) {
-      case 'deposit':
-        return <Deposit setState={setState} />;
+      case 'borrow':
+        return <Borrow setState={setState} />;
+      case 'repay':
+        return <Repay setState={setState} />;
       case 'balance':
       default:
         return <Balance setState={setState} />;
@@ -38,7 +41,7 @@ export const BorrowCard: FC<Props> = ({ obligation }) => {
   };
 
   return (
-    <Card className={classNames({ hasDeposit: true })}>
+    <Card className={classNames({ hasBorrow: true })}>
       <Top state={state} />
       <Content>{renderContent()}</Content>
     </Card>

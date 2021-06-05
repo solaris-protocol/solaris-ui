@@ -34,11 +34,11 @@ export const Balance: FC<Props> = ({ setState }) => {
       </CollateralBalanceWrapper>
       <Bottom>
         <ButtonConnect>
-          <Button onClick={() => setState('deposit')} className="full">
+          <Button onClick={() => setState('borrow')} className="full">
             Borrow
           </Button>
           {balance ? (
-            <Button onClick={() => setState('withdraw')} className="full">
+            <Button onClick={() => setState('repay')} className="full">
               Repay
             </Button>
           ) : null}

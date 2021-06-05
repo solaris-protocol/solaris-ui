@@ -24,6 +24,10 @@ const Wrapper = styled.div`
   &.hasDeposit {
     border: 2px solid #1594dd;
   }
+
+  &.hasBorrow {
+    border: 2px solid #b745bc;
+  }
 `;
 
 interface Props {

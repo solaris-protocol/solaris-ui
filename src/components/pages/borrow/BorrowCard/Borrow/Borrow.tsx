@@ -3,15 +3,13 @@ import React, { FC, useState } from 'react';
 import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 
-import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
+import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
-import { ButtonLoading } from 'components/pages/deposit/DepositCard/common/ButtonLoading';
-import { StateType } from 'components/pages/deposit/DepositCard/types';
-import { useUserBalance } from 'hooks';
 
 import { Bottom } from '../common/styled';
+import { StateType } from '../types';
 
 const CollateralBalanceWrapper = styled.div`
   display: flex;
@@ -47,7 +45,7 @@ interface Props {
   setState: (state: StateType) => void;
 }
 
-export const Deposit: FC<Props> = ({ setState }) => {
+export const Borrow: FC<Props> = ({ setState }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState('');
 
@@ -61,7 +59,7 @@ export const Deposit: FC<Props> = ({ setState }) => {
     // setValue(balance.toString());
   };
 
-  const handleDepositClick = async () => {
+  const handleBorrowClick = async () => {
     setIsLoading(true);
     // TODO: deposit
     await new Promise((resolve) => setTimeout(resolve, 300));
@@ -79,8 +77,8 @@ export const Deposit: FC<Props> = ({ setState }) => {
           <ButtonLoading />
         ) : (
           <ButtonConnect>
-            <Button onClick={handleDepositClick} className="full">
-              Deposit
+            <Button onClick={handleBorrowClick} className="full">
+              Borrow
             </Button>
             <Button onClick={() => setState('balance')}>Cancel</Button>
           </ButtonConnect>

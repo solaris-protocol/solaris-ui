@@ -1,1 +1,1 @@
-export type StateType = 'balance' | 'deposit' | 'withdraw';
+export type StateType = 'balance' | 'borrow' | 'repay';
