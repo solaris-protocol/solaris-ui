@@ -1,7 +1,9 @@
 import React from "react";
-import { Typography } from "antd";
-import { shortenAddress } from "../../../utils/utils";
+
 import { PublicKey } from "@solana/web3.js";
+import { Typography } from "antd";
+
+import { shortenAddress } from "../../../utils/utils";
 
 export const ExplorerLink = (props: {
   address: string | PublicKey;
@@ -29,7 +31,7 @@ export const ExplorerLink = (props: {
       // eslint-disable-next-line react/jsx-no-target-blank
       target="_blank"
       title={address}
-      style={props.style}
+      style={props.style} rel="noreferrer"
     >
       {code ? (
         <Typography.Text style={props.style} code>

@@ -1,3 +1,4 @@
+import { AccountInfo as TokenAccountInfo, Token } from "@solana/spl-token";
 import {
   Account,
   AccountInfo,
@@ -5,7 +6,6 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-import { AccountInfo as TokenAccountInfo, Token } from "@solana/spl-token";
 import { TOKEN_PROGRAM_ID } from "../../utils/ids";
 
 export interface TokenAccount {

@@ -1,6 +1,8 @@
 import { useMemo } from "react";
-import { useUserObligations } from "./useUserObligations";
+
 import { PublicKey } from "@solana/web3.js";
+
+import { useUserObligations } from "./useUserObligations";
 
 export function useUserObligationByReserve(
   borrowReserve?: string | PublicKey,

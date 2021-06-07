@@ -5,13 +5,14 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
+
 import {
   LENDING_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   WRAPPED_SOL_MINT,
 } from "../../utils/ids";
-import { LendingObligationLayout, TokenAccount } from "../models";
 import { cache, TokenAccountParser } from "../contexts/accounts";
+import { LendingObligationLayout, TokenAccount } from "../models";
 
 export function ensureSplAccount(
   instructions: TransactionInstruction[],
