@@ -34,9 +34,6 @@ export const Routes: FC = () => {
               <Route exact path={['/', '/deposit']}>
                 <Deposit />
               </Route>
-              {/*<Route exact path="/depositold">*/}
-              {/*  <DepositView />*/}
-              {/*</Route>*/}
               <Route exact path="/borrow">
                 <Borrow />
               </Route>
