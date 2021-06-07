@@ -1,20 +1,14 @@
 import { useCallback, useState } from 'react';
 
 import { MintInfo } from '@solana/spl-token';
+import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
 import { PoolInfo, TokenAccount } from '../app/models';
 import { LAMPORTS_PER_SOL, WAD, ZERO } from '../constants';
 
-export interface KnownToken {
-  tokenSymbol: string;
-  tokenName: string;
-  icon: string;
-  mintAddress: string;
-}
-
-export type KnownTokenMap = Map<string, KnownToken>;
+export type KnownTokenMap = Map<string, TokenInfo>;
 
 export const formatPriceNumber = new Intl.NumberFormat('en-US', {
   style: 'decimal',
@@ -63,7 +57,7 @@ export function getTokenName(map: KnownTokenMap, mint?: string | PublicKey, shor
     return 'N/A';
   }
 
-  const knownSymbol = map.get(mintAddress)?.tokenSymbol;
+  const knownSymbol = map.get(mintAddress)?.symbol;
   if (knownSymbol) {
     return knownSymbol;
   }
@@ -72,9 +66,9 @@ export function getTokenName(map: KnownTokenMap, mint?: string | PublicKey, shor
 }
 
 export function getTokenByName(tokenMap: KnownTokenMap, name: string) {
-  let token: KnownToken | null = null;
+  let token: TokenInfo | null = null;
   for (const val of tokenMap.values()) {
-    if (val.tokenSymbol === name) {
+    if (val.symbol === name) {
       token = val;
       break;
     }
@@ -88,7 +82,7 @@ export function getTokenIcon(map: KnownTokenMap, mintAddress?: string | PublicKe
     return;
   }
 
-  return map.get(address)?.icon;
+  return map.get(address)?.logoURI;
 }
 
 export function isKnownMint(map: KnownTokenMap, mintAddress: string) {

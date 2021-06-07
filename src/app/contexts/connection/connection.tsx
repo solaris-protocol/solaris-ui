@@ -1,14 +1,14 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-import { Account, Connection, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { TokenInfo, TokenListProvider } from '@solana/spl-token-registry';
+import { Account, Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 
-import localTokens from 'constants/tokens.json';
 import { setProgramIds } from 'utils/ids';
 import { notify } from 'utils/notifications';
-import { KnownToken, useLocalStorageState } from 'utils/utils';
+import { useLocalStorageState } from 'utils/utils';
 
 import { ExplorerLink } from '../../../old/components/ExplorerLink';
-import { cache } from '../accounts';
+import { cache, getMultipleAccounts, MintParser } from '../accounts';
 import { WalletAdapter } from '../wallet/wallet';
 import { ENDPOINTS } from './constants';
 
@@ -25,8 +25,8 @@ interface ConnectionConfig {
   setSlippage: (val: number) => void;
   env: ENV;
   setEndpoint: (val: string) => void;
-  tokens: KnownToken[];
-  tokenMap: Map<string, KnownToken>;
+  tokens: TokenInfo[];
+  tokenMap: Map<string, TokenInfo>;
 }
 
 const ConnectionContext = React.createContext<ConnectionConfig>({
@@ -38,7 +38,7 @@ const ConnectionContext = React.createContext<ConnectionConfig>({
   sendConnection: new Connection(DEFAULT, 'recent'),
   env: ENDPOINTS[0].name,
   tokens: [],
-  tokenMap: new Map<string, KnownToken>(),
+  tokenMap: new Map<string, TokenInfo>(),
 });
 
 export function ConnectionProvider({ children = undefined as any }) {
@@ -49,29 +49,37 @@ export function ConnectionProvider({ children = undefined as any }) {
   const connection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
   const sendConnection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
 
-  const env = ENDPOINTS.find((end) => end.endpoint === endpoint)?.name || ENDPOINTS[0].name;
+  const chain = ENDPOINTS.find((end) => end.endpoint === endpoint) || ENDPOINTS[2];
+  const env = chain.name;
 
-  const [tokens, setTokens] = useState<KnownToken[]>([]);
-  const [tokenMap, setTokenMap] = useState<Map<string, KnownToken>>(new Map());
+  const [tokens, setTokens] = useState<TokenInfo[]>([]);
+  const [tokenMap, setTokenMap] = useState<Map<string, TokenInfo>>(new Map());
+
   useEffect(() => {
     cache.clear();
     // fetch token files
-    window
-      .fetch(`https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/${env}.json`)
-      .then((res) => {
-        return res.json();
-      })
-      .catch((err) => [])
-      .then((list: KnownToken[]) => {
-        const knownMints = [...localTokens, ...list].reduce((map, item) => {
-          map.set(item.mintAddress, item);
-          return map;
-        }, new Map<string, KnownToken>());
+    (async () => {
+      const res = await new TokenListProvider().resolve();
+      const list = res.filterByChainId(chain.chainID).excludeByTag('nft').getList();
+      const knownMints = list.reduce((map, item) => {
+        map.set(item.address, item);
+        return map;
+      }, new Map<string, TokenInfo>());
 
-        setTokenMap(knownMints);
-        setTokens(list);
+      const accounts = await getMultipleAccounts(connection, [...knownMints.keys()], 'single');
+      accounts.keys.forEach((key, index) => {
+        const account = accounts.array[index];
+        if (!account) {
+          return;
+        }
+
+        cache.add(new PublicKey(key), account, MintParser);
       });
-  }, [env]);
+
+      setTokenMap(knownMints);
+      setTokens(list);
+    })();
+  }, [connection, chain]);
 
   setProgramIds(env);
 

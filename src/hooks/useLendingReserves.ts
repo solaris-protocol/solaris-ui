@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey } from '@solana/web3.js';
-import { log } from 'util';
 
-import { cache, ParsedAccount } from '../app/contexts/accounts';
-import { useConnectionConfig } from '../app/contexts/connection';
-import { Reserve, ReserveParser } from '../app/models/lending';
-import { getTokenByName, KnownToken } from '../utils/utils';
+import { cache, ParsedAccount } from 'app/contexts/accounts';
+import { useConnectionConfig } from 'app/contexts/connection';
+import { Reserve, ReserveParser } from 'app/models/lending';
+import { getTokenByName } from 'utils/utils';
 
 export const getLendingReserves = () => {
   return cache
@@ -41,11 +41,9 @@ export function useLendingReserve(address?: string | PublicKey) {
 
   let addressName = address;
   if (typeof address === 'string') {
-    const token: KnownToken | null = getTokenByName(tokenMap, address);
+    const token: TokenInfo | null = getTokenByName(tokenMap, address);
     if (token) {
-      const account = reserveAccounts.filter(
-        (acc) => acc.info.liquidity.mintPubkey.toBase58() === token.mintAddress
-      )[0];
+      const account = reserveAccounts.filter((acc) => acc.info.liquidity.mintPubkey.toBase58() === token.address)[0];
       if (account) {
         addressName = account.pubkey;
       }
