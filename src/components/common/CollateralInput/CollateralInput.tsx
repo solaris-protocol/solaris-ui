@@ -14,7 +14,7 @@ const WrapperLabel = styled.label`
   white-space: nowrap;
 `;
 
-const Input = styled.span`
+const Input = styled.input`
   position: relative;
 
   width: 100%;
