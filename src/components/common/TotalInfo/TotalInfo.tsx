@@ -53,6 +53,7 @@ const Title = styled.span`
   font-size: 12px;
   line-height: 15px;
   letter-spacing: 0.06em;
+  text-transform: uppercase;
 `;
 
 const Value = styled.span`
@@ -73,7 +74,7 @@ export const TotalInfo: FC<Props> = ({ type }) => {
   return (
     <Wrapper className={classNames({ [type]: true })}>
       <Column>
-        <Title>DEPOSITED</Title>
+        <Title>Deposited</Title>
         <Value>$1,082.50</Value>
       </Column>
       {/*<Column className="collateral">*/}

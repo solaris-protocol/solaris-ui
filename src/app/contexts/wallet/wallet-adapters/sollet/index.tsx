@@ -56,7 +56,8 @@ export class SolanaWalletAdapter extends EventEmitter implements WalletAdapter {
   };
 
   disconnect(): void {
-    this._provider.disconnect();
-    this.emit('disconnect');
+    if (this._provider) {
+      this._provider.disconnect();
+    }
   }
 }
