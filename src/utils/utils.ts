@@ -5,7 +5,8 @@ import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
-import { PoolInfo, TokenAccount } from '../app/models';
+import { PoolInfo, TokenAccount } from 'app/models';
+
 import { LAMPORTS_PER_SOL, WAD, ZERO } from '../constants';
 
 export type KnownTokenMap = Map<string, TokenInfo>;

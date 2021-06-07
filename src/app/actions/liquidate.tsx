@@ -1,14 +1,15 @@
 import { AccountLayout } from '@solana/spl-token';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-import { LENDING_PROGRAM_ID } from '../../utils/ids';
-import { notify } from '../../utils/notifications';
-import { cache, ParsedAccount } from '../contexts/accounts';
-import { sendTransaction } from '../contexts/connection/connection';
-import { WalletAdapter } from '../contexts/wallet';
-import { approve, LendingMarket, LendingObligation, TokenAccount } from '../models';
-import { liquidateInstruction } from '../models/lending/liquidate';
-import { Reserve } from '../models/lending/reserve';
+import { cache, ParsedAccount } from 'app/contexts/accounts';
+import { sendTransaction } from 'app/contexts/connection';
+import { WalletAdapter } from 'app/contexts/wallet';
+import { Reserve } from 'app/models';
+import { approve, LendingMarket, LendingObligation, TokenAccount } from 'app/models';
+import { liquidateInstruction } from 'app/models/lending/liquidate';
+import { LENDING_PROGRAM_ID } from 'utils/ids';
+import { notify } from 'utils/notifications';
+
 import { createTempMemoryAccount, ensureSplAccount, findOrCreateAccountByMint } from './account';
 
 export const liquidate = async (

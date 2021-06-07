@@ -1,12 +1,10 @@
 import { AccountLayout, MintInfo, MintLayout } from '@solana/spl-token';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-import { LEND_HOST_FEE_ADDRESS, LENDING_PROGRAM_ID } from '../../utils/ids';
-import { notify } from '../../utils/notifications';
-import { toLamports } from '../../utils/utils';
-import { cache, MintParser, ParsedAccount } from '../contexts/accounts';
-import { sendTransaction } from '../contexts/connection/connection';
-import { WalletAdapter } from '../contexts/wallet';
+import { cache, MintParser, ParsedAccount } from 'app/contexts/accounts';
+import { sendTransaction } from 'app/contexts/connection';
+import { WalletAdapter } from 'app/contexts/wallet';
+import { Reserve } from 'app/models';
 import {
   approve,
   BorrowAmountType,
@@ -16,8 +14,11 @@ import {
   LendingObligation,
   LendingObligationLayout,
   TokenAccount,
-} from '../models';
-import { Reserve } from '../models/lending/reserve';
+} from 'app/models';
+import { LEND_HOST_FEE_ADDRESS, LENDING_PROGRAM_ID } from 'utils/ids';
+import { notify } from 'utils/notifications';
+import { toLamports } from 'utils/utils';
+
 import {
   createTempMemoryAccount,
   createUninitializedAccount,

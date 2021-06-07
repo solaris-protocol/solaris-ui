@@ -1,12 +1,13 @@
 import { AccountLayout } from '@solana/spl-token';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-import { LENDING_PROGRAM_ID } from '../../utils/ids';
-import { notify } from '../../utils/notifications';
-import { sendTransaction } from '../contexts/connection/connection';
-import { WalletAdapter } from '../contexts/wallet';
-import { approve, TokenAccount } from '../models';
-import { redeemReserveCollateralInstruction, refreshReserveInstruction, Reserve } from '../models/lending';
+import { sendTransaction } from 'app/contexts/connection/connection';
+import { WalletAdapter } from 'app/contexts/wallet';
+import { approve, TokenAccount } from 'app/models';
+import { redeemReserveCollateralInstruction, refreshReserveInstruction, Reserve } from 'app/models/lending';
+import { LENDING_PROGRAM_ID } from 'utils/ids';
+import { notify } from 'utils/notifications';
+
 import { findOrCreateAccountByMint } from './account';
 
 export const withdraw = async (

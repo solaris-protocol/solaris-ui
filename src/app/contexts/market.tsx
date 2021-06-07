@@ -4,12 +4,12 @@ import { useMemo } from 'react';
 import { Market, MARKETS, Orderbook, TOKEN_MINTS } from '@project-serum/serum';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 
+import { LendingMarket, Reserve } from 'app/models';
+import { DexMarketParser } from 'app/models/dex';
+import { MINT_TO_MARKET } from 'app/models/marketOverrides';
 import { EventEmitter } from 'utils/eventEmitter';
 import { fromLamports, STABLE_COINS } from 'utils/utils';
 
-import { LendingMarket, Reserve } from '../models';
-import { DexMarketParser } from '../models/dex';
-import { MINT_TO_MARKET } from '../models/marketOverrides';
 import { cache, getMultipleAccounts, ParsedAccount } from './accounts';
 import { useConnectionConfig } from './connection/connection';
 

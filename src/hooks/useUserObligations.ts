@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
-import { TokenAccount } from '../app/models';
+import { TokenAccount } from 'app/models';
+
 import { useEnrichedLendingObligations } from './useEnrichedLendingObligations';
 import { useUserAccounts } from './useUserAccounts';
 

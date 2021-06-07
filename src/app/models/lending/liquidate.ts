@@ -2,8 +2,9 @@ import { PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/
 import BN from 'bn.js';
 import * as BufferLayout from 'buffer-layout';
 
-import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID } from '../../../utils/ids';
-import * as Layout from '../../../utils/layout';
+import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID } from 'utils/ids';
+import * as Layout from 'utils/layout';
+
 import { LendingInstructions } from './lending';
 
 /// Purchase collateral tokens at a discount rate if the chosen obligation is unhealthy.

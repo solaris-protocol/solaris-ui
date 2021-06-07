@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 
 import { PublicKey } from '@solana/web3.js';
 
-import { useMint } from '../app/contexts/accounts';
-import { useMidPriceInUSD } from '../app/contexts/market';
-import { fromLamports } from '../utils/utils';
+import { useMint } from 'app/contexts/accounts';
+import { useMidPriceInUSD } from 'app/contexts/market';
+import { fromLamports } from 'utils/utils';
+
 import { useLendingMarket } from './useLendingMarket';
 import { getLendingReserves, useLendingReserve } from './useLendingReserves';
 import { useUserDeposits } from './useUserDeposits';

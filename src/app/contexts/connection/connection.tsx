@@ -3,13 +3,13 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { TokenInfo, TokenListProvider } from '@solana/spl-token-registry';
 import { Account, Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 
+import { cache, getMultipleAccounts, MintParser } from 'app/contexts/accounts';
+import { WalletAdapter } from 'app/contexts/wallet';
 import { setProgramIds } from 'utils/ids';
 import { notify } from 'utils/notifications';
 import { useLocalStorageState } from 'utils/utils';
 
 import { ExplorerLink } from '../../../old/components/ExplorerLink';
-import { cache, getMultipleAccounts, MintParser } from '../accounts';
-import { WalletAdapter } from '../wallet/wallet';
 import { ENDPOINTS } from './constants';
 
 export type ENV = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet';

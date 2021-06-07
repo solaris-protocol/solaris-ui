@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { MintInfo } from '@solana/spl-token';
 
-import { cache, ParsedAccount } from '../app/contexts/accounts';
-import { useConnectionConfig } from '../app/contexts/connection';
-import { useMarkets } from '../app/contexts/market';
-import { TokenAccount } from '../app/models';
-import { calculateDepositAPY, Reserve } from '../app/models/lending';
-import { fromLamports, getTokenName } from '../utils/utils';
+import { cache, ParsedAccount } from 'app/contexts/accounts';
+import { useConnectionConfig } from 'app/contexts/connection';
+import { useMarkets } from 'app/contexts/market';
+import { TokenAccount } from 'app/models';
+import { calculateDepositAPY, Reserve } from 'app/models/lending';
+import { fromLamports, getTokenName } from 'utils/utils';
+
 import { calculateCollateralBalance } from './useCollateralBalance';
 import { useLendingReserves } from './useLendingReserves';
 import { useUserAccounts } from './useUserAccounts';

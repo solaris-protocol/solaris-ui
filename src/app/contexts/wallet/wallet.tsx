@@ -4,11 +4,11 @@ import Wallet from '@project-serum/sol-wallet-adapter';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import EventEmitter from 'eventemitter3';
 
+import { useConnectionConfig } from 'app/contexts/connection';
 import { useModals } from 'app/contexts/modals';
 import { notify } from 'utils/notifications';
 import { shortenAddress, useLocalStorageState } from 'utils/utils';
 
-import { useConnectionConfig } from '../connection/connection';
 import { WALLET_PROVIDERS } from './constants';
 
 export interface WalletAdapter extends EventEmitter {

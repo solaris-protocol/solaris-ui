@@ -2,10 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 
-import { useLendingReserves } from 'hooks';
-import { LENDING_PROGRAM_ID } from 'utils/ids';
-
-import { DexMarketParser } from '../models/dex';
+import { DexMarketParser } from 'app/models/dex';
 import {
   isLendingMarket,
   isLendingObligation,
@@ -14,7 +11,10 @@ import {
   LendingObligationParser,
   Reserve,
   ReserveParser,
-} from '../models/lending';
+} from 'app/models/lending';
+import { useLendingReserves } from 'hooks';
+import { LENDING_PROGRAM_ID } from 'utils/ids';
+
 import { cache, getMultipleAccounts, MintParser, ParsedAccount } from './accounts';
 import { useConnection } from './connection/connection';
 import { usePrecacheMarket } from './market';

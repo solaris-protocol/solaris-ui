@@ -3,11 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MintInfo } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 
-import { cache, ParsedAccount } from '../app/contexts/accounts';
-import { useConnectionConfig } from '../app/contexts/connection';
-import { simulateMarketOrderFill, useMarkets } from '../app/contexts/market';
-import { collateralToLiquidity, LendingObligation, Reserve } from '../app/models/lending';
-import { fromLamports, getTokenName, wadToLamports } from '../utils/utils';
+import { cache, ParsedAccount } from 'app/contexts/accounts';
+import { useConnectionConfig } from 'app/contexts/connection';
+import { simulateMarketOrderFill, useMarkets } from 'app/contexts/market';
+import { collateralToLiquidity, LendingObligation, Reserve } from 'app/models/lending';
+import { fromLamports, getTokenName, wadToLamports } from 'utils/utils';
+
 import { useLendingObligations } from './useLendingObligations';
 import { useLendingReserves } from './useLendingReserves';
 

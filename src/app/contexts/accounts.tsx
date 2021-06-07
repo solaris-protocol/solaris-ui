@@ -1,19 +1,14 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { AccountLayout, MintInfo, MintLayout, u64 } from '@solana/spl-token';
-import {
-  AccountInfo,
-  ConfirmedSignatureInfo,
-  ConfirmedTransaction,
-  Connection,
-  PublicKey,
-} from '@solana/web3.js';
+import { AccountInfo, ConfirmedSignatureInfo, ConfirmedTransaction, Connection, PublicKey } from '@solana/web3.js';
 
-import { useUserAccounts } from '../../hooks/useUserAccounts';
-import { EventEmitter } from '../../utils/eventEmitter';
-import { LEND_HOST_FEE_ADDRESS, programIds, WRAPPED_SOL_MINT } from '../../utils/ids';
-import { chunks } from '../../utils/utils';
-import { PoolInfo, TokenAccount } from '../models';
+import { PoolInfo, TokenAccount } from 'app/models';
+import { useUserAccounts } from 'hooks/useUserAccounts';
+import { EventEmitter } from 'utils/eventEmitter';
+import { LEND_HOST_FEE_ADDRESS, programIds, WRAPPED_SOL_MINT } from 'utils/ids';
+import { chunks } from 'utils/utils';
+
 import { useConnection } from './connection/connection';
 import { useWallet } from './wallet/wallet';
 
@@ -37,10 +32,7 @@ export interface ParsedAccountBase {
   info: any; // TODO: change to unkown
 }
 
-export type AccountParser = (
-  pubkey: PublicKey,
-  data: AccountInfo<Buffer>
-) => ParsedAccountBase | undefined;
+export type AccountParser = (pubkey: PublicKey, data: AccountInfo<Buffer>) => ParsedAccountBase | undefined;
 
 export interface ParsedAccount<T> extends ParsedAccountBase {
   info: T;
@@ -282,10 +274,7 @@ export const useAccountsContext = () => {
   return context;
 };
 
-function wrapNativeAccount(
-  pubkey: PublicKey,
-  account?: AccountInfo<Buffer>
-): TokenAccount | undefined {
+function wrapNativeAccount(pubkey: PublicKey, account?: AccountInfo<Buffer>): TokenAccount | undefined {
   if (!account) {
     return undefined;
   }
@@ -589,9 +578,7 @@ export function useAccount(pubKey?: PublicKey) {
           return;
         }
 
-        const acc = await cache
-          .query(connection, key, TokenAccountParser)
-          .catch((err) => console.log(err));
+        const acc = await cache.query(connection, key, TokenAccountParser).catch((err) => console.log(err));
         if (acc) {
           setAccount(acc);
         }

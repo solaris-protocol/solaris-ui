@@ -1,7 +1,7 @@
 import { Market, MARKETS, Orderbook } from '@project-serum/serum';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 
-import { cache, MintParser, ParsedAccountBase } from '../../contexts/accounts';
+import { cache, MintParser, ParsedAccountBase } from 'app/contexts/accounts';
 
 export const OrderBookParser = (id: PublicKey, acc: AccountInfo<Buffer>) => {
   const decoded = Orderbook.LAYOUT.decode(acc.data);

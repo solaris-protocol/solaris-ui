@@ -2,9 +2,8 @@ import SolletWalletAdapter from '@project-serum/sol-wallet-adapter';
 import { Transaction } from '@solana/web3.js';
 import EventEmitter from 'eventemitter3';
 
+import { WalletAdapter } from 'app/contexts/wallet';
 import { notify } from 'utils/notifications';
-
-import { WalletAdapter } from '../../wallet';
 
 export class SolanaWalletAdapter extends EventEmitter implements WalletAdapter {
   private _provider: SolletWalletAdapter;

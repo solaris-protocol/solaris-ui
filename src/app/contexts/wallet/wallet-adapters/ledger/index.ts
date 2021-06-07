@@ -4,9 +4,9 @@ import type { Transaction } from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js';
 import EventEmitter from 'eventemitter3';
 
+import { WalletAdapter } from 'app/contexts/wallet';
 import { notify } from 'utils/notifications';
 
-import { WalletAdapter } from '../../wallet';
 import { getPublicKey, signTransaction } from './core';
 
 export class LedgerWalletAdapter extends EventEmitter implements WalletAdapter {

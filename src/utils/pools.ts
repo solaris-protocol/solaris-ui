@@ -3,14 +3,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { AccountLayout, MintLayout } from '@solana/spl-token';
 import { Connection, PublicKey } from '@solana/web3.js';
 
-import { cache, getMultipleAccounts, TokenAccountParser } from '../app/contexts/accounts';
-import { useConnection } from '../app/contexts/connection';
-import {
-  PoolInfo,
-  TokenSwapLayout,
-  TokenSwapLayoutLegacyV0 as TokenSwapLayoutV0,
-  TokenSwapLayoutV1,
-} from '../app/models';
+import { cache, getMultipleAccounts, TokenAccountParser } from 'app/contexts/accounts';
+import { useConnection } from 'app/contexts/connection';
+import { PoolInfo, TokenSwapLayout, TokenSwapLayoutLegacyV0 as TokenSwapLayoutV0, TokenSwapLayoutV1 } from 'app/models';
+
 import { programIds } from './ids';
 
 export const LIQUIDITY_PROVIDER_FEE = 0.003;
