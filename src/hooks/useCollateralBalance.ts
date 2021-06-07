@@ -9,6 +9,10 @@ import { fromLamports } from 'utils/utils';
 
 import { useUserBalance } from './useUserBalance';
 
+export function calculateCollateralBalance(reserve: Reserve, balanceLamports: number) {
+  return reserveMarketCap(reserve) * (balanceLamports / (reserve?.collateral.mintTotalSupply.toNumber() || 1));
+}
+
 export function useUserCollateralBalance(reserve?: Reserve, account?: PublicKey) {
   const mint = useMint(reserve?.collateral.mintPubkey);
   const { balanceLamports: userBalance, accounts } = useUserBalance(reserve?.collateral.mintPubkey, account);
@@ -47,7 +51,4 @@ export function useUserCollateralBalance(reserve?: Reserve, account?: PublicKey)
     accounts,
     hasBalance: accounts.length > 0 && balance > 0,
   };
-}
-export function calculateCollateralBalance(reserve: Reserve, balanceLamports: number) {
-  return reserveMarketCap(reserve) * (balanceLamports / (reserve?.collateral.mintTotalSupply.toNumber() || 1));
 }

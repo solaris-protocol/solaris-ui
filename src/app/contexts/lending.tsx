@@ -23,19 +23,6 @@ export interface LendingContextState {}
 
 const LendingContext = React.createContext<LendingContextState | null>(null);
 
-export function LendingProvider({ children = null as any }) {
-  const { accounts } = useLending();
-  return (
-    <LendingContext.Provider
-      value={{
-        accounts,
-      }}
-    >
-      {children}
-    </LendingContext.Provider>
-  );
-}
-
 export const useLending = () => {
   const connection = useConnection();
   const [lendingAccounts, setLendingAccounts] = useState<any[]>([]);
@@ -130,3 +117,16 @@ export const useLending = () => {
 
   return { accounts: lendingAccounts };
 };
+
+export function LendingProvider({ children = null as any }) {
+  const { accounts } = useLending();
+  return (
+    <LendingContext.Provider
+      value={{
+        accounts,
+      }}
+    >
+      {children}
+    </LendingContext.Provider>
+  );
+}
