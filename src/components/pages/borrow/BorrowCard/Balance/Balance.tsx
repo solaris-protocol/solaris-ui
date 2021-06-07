@@ -24,7 +24,7 @@ interface Props {
 }
 
 export const Balance: FC<Props> = ({ setState }) => {
-  const balance = 0;
+  const balance = 1;
   const balanceInUSD = 0;
 
   return (

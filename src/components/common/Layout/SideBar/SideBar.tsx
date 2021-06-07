@@ -71,6 +71,7 @@ const Main = styled.div`
 `;
 
 const Logo = styled.div`
+  flex-shrink: 0;
   width: 50px;
   height: 50px;
 

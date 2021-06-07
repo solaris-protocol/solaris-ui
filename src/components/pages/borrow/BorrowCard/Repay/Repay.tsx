@@ -10,6 +10,7 @@ import { CollateralInput } from 'components/common/CollateralInput';
 
 import { Bottom } from '../common/styled';
 import { StateType } from '../types';
+import { Range } from './Range';
 
 const CollateralBalanceWrapper = styled.div`
   display: flex;
@@ -70,7 +71,7 @@ export const Repay: FC<Props> = ({ setState }) => {
     <>
       <CollateralBalanceWrapper>
         <CollateralInput mintAddress={liquidityMint} value={value} onChange={handleValueChange} />
-        <MaxButton onClick={handleMaxClick}>Max</MaxButton>
+        <Range />
       </CollateralBalanceWrapper>
       <Bottom>
         {isLoading ? (

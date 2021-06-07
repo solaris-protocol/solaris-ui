@@ -120,6 +120,8 @@ export interface Reserve {
   collateral: ReserveCollateral;
   /// Reserve configuration values
   config: ReserveConfig;
+  // optional
+  pubkey?: PublicKey;
 }
 
 export const ReserveLayout: typeof BufferLayout.Structure = BufferLayout.struct([

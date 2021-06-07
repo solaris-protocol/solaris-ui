@@ -16,10 +16,7 @@ import { ButtonBottom, ButtonTopA, Wrapper } from '../common/styled';
 const TopWrapper = styled.div`
   display: flex;
   flex-direction: column;
-
-  & > :not(:last-child) {
-    margin-bottom: 14px;
-  }
+  row-gap: 14px;
 `;
 
 const ButtonTopAStyled = styled(ButtonTopA)`
@@ -37,10 +34,7 @@ const ButtonBottomStyled = styled(ButtonBottom)`
 const BottomWrapper = styled.div`
   display: flex;
   flex-direction: column;
-
-  & > :not(:last-child) {
-    margin-bottom: 20px;
-  }
+  row-gap: 20px;
 `;
 
 export const Closed: FC = () => {

@@ -5,6 +5,7 @@ export const Wrapper = styled.div`
   flex: 1;
   flex-direction: column;
   justify-content: space-between;
+  row-gap: 20px;
 `;
 
 export const ButtonTopA = styled.a`

@@ -1,15 +1,15 @@
 import React, { FC } from 'react';
 
 import { styled } from '@linaria/react';
-import { rgba } from 'polished';
 
 import { calculateDepositAPY, Reserve } from 'app/models';
 import WalletIcon from 'assets/icons/wallet-icon.svg';
-import { APY } from 'components/common/APY';
 import { TokenIcon } from 'components/common/TokenIcon';
-import { StateType } from 'components/pages/deposit/DepositCard/types';
 import { useTokenName, useUserBalance } from 'hooks';
-import { formatNumber, formatPct } from 'utils/utils';
+import { formatNumber } from 'utils/utils';
+
+import { StateType } from './../types';
+import { APY } from './/APY';
 
 const Wrapper = styled.div`
   display: flex;

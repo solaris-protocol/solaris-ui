@@ -7,9 +7,16 @@ import classNames from 'classnames';
 import { useMidPriceInUSD } from 'app/contexts/market';
 import { formatNumber } from 'utils/utils';
 
-const WrapperLabel = styled.label``;
+const WrapperLabel = styled.label`
+  display: flex;
+  flex-direction: column;
 
-const Input = styled.input`
+  white-space: nowrap;
+`;
+
+const Input = styled.span`
+  position: relative;
+
   width: 100%;
   padding: 0;
 
@@ -29,6 +36,16 @@ const Input = styled.input`
 
   &::placeholder {
     color: #45364d;
+  }
+
+  &::before {
+    position: absolute;
+
+    display: block;
+
+    color: #45364d;
+
+    content: attr(placeholder);
   }
 `;
 
@@ -66,10 +83,11 @@ export const CollateralInput: FC<Props> = ({ mintAddress, value, onChange }) => 
   return (
     <WrapperLabel>
       <Input
-        value={value || undefined}
+        value={value}
         placeholder="0.00"
         onChange={handleValueChange}
         className={classNames({ isZero: !value })}
+        contentEditable
       />
       <BalanceUSD>${formatNumber.format(valueIsUSD)}</BalanceUSD>
     </WrapperLabel>

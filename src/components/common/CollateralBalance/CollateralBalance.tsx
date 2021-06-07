@@ -3,13 +3,14 @@ import React, { FC } from 'react';
 import { styled } from '@linaria/react';
 import classNames from 'classnames';
 
-import { Reserve } from 'app/models';
-import { useUserCollateralBalance } from 'hooks';
 import { formatNumber } from 'utils/utils';
 
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
+
+  white-space: nowrap;
+
   pointer-events: none;
 `;
 

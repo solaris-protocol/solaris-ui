@@ -4,11 +4,11 @@ import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 
 import WalletIcon from 'assets/icons/wallet-icon.svg';
-import { APY } from 'components/common/APY';
 import { TokenIcon } from 'components/common/TokenIcon';
 import { formatNumber } from 'utils/utils';
 
 import { StateType } from '../types';
+import { APR } from './APR';
 
 const Wrapper = styled.div`
   display: flex;
@@ -59,7 +59,7 @@ interface Props {
 
 export const Top: FC<Props> = ({ state }) => {
   const name = 'SOL';
-  const apy = 1;
+  const apr = 1;
   const liquidityMint = new PublicKey('So11111111111111111111111111111111111111112');
   const tokenBalance = 0.0001;
 
@@ -68,7 +68,7 @@ export const Top: FC<Props> = ({ state }) => {
       <Left>
         <TokenIconStyled mintAddress={liquidityMint} size={40} />
         <Symbol>{name}</Symbol>
-        <APY apy={apy} isActive={state === 'borrow'} />
+        <APR apr={apr} isActive={state === 'borrow'} />
       </Left>
       <WalletBalance title={String(tokenBalance)}>
         <WalletIconStyled />

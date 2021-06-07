@@ -17,10 +17,7 @@ const TopWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  & > :not(:last-child) {
-    margin-bottom: 18px;
-  }
+  row-gap: 18px;
 `;
 
 const ButtonTopAStyled = styled(ButtonTopA)`
@@ -63,9 +60,7 @@ const ButtonSettings = styled(ButtonBottomStyled)`
 const BottomWrapper = styled.div`
   display: flex;
 
-  & > :not(:last-child) {
-    margin-right: 10px;
-  }
+  column-gap: 10px;
 `;
 
 export const Opened: FC = () => {
