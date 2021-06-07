@@ -1,4 +1,2 @@
-export * from "./labels";
-export * from "./math";
-export * from "./marks";
-export * from "./style";
+export * from './labels';
+export * from './math';
