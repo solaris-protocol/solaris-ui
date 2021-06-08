@@ -54,6 +54,7 @@ const Wrapper = styled.div`
 
 const Header = styled.div`
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
 
@@ -102,13 +103,7 @@ interface Props {
   title: string | React.ReactNode;
 }
 
-export const Modal: FC<Props & SideModalPropsType> = ({
-  noAnimation,
-  title,
-  close,
-  children,
-  ...props
-}) => {
+export const Modal: FC<Props & SideModalPropsType> = ({ noAnimation, title, close, children, ...props }) => {
   return (
     <CSSTransition timeout={noAnimation ? 0 : 600} classNames="transition" {...props}>
       <Wrapper>
