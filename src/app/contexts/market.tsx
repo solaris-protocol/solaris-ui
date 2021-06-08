@@ -7,11 +7,37 @@ import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import { LendingMarket, Reserve } from 'app/models';
 import { DexMarketParser } from 'app/models/dex';
 import { MINT_TO_MARKET } from 'app/models/marketOverrides';
+import { useUserAccounts } from 'hooks/useUserAccounts';
 import { EventEmitter } from 'utils/eventEmitter';
 import { fromLamports, STABLE_COINS } from 'utils/utils';
 
 import { cache, getMultipleAccounts, ParsedAccount } from './accounts';
 import { useConnectionConfig } from './connection/connection';
+
+interface SerumMarket {
+  marketInfo: {
+    address: PublicKey;
+    name: string;
+    programId: PublicKey;
+    deprecated: boolean;
+  };
+
+  // 1st query
+  marketAccount?: AccountInfo<Buffer>;
+
+  // 2nd query
+  mintBase?: AccountInfo<Buffer>;
+  mintQuote?: AccountInfo<Buffer>;
+  bidAccount?: AccountInfo<Buffer>;
+  askAccount?: AccountInfo<Buffer>;
+  eventQueue?: AccountInfo<Buffer>;
+
+  swap?: {
+    dailyVolume: number;
+  };
+
+  midPrice?: (mint?: PublicKey) => number;
+}
 
 interface RecentPoolData {
   pool_identifier: string;
@@ -27,7 +53,6 @@ export interface MarketsContextState {
   subscribeToMarket: (mint: string) => () => void;
 
   precacheMarkets: (mints: string[]) => void;
-  dailyVolume: Map<string, RecentPoolData>;
 }
 
 const REFRESH_INTERVAL = 30_000;
@@ -36,13 +61,28 @@ const MarketsContext = React.createContext<MarketsContextState | null>(null);
 
 const marketEmitter = new EventEmitter();
 
+const refreshAccounts = async (connection: Connection, keys: string[]) => {
+  if (keys.length === 0) {
+    return [];
+  }
+
+  return getMultipleAccounts(connection, keys, 'single').then(({ keys, array }) => {
+    return array.map((item, index) => {
+      const address = keys[index];
+      return cache.add(new PublicKey(address), item);
+    });
+  });
+};
+
 export function MarketProvider({ children = null as any }) {
   const { endpoint } = useConnectionConfig();
   const accountsToObserve = useMemo(() => new Map<string, number>(), []);
   const [marketMints, setMarketMints] = useState<string[]>([]);
-  const [dailyVolume, setDailyVolume] = useState<Map<string, RecentPoolData>>(new Map());
+  const { userAccounts } = useUserAccounts();
 
   const connection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
+
+  console.log(111, { TOKEN_MINTS, MARKETS, MINT_TO_MARKET });
 
   const marketByMint = useMemo(() => {
     return [...new Set(marketMints).values()].reduce((acc, key) => {
@@ -51,8 +91,12 @@ export function MarketProvider({ children = null as any }) {
       const SERUM_TOKEN = TOKEN_MINTS.find((a) => a.address.toBase58() === mintAddress);
 
       const marketAddress = MINT_TO_MARKET[mintAddress];
-      const marketName = `${SERUM_TOKEN?.name}/USDT`;
-      const marketInfo = MARKETS.find((m) => m.name === marketName || m.address.toBase58() === marketAddress);
+      const marketInfo = MARKETS.filter((m) => !m.deprecated).find(
+        (m) =>
+          m.name === `${SERUM_TOKEN?.name}/USDC` ||
+          m.name === `${SERUM_TOKEN?.name}/USDT` ||
+          m.address.toBase58() === marketAddress
+      );
 
       if (marketInfo) {
         acc.set(mintAddress, {
@@ -98,6 +142,7 @@ export function MarketProvider({ children = null as any }) {
         return array.map((item, index) => {
           const marketAddress = keys[index];
           const mintAddress = reverseSerumMarketCache.get(marketAddress);
+
           if (mintAddress) {
             const market = marketByMint.get(mintAddress);
 
@@ -124,7 +169,7 @@ export function MarketProvider({ children = null as any }) {
           toQuery.add(decoded.info.baseMint.toBase58());
         }
 
-        if (!cache.get(decoded.info.baseMint)) {
+        if (!cache.get(decoded.info.quoteMint)) {
           toQuery.add(decoded.info.quoteMint.toBase58());
         }
 
@@ -197,6 +242,10 @@ export function MarketProvider({ children = null as any }) {
     [setMarketMints, marketMints]
   );
 
+  useEffect(() => {
+    precacheMarkets(userAccounts.map((a) => a.info.mint.toBase58()));
+  }, [userAccounts, precacheMarkets]);
+
   return (
     <MarketsContext.Provider
       value={{
@@ -206,7 +255,6 @@ export function MarketProvider({ children = null as any }) {
         marketByMint,
         subscribeToMarket,
         precacheMarkets,
-        dailyVolume,
       }}
     >
       {children}
@@ -219,16 +267,16 @@ export const useMarkets = () => {
   return context as MarketsContextState;
 };
 
-export const useMidPriceInUSD = (mint: string | PublicKey) => {
-  const mintAddress = typeof mint === 'string' ? mint : mint.toBase58();
+export const useMidPriceInUSD = (mintAddress: PublicKey | string) => {
+  const mint = typeof mintAddress === 'string' ? mintAddress : mintAddress.toBase58();
   const { midPriceInUSD, subscribeToMarket, marketEmitter } = useContext(MarketsContext) as MarketsContextState;
   const [price, setPrice] = useState<number>(0);
 
   useEffect(() => {
-    const subscription = subscribeToMarket(mintAddress);
+    const subscription = subscribeToMarket(mint);
     const update = () => {
       if (midPriceInUSD) {
-        setPrice(midPriceInUSD(mintAddress));
+        setPrice(midPriceInUSD(mint));
       }
     };
 
@@ -239,7 +287,7 @@ export const useMidPriceInUSD = (mint: string | PublicKey) => {
       subscription();
       dispose();
     };
-  }, [midPriceInUSD, mintAddress, marketEmitter, subscribeToMarket]);
+  }, [midPriceInUSD, mint, marketEmitter, subscribeToMarket]);
 
   return { price, isBase: price === 1.0 };
 };
@@ -355,41 +403,3 @@ const getMidPrice = (marketAddress?: string, mintAddress?: string) => {
 
   return 0;
 };
-
-const refreshAccounts = async (connection: Connection, keys: string[]) => {
-  if (keys.length === 0) {
-    return [];
-  }
-
-  return getMultipleAccounts(connection, keys, 'single').then(({ keys, array }) => {
-    return array.map((item, index) => {
-      const address = keys[index];
-      return cache.add(new PublicKey(address), item);
-    });
-  });
-};
-
-interface SerumMarket {
-  marketInfo: {
-    address: PublicKey;
-    name: string;
-    programId: PublicKey;
-    deprecated: boolean;
-  };
-
-  // 1st query
-  marketAccount?: AccountInfo<Buffer>;
-
-  // 2nd query
-  mintBase?: AccountInfo<Buffer>;
-  mintQuote?: AccountInfo<Buffer>;
-  bidAccount?: AccountInfo<Buffer>;
-  askAccount?: AccountInfo<Buffer>;
-  eventQueue?: AccountInfo<Buffer>;
-
-  swap?: {
-    dailyVolume: number;
-  };
-
-  midPrice?: (mint?: PublicKey) => number;
-}
