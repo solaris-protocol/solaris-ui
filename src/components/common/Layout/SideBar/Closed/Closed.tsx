@@ -48,7 +48,12 @@ export const Closed: FC = () => {
   return (
     <Wrapper>
       <TopWrapper>
-        <NavLink to="/deposit" component={ButtonTopAStyled} className="deposit">
+        <NavLink
+          to="/deposit"
+          isActive={(_, location) => ['/deposit', '/'].includes(location.pathname)}
+          component={ButtonTopAStyled}
+          className="deposit"
+        >
           <DepositIcon />
         </NavLink>
         <NavLink to="/borrow" component={ButtonTopAStyled} className="borrow">
