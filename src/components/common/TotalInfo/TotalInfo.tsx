@@ -68,19 +68,18 @@ const Value = styled.span`
 
 interface Props {
   type: 'deposit' | 'borrow';
+  columns: { title: string; value: number | string }[];
 }
 
-export const TotalInfo: FC<Props> = ({ type }) => {
+export const TotalInfo: FC<Props> = ({ type, columns }) => {
   return (
     <Wrapper className={classNames({ [type]: true })}>
-      <Column>
-        <Title>Deposited</Title>
-        <Value>$1,082.50</Value>
-      </Column>
-      {/*<Column className="collateral">*/}
-      {/*  <Title>TOTAL COLLATERAL</Title>*/}
-      {/*  <Value>$1,539.00</Value>*/}
-      {/*</Column>*/}
+      {columns.map((column) => (
+        <Column key={column.title}>
+          <Title>{column.title}</Title>
+          <Value>{column.value}</Value>
+        </Column>
+      ))}
     </Wrapper>
   );
 };

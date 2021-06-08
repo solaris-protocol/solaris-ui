@@ -48,9 +48,6 @@ export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
   }, [reserveAccounts, exclude, include]);
 
   useEffect(() => {
-    // @ts-ignore
-    const activeMarkets = new Set(reserveAccounts.map((r) => r.info.dexMarket.toBase58()));
-
     const userDepositsFactory = () => {
       return userAccounts
         .filter((acc) => reservesByCollateralMint.has(acc?.info.mint.toBase58()))
@@ -79,11 +76,6 @@ export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
     };
 
     const dispose = marketEmitter.onMarket((args) => {
-      // ignore if none of the markets is used by the reserve
-      if ([...args.ids.values()].every((id) => !activeMarkets.has(id))) {
-        return;
-      }
-
       setUserDeposits(userDepositsFactory());
     });
 

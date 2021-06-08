@@ -19,7 +19,7 @@ export const Borrow: FC = () => {
 
   return (
     <>
-      <TotalInfo type="borrow" />
+      <TotalInfo type="borrow" columns={[]} />
       <CardsWrapper>
         <BorrowCard key="1" />
         {/*{userObligations.map((item) => (*/}
