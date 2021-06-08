@@ -123,15 +123,6 @@ export const SideBar: FC = () => {
           </Main>
         </CSSTransition>
       </TransitionGroup>
-
-      {/*<SideModalWallet isOpen={sideModal === 'wallet'} close={handleSideModalClose} />*/}
-
-      {/*<SideModalSettings*/}
-      {/*  isOpen={sideModal === 'settings'}*/}
-      {/*  openSideModal={handleSideModalChange}*/}
-      {/*  close={handleSideModalClose}*/}
-      {/*/>*/}
-      {/*<SideModalNetwork isOpen={sideModal === 'network'} close={handleSideModalClose} />*/}
     </Wrapper>
   );
 };

@@ -1,7 +1,6 @@
 import React, { ElementType, useCallback, useContext, useMemo, useState } from 'react';
 import { TransitionGroup } from 'react-transition-group';
 
-import { SideModalNetwork } from 'components/modals/SideModalNetwork';
 import { SideModalSettings } from 'components/modals/SideModalSettings';
 import { SideModalWallet } from 'components/modals/SideModalWallet';
 import { SideModalPropsType, SideModalType } from 'components/modals/types';
@@ -11,7 +10,6 @@ type ModalState = { modalName: SideModalType; modalId: number; props: any };
 const modalsMap = new Map<SideModalType, ElementType<SideModalPropsType>>([
   ['wallet', SideModalWallet],
   ['settings', SideModalSettings],
-  ['network', SideModalNetwork],
 ]);
 
 let modalId = 0;
@@ -57,12 +55,7 @@ export function ModalsProvider({ children = null as any }) {
         return null;
       }
 
-      return (
-        <ModalComponent
-          key={modal.modalId}
-          close={(result?: any) => closeModal(modal.modalId, result)}
-        />
-      );
+      return <ModalComponent key={modal.modalId} close={(result?: any) => closeModal(modal.modalId, result)} />;
     });
   }, [modals]);
 

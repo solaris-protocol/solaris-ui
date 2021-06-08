@@ -1,15 +1,11 @@
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 
 import { styled } from '@linaria/react';
 import { rgba } from 'polished';
 
-import { ENDPOINTS } from 'app/contexts/connection';
-import { useConnectionConfig } from 'app/contexts/connection';
+import { ENDPOINTS, useConnectionConfig } from 'app/contexts/connection';
 
-import { Modal } from '../common/Modal';
-import { SideModalPropsType } from '../types';
-
-const Content = styled.div`
+const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
 `;
@@ -96,7 +92,11 @@ const RadioVisible = styled.span`
   }
 `;
 
-export const SideModalNetwork: FC<SideModalPropsType> = ({ close, ...props }) => {
+interface Props {
+  setState: (state: string) => void;
+}
+
+export const Network: FC<Props> = (props) => {
   const { endpoint, setEndpoint } = useConnectionConfig();
 
   const handleEndpointChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,20 +104,18 @@ export const SideModalNetwork: FC<SideModalPropsType> = ({ close, ...props }) =>
   };
 
   return (
-    <Modal noAnimation title="Settings" close={close} {...props}>
-      <Content onChange={handleEndpointChange}>
-        {ENDPOINTS.map((endpointItem) => (
-          <ItemLabelWrapper key={endpointItem.endpoint}>
-            <RadioHidden
-              type="radio"
-              defaultChecked={endpoint === endpointItem.endpoint}
-              value={endpointItem.endpoint}
-              name="endpoint"
-            />
-            <RadioVisible>{endpointItem.name}</RadioVisible>
-          </ItemLabelWrapper>
-        ))}
-      </Content>
-    </Modal>
+    <Wrapper onChange={handleEndpointChange}>
+      {ENDPOINTS.map((endpointItem) => (
+        <ItemLabelWrapper key={endpointItem.endpoint}>
+          <RadioHidden
+            type="radio"
+            defaultChecked={endpoint === endpointItem.endpoint}
+            value={endpointItem.endpoint}
+            name="endpoint"
+          />
+          <RadioVisible>{endpointItem.name}</RadioVisible>
+        </ItemLabelWrapper>
+      ))}
+    </Wrapper>
   );
 };

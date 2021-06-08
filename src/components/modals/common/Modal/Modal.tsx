@@ -1,13 +1,23 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect, useRef } from 'react';
 import { CSSTransition } from 'react-transition-group';
 
 import { styled } from '@linaria/react';
 import { rgba } from 'polished';
 
+import ArrowIcon from 'assets/icons/arrow-icon.svg';
 import CloseIcon from 'assets/icons/close-icon.svg';
 import { SideModalPropsType } from 'components/modals/types';
 
 const TRANSITION_DURATION = 600;
+
+const OutsideWrapper = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+`;
 
 const Wrapper = styled.div`
   position: fixed;
@@ -53,12 +63,31 @@ const Wrapper = styled.div`
 `;
 
 const Header = styled.div`
+  position: relative;
+
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
 
   height: 140px;
+`;
+
+const BackWrapper = styled.div`
+  position: absolute;
+  left: 35px;
+
+  cursor: pointer;
+`;
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+const BackIcon = styled(ArrowIcon)`
+  height: 28px;
+
+  color: #fff;
+
+  transform: rotate(180deg);
 `;
 
 const Title = styled.span`
@@ -100,21 +129,35 @@ const CloseIconStyled = styled(CloseIcon)`
 
 interface Props {
   noAnimation?: boolean;
+  back?: () => void;
   title: string | React.ReactNode;
 }
 
-export const Modal: FC<Props & SideModalPropsType> = ({ noAnimation, title, close, children, ...props }) => {
+export const Modal: FC<Props & SideModalPropsType> = ({ noAnimation, back, title, close, children, ...props }) => {
+  const handleOutsideWrapperClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      close();
+    }
+  };
+
   return (
-    <CSSTransition timeout={noAnimation ? 0 : 600} classNames="transition" {...props}>
-      <Wrapper>
-        <Header>
-          <Title>{title}</Title>
-        </Header>
-        <Content>{children}</Content>
-        <ButtonClose onClick={close}>
-          <CloseIconStyled /> Close
-        </ButtonClose>
-      </Wrapper>
-    </CSSTransition>
+    <OutsideWrapper onMouseDown={handleOutsideWrapperClick}>
+      <CSSTransition timeout={noAnimation ? 0 : 600} classNames="transition" {...props}>
+        <Wrapper>
+          <Header>
+            {back ? (
+              <BackWrapper onClick={back}>
+                <BackIcon />
+              </BackWrapper>
+            ) : null}
+            <Title>{title}</Title>
+          </Header>
+          <Content>{children}</Content>
+          <ButtonClose onClick={close}>
+            <CloseIconStyled /> Close
+          </ButtonClose>
+        </Wrapper>
+      </CSSTransition>
+    </OutsideWrapper>
   );
 };
