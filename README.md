@@ -6,7 +6,9 @@ Solaris is a Lending/Borrowing protocol that brings Flashloans to Solana blockch
 
 Built on top of [Solaris Protocol](https://github.com/solaris-protocol/solaris-protocol), [Solana](https://solana.com), [Pyth](https://pyth.network)
 
-[![solaris channel on discord](https://img.shields.io/badge/discord-%23general%20%40%20solaris-78468c.svg?style=flat-square)](https://discord.gg/54mVmwsv)
+[![solaris channel on discord](https://img.shields.io/badge/discord-%23general%20%40%20Solaris%20Protocol-78468c.svg?style=flat-square)](https://discord.gg/54mVmwsv)
+[![solaris channel on telegram](https://img.shields.io/badge/telegram-SolarisProtocol-78468c.svg?style=flat-square)](https://t.me/SolarisProtocol)
+[![solaris channel on telegram](https://img.shields.io/badge/twitter-solarisprotocol-78468c.svg?style=flat-square)](https://twitter.com/solarisprotocol)
 
 ## Installation
 
