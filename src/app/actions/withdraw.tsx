@@ -75,7 +75,7 @@ export const withdraw = async (
     const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
     notify({
-      message: 'Funds deposited.',
+      message: 'Funds withdrawn.',
       type: 'success',
       description: `Transaction - ${tx}`,
     });
