@@ -1,8 +1,12 @@
 # Solaris UI
 
+<a href='http://solarisprotocol.com'><img src='https://raw.githubusercontent.com/solaris-protocol/solaris-ui/new/assets/UI.png' alt='Solaris UI' aria-label='solarisprotocol.com' /></a>
+
 Solaris is a Lending/Borrowing protocol that brings Flashloans to Solana blockchain (inspired by Aave and Compound).
 
 Built on top of [Solaris Protocol](https://github.com/solaris-protocol/solaris-protocol), [Solana](https://solana.com), [Pyth](https://pyth.network)
+
+[![solaris channel on discord](https://img.shields.io/badge/discord-%23general%20%40%20solaris-78468c.svg?style=flat-square)](https://discord.gg/54mVmwsv)
 
 ## Installation
 
