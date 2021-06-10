@@ -1,17 +1,23 @@
 # Solaris UI
 
+Solaris is a Lending/Borrowing protocol that brings Flashloans to Solana blockchain (inspired by Aave and Compound).
+
+Built on top of [Solaris Protocol](https://github.com/solaris-protocol/solaris-protocol), [Solana](https://solana.com), [Pyth](https://pyth.network)
+
 ## Installation
+
 Clone the repository
-```
-git clone https://github.com/solaris-protocol/solaris-ui
-cd solaris-ui
+
+```bash
+$ git clone https://github.com/solaris-protocol/solaris-ui
+$ cd solaris-ui
 ```
 
-Edit environments in .env file and after that use this commands:
+Edit environments in `.env` file and after that use this commands:
 
-```
-yarn start // to start a development
-yarn build // to create a production build
+```bash
+$ yarn start // to start a development
+$ yarn build // to create a production build
 ```
 
 ## Development
