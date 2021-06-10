@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { PublicKey } from '@solana/web3.js';
 
 import { useMint } from 'app/contexts/accounts';
-import { useMidPriceInUSD } from 'app/contexts/market';
+import { useMidPriceInUSD } from 'app/contexts/pyth';
 import { fromLamports } from 'utils/utils';
 
 import { useLendingMarket } from './useLendingMarket';
@@ -44,7 +44,7 @@ export function useBorrowingPower(
 
   const { totalInQuote } = useUserDeposits(exclude, inlcude);
 
-  const price = useMidPriceInUSD(liquidityMintAddress).price;
+  const price = useMidPriceInUSD(reserve.info.liquidity.oraclePubkey).price;
   const availableLiquidityInUSD = availableLiquidity * price;
 
   const { totalInQuote: loansValue } = useUserObligations();

@@ -1,10 +1,12 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { parseMappingData, parsePriceData, parseProductData } from '@pythnetwork/client';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
+import throttle from 'lodash/throttle';
 
-import { cache, getMultipleAccounts, ParsedAccountBase } from 'app/contexts/accounts';
+import { getMultipleAccounts, ParsedAccountBase } from 'app/contexts/accounts';
 import { useConnectionConfig } from 'app/contexts/connection';
+import { EventEmitter, PriceUpdateEvent } from 'utils/eventEmitter';
 
 export const PriceParser = (pubKey: PublicKey, info: AccountInfo<Buffer>) => {
   const buffer = Buffer.from(info.data);
@@ -22,38 +24,52 @@ export const PriceParser = (pubKey: PublicKey, info: AccountInfo<Buffer>) => {
 
 const DEFAULT_PYTH_MAPPING_ID = new PublicKey('ArppEFcsybCLE8CRtQJLQ9tLv2peGmQoKWFuiUWm4KBP');
 
-export interface NewMarketsContextState {
-  midPriceInUSD: (oracleAddress: string) => number;
+const priceEmitter = new EventEmitter();
+
+export interface PythContextState {
+  midPriceInUSD: (priceAddress: string) => number;
+  priceEmitter: EventEmitter;
 }
 
-const NewMarketsContext = React.createContext<NewMarketsContextState | null>(null);
+const PythContext = React.createContext<PythContextState | null>(null);
 
-const createSetSymbolMapUpdater = (symbol: string, product: any, price: any) => (prev: any) =>
-  !prev[symbol] || prev[symbol].price['currentSlot'] < price.currentSlot
-    ? {
+const createSetPriceAccountMapUpdater =
+  (priceAddress: string, symbol: string, product: any, price: any) => (prev: any) => {
+    if (!prev[priceAddress] || prev[priceAddress].price['currentSlot'] < price.currentSlot) {
+      return {
         ...prev,
-        [symbol]: {
+        [priceAddress]: {
+          symbol,
           product,
           price,
         },
-      }
-    : prev;
+      };
+    }
+
+    return prev;
+  };
+
+type PythType = {
+  symbol: string;
+  product: any;
+  price: ReturnType<typeof parsePriceData>;
+};
 
 interface ISymbolMap {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  [index: string]: object;
+  [index: string]: PythType;
 }
 
-export function NewMarketProvider({ children = null as any }) {
+export function PythProvider({ children = null as any }) {
   const { endpoint } = useConnectionConfig();
   const connection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
-  const [symbolMap, setSymbolMap] = useState<ISymbolMap>({});
+  const pythByPriceAddressMap = useRef<ISymbolMap>({});
+  const pythByMintMap = useRef<ISymbolMap>({});
 
   const handlePriceInfo = (
+    priceAddress: string,
     symbol: string,
     product: any,
     accountInfo: AccountInfo<Buffer> | null
-    // setSymbolMap: Function
   ) => {
     if (!accountInfo || !accountInfo.data) {
       return;
@@ -63,11 +79,17 @@ export function NewMarketProvider({ children = null as any }) {
       console.log(symbol, price.priceType, price.nextPriceAccountKey?.toString());
     }
 
-    console.log(price);
+    // console.log(price);
 
     // console.log(`Product ${symbol} key: ${key} price: ${accountInfo.data.} ${price.price}`);
 
-    setSymbolMap(createSetSymbolMapUpdater(symbol, product, price));
+    pythByPriceAddressMap.current = createSetPriceAccountMapUpdater(
+      priceAddress,
+      symbol,
+      product,
+      price
+    )(pythByPriceAddressMap.current);
+    // setPriceAccountMap(createSetPriceAccountMapUpdater(priceAddress, symbol, product, price));
   };
 
   useEffect(() => {
@@ -105,13 +127,17 @@ export function NewMarketProvider({ children = null as any }) {
         // const priceInfo = priceMultiple.array[i];
         // const price = parsePriceData(priceInfo.data);
 
-        console.log(111, product);
-
         // console.log(`Product ${symbol} key: ${key} price: ${priceMultiple.keys[i]} ${price.price}`);
 
-        const subscriptionId = connection.onAccountChange(priceAccountKey, (accountInfo) => {
-          handlePriceInfo(symbol, product, accountInfo);
-        });
+        // handlePriceInfo(priceAccountKey.toBase58(), symbol, product, accountInfo);
+
+        const subscriptionId = connection.onAccountChange(
+          priceAccountKey,
+          throttle((accountInfo) => {
+            handlePriceInfo(priceAccountKey.toBase58(), symbol, product, accountInfo);
+            priceEmitter.raisePriceUpdated(priceAccountKey.toBase58());
+          }, 5000)
+        );
         subscriptionIds.push(subscriptionId);
       }
     })();
@@ -125,27 +151,58 @@ export function NewMarketProvider({ children = null as any }) {
     };
   }, [connection]);
 
-  const midPriceInUSD = useCallback((oracleAddress: string) => {
-    const price = cache.get(oracleAddress);
-    if (!price) {
-      return;
-    }
+  const midPriceInUSD = useCallback(
+    (priceAddress: string) => {
+      const price = pythByPriceAddressMap.current[priceAddress];
 
-    return price.info.price;
-  }, []);
+      if (!price) {
+        return 0.0;
+      }
+
+      return price.price.price;
+    },
+    [pythByPriceAddressMap.current]
+  );
 
   return (
-    <NewMarketsContext.Provider
+    <PythContext.Provider
       value={{
         midPriceInUSD,
+        priceEmitter,
       }}
     >
       {children}
-    </NewMarketsContext.Provider>
+    </PythContext.Provider>
   );
 }
 
-export const useNewMarkets = () => {
-  const context = useContext(NewMarketsContext);
-  return context as NewMarketsContextState;
+export const usePyth = () => {
+  const context = useContext(PythContext);
+  return context as PythContextState;
+};
+
+export const useMidPriceInUSD = (priceAddress: PublicKey | string) => {
+  const address = typeof priceAddress === 'string' ? priceAddress : priceAddress.toBase58();
+  const { midPriceInUSD, priceEmitter } = useContext(PythContext) as PythContextState;
+  const [price, setPrice] = useState<number>(0);
+
+  useEffect(() => {
+    const update = (args?: PriceUpdateEvent) => {
+      if (args && args.id !== address) {
+        return;
+      }
+
+      if (midPriceInUSD) {
+        setPrice(midPriceInUSD(address));
+      }
+    };
+    update();
+
+    const dispose = priceEmitter.onPrice(update);
+    return () => {
+      dispose();
+    };
+  }, [midPriceInUSD, address, priceEmitter]);
+
+  return { price, isBase: price === 1.0 };
 };

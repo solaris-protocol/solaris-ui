@@ -1,7 +1,29 @@
-import { EventEmitter as Emitter } from "eventemitter3";
+import { EventEmitter as Emitter } from 'eventemitter3';
+
+// Market
+
+export class MarketUpdateEvent {
+  static type = 'MarketUpdate';
+  ids: Set<string>;
+  constructor(ids: Set<string>) {
+    this.ids = ids;
+  }
+}
+
+// Price
+
+export class PriceUpdateEvent {
+  static type = 'PriceUpdate';
+  id: string;
+  constructor(id: string) {
+    this.id = id;
+  }
+}
+
+// Cache
 
 export class CacheUpdateEvent {
-  static type = "CacheUpdate";
+  static type = 'CacheUpdate';
   id: string;
   parser: any;
   isNew: boolean;
@@ -13,27 +35,21 @@ export class CacheUpdateEvent {
 }
 
 export class CacheDeleteEvent {
-  static type = "CacheUpdate";
+  static type = 'CacheUpdate';
   id: string;
   constructor(id: string) {
     this.id = id;
   }
 }
 
-export class MarketUpdateEvent {
-  static type = "MarketUpdate";
-  ids: Set<string>;
-  constructor(ids: Set<string>) {
-    this.ids = ids;
-  }
-}
-
 export class CacheClearEvent {
-  static type = "CacheDelete";
+  static type = 'CacheDelete';
 }
 
 export class EventEmitter {
   private emitter = new Emitter();
+
+  // Market
 
   onMarket(callback: (args: MarketUpdateEvent) => void) {
     this.emitter.on(MarketUpdateEvent.type, callback);
@@ -41,21 +57,32 @@ export class EventEmitter {
     return () => this.emitter.removeListener(MarketUpdateEvent.type, callback);
   }
 
+  raiseMarketUpdated(ids: Set<string>) {
+    this.emitter.emit(MarketUpdateEvent.type, new MarketUpdateEvent(ids));
+  }
+
+  // Price
+
+  onPrice(callback: (args: PriceUpdateEvent) => void) {
+    this.emitter.on(PriceUpdateEvent.type, callback);
+
+    return () => this.emitter.removeListener(PriceUpdateEvent.type, callback);
+  }
+
+  raisePriceUpdated(id: string) {
+    this.emitter.emit(PriceUpdateEvent.type, new PriceUpdateEvent(id));
+  }
+
+  // Cache
+
   onCache(callback: (args: CacheUpdateEvent) => void) {
     this.emitter.on(CacheUpdateEvent.type, callback);
 
     return () => this.emitter.removeListener(CacheUpdateEvent.type, callback);
   }
 
-  raiseMarketUpdated(ids: Set<string>) {
-    this.emitter.emit(MarketUpdateEvent.type, new MarketUpdateEvent(ids));
-  }
-
   raiseCacheUpdated(id: string, isNew: boolean, parser: any) {
-    this.emitter.emit(
-      CacheUpdateEvent.type,
-      new CacheUpdateEvent(id, isNew, parser)
-    );
+    this.emitter.emit(CacheUpdateEvent.type, new CacheUpdateEvent(id, isNew, parser));
   }
 
   raiseCacheDeleted(id: string) {

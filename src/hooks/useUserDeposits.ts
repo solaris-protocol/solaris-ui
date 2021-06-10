@@ -4,7 +4,7 @@ import { MintInfo } from '@solana/spl-token';
 
 import { cache, ParsedAccount } from 'app/contexts/accounts';
 import { useConnectionConfig } from 'app/contexts/connection';
-import { useMarkets } from 'app/contexts/market';
+import { usePyth } from 'app/contexts/pyth';
 import { TokenAccount } from 'app/models';
 import { calculateDepositAPY, Reserve } from 'app/models/lending';
 import { fromLamports, getTokenName } from 'utils/utils';
@@ -29,7 +29,7 @@ export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
   const { userAccounts } = useUserAccounts();
   const { reserveAccounts } = useLendingReserves();
   const [userDeposits, setUserDeposits] = useState<UserDeposit[]>([]);
-  const { marketEmitter, midPriceInUSD } = useMarkets();
+  const { priceEmitter, midPriceInUSD } = usePyth();
   const { tokenMap } = useConnectionConfig();
 
   const reservesByCollateralMint = useMemo(() => {
@@ -58,7 +58,7 @@ export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
 
           const amountLamports = calculateCollateralBalance(reserve.info, item?.info.amount.toNumber());
           const amount = fromLamports(amountLamports, collateralMint?.info);
-          const price = midPriceInUSD(reserve.info.liquidity.mintPubkey.toBase58());
+          const price = midPriceInUSD(reserve.info.liquidity.oraclePubkey.toBase58());
           const amountInQuote = price * amount;
 
           return {
@@ -75,7 +75,7 @@ export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
         .sort((a, b) => b.info.amountInQuote - a.info.amountInQuote);
     };
 
-    const dispose = marketEmitter.onMarket((args) => {
+    const dispose = priceEmitter.onPrice((args) => {
       setUserDeposits(userDepositsFactory());
     });
 
@@ -84,7 +84,7 @@ export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
     return () => {
       dispose();
     };
-  }, [userAccounts, reserveAccounts, reservesByCollateralMint, tokenMap, midPriceInUSD, marketEmitter]);
+  }, [userAccounts, reserveAccounts, reservesByCollateralMint, tokenMap, midPriceInUSD, priceEmitter]);
 
   return {
     userDeposits,

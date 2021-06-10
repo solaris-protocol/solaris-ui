@@ -83,7 +83,7 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
   return (
     <>
       <CollateralBalanceWrapper>
-        <CollateralInput mintAddress={reserve.liquidity.mintPubkey} value={value} onChange={handleValueChange} />
+        <CollateralInput priceAddress={reserve.liquidity.oraclePubkey} value={value} onChange={handleValueChange} />
         <MaxButton onClick={handleMaxClick}>Max</MaxButton>
       </CollateralBalanceWrapper>
       <Bottom>

@@ -1,44 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey } from '@solana/web3.js';
 
-import { cache, ParsedAccount } from "../app/contexts/accounts";
-import { LendingMarket,LendingMarketParser } from "../app/models/lending";
-
-const getLendingMarkets = () => {
-  return cache
-    .byParser(LendingMarketParser)
-    .map((id) => cache.get(id))
-    .filter((acc) => acc !== undefined) as any[];
-};
-
-export function useLendingMarkets() {
-  const [lendingMarkets, setLendingMarket] = useState<
-    ParsedAccount<LendingMarket>[]
-  >(getLendingMarkets());
-
-  useEffect(() => {
-    const dispose = cache.emitter.onCache((args) => {
-      if (args.parser === LendingMarketParser) {
-        setLendingMarket(getLendingMarkets());
-      }
-    });
-
-    return () => {
-      dispose();
-    };
-  }, [setLendingMarket]);
-
-  return {
-    lendingMarkets,
-  };
-}
+import { cache, ParsedAccount } from 'app/contexts/accounts';
+import { LendingMarket } from 'app/models/lending';
 
 export function useLendingMarket(address?: string | PublicKey) {
-  const id = typeof address === "string" ? address : address?.toBase58();
-  const [lendingMarket, setLendingMarket] = useState<
-    ParsedAccount<LendingMarket>
-  >(cache.get(id || "") as ParsedAccount<LendingMarket>);
+  const id = typeof address === 'string' ? address : address?.toBase58();
+  const [lendingMarket, setLendingMarket] = useState<ParsedAccount<LendingMarket>>(
+    cache.get(id || '') as ParsedAccount<LendingMarket>
+  );
 
   useEffect(() => {
     const dispose = cache.emitter.onCache((args) => {

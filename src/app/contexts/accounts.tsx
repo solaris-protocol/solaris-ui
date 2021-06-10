@@ -408,7 +408,9 @@ export function AccountsProvider({ children = null as any }) {
   }, [nativeAccount, wallet, tokenAccounts, selectUserAccounts]);
 
   useEffect(() => {
+    // TODO: why not using?
     const subs: number[] = [];
+
     cache.emitter.onCache((args) => {
       if (args.isNew) {
         const id = args.id;

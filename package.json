@@ -31,6 +31,7 @@
     "@linaria/shaker": "^3.0.0-beta.4",
     "@project-serum/serum": "^0.13.38",
     "@project-serum/sol-wallet-adapter": "^0.1.8",
+    "@pythnetwork/client": "^1.0.7",
     "@solana/spl-token": "0.0.11",
     "@solana/spl-token-registry": "^0.2.121",
     "@solana/spl-token-swap": "0.0.2",

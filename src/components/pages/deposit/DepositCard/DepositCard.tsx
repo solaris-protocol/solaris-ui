@@ -4,6 +4,7 @@ import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 import classNames from 'classnames';
 
+import { usePyth } from 'app/contexts/pyth';
 import { Reserve } from 'app/models/lending';
 import { Card } from 'components/common/Card';
 import { useUserCollateralBalance } from 'hooks';

@@ -47,7 +47,7 @@ export const Borrow: FC<Props> = ({ setState }) => {
   return (
     <>
       <CollateralBalanceWrapper>
-        <CollateralInput mintAddress={liquidityMint} value={value} onChange={handleValueChange} />
+        <CollateralInput priceAddress={liquidityMint} value={value} onChange={handleValueChange} />
         <Range />
       </CollateralBalanceWrapper>
       <Bottom>

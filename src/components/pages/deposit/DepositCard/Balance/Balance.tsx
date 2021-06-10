@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 
 import { styled } from '@linaria/react';
 
+import { usePyth } from 'app/contexts/pyth';
 import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';

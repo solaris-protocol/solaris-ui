@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 
-import { DexMarketParser } from 'app/models/dex';
 import {
   isLendingMarket,
   isLendingObligation,
@@ -67,9 +66,6 @@ export const useLending = () => {
           const result = [
             cache.registerParser(acc?.info.collateral.mintPubkey.toBase58(), MintParser),
             cache.registerParser(acc?.info.liquidity.mintPubkey.toBase58(), MintParser),
-            // ignore dex if its not set
-            // @ts-ignore
-            cache.registerParser(acc?.info.dexMarketOption ? acc?.info.dexMarket.toBase58() : '', DexMarketParser),
           ].filter((_) => _);
           return result;
         }),

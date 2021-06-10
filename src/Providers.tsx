@@ -5,6 +5,7 @@ import { ConnectionProvider } from 'app/contexts/connection';
 import { LendingProvider } from 'app/contexts/lending';
 import { MarketProvider } from 'app/contexts/market';
 import { ModalsProvider } from 'app/contexts/modals';
+import { PythProvider } from 'app/contexts/pyth';
 import { WalletProvider } from 'app/contexts/wallet';
 
 export const Providers: FC = ({ children }) => {
@@ -14,7 +15,9 @@ export const Providers: FC = ({ children }) => {
         <ModalsProvider>
           <AccountsProvider>
             <MarketProvider>
-              <LendingProvider>{children}</LendingProvider>
+              <PythProvider>
+                <LendingProvider>{children}</LendingProvider>
+              </PythProvider>
             </MarketProvider>
           </AccountsProvider>
         </ModalsProvider>

@@ -4,6 +4,7 @@ import { PublicKey } from '@solana/web3.js';
 
 import { useMint } from 'app/contexts/accounts';
 import { useMarkets } from 'app/contexts/market';
+import { usePyth } from 'app/contexts/pyth';
 import { Reserve, reserveMarketCap } from 'app/models/lending';
 import { fromLamports } from 'utils/utils';
 
@@ -18,7 +19,7 @@ export function useUserCollateralBalance(reserve?: Reserve, account?: PublicKey)
   const { balanceLamports: userBalance, accounts } = useUserBalance(reserve?.collateral.mintPubkey, account);
 
   const [balanceInUSD, setBalanceInUSD] = useState(0);
-  const { marketEmitter, midPriceInUSD } = useMarkets();
+  const { priceEmitter, midPriceInUSD } = usePyth();
 
   const balanceLamports = useMemo(
     () => reserve && calculateCollateralBalance(reserve, userBalance),
@@ -29,11 +30,13 @@ export function useUserCollateralBalance(reserve?: Reserve, account?: PublicKey)
 
   useEffect(() => {
     const updateBalance = () => {
-      setBalanceInUSD(balance * midPriceInUSD(reserve?.liquidity.mintPubkey?.toBase58() || ''));
+      setBalanceInUSD(balance * midPriceInUSD(reserve?.liquidity.oraclePubkey?.toBase58() || ''));
     };
 
-    const dispose = marketEmitter.onMarket(() => {
-      updateBalance();
+    const dispose = priceEmitter.onPrice((args) => {
+      if (args.id === reserve?.liquidity.oraclePubkey.toBase58()) {
+        updateBalance();
+      }
     });
 
     updateBalance();
@@ -41,7 +44,7 @@ export function useUserCollateralBalance(reserve?: Reserve, account?: PublicKey)
     return () => {
       dispose();
     };
-  }, [balance, midPriceInUSD, marketEmitter, mint, setBalanceInUSD, reserve]);
+  }, [balance, midPriceInUSD, priceEmitter, mint, setBalanceInUSD, reserve]);
 
   return {
     balance,

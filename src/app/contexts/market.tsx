@@ -82,8 +82,6 @@ export function MarketProvider({ children = null as any }) {
 
   const connection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
 
-  console.log(111, { TOKEN_MINTS, MARKETS, MINT_TO_MARKET });
-
   const marketByMint = useMemo(() => {
     return [...new Set(marketMints).values()].reduce((acc, key) => {
       const mintAddress = key;
