@@ -4,6 +4,7 @@ import { SolanaWalletAdapter } from 'app/contexts/wallet/wallet-adapters/sollet'
 import { SolongWalletAdapter } from 'app/contexts/wallet/wallet-adapters/solong';
 import ledgerIcon from 'assets/icons/ledger.svg';
 import mathwalletIcon from 'assets/icons/mathwallet.svg';
+import phantomIcon from 'assets/icons/phantom.png';
 import solflareIcon from 'assets/icons/solflare.svg';
 import solletIcon from 'assets/icons/sollet.svg';
 import solongIcon from 'assets/icons/solong.png';
@@ -12,7 +13,7 @@ export const WALLET_PROVIDERS = [
   {
     name: 'Phantom',
     url: 'https://phantom.app/',
-    icon: `https://raydium.io/_nuxt/img/phantom.d9e3c61.png`,
+    icon: phantomIcon,
     adapter: PhantomWalletAdapter,
   },
   {
