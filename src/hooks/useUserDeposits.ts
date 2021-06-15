@@ -10,7 +10,7 @@ import { calculateDepositAPY, Reserve } from 'app/models/lending';
 import { fromLamports, getTokenName } from 'utils/utils';
 
 import { calculateCollateralBalance } from './useCollateralBalance';
-import { useLendingReserves } from './useLendingReserves';
+import { useReserves } from './useReserves';
 import { useUserAccounts } from './useUserAccounts';
 
 export interface UserDeposit {
@@ -27,7 +27,7 @@ export interface UserDeposit {
 
 export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
   const { userAccounts } = useUserAccounts();
-  const { reserveAccounts } = useLendingReserves();
+  const { reserveAccounts } = useReserves();
   const [userDeposits, setUserDeposits] = useState<UserDeposit[]>([]);
   const { priceEmitter, midPriceInUSD } = usePyth();
   const { tokenMap } = useConnectionConfig();

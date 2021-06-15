@@ -7,7 +7,7 @@ import { cache, getMultipleAccounts, MintParser, ParsedAccount, useMint } from '
 import { useConnection } from 'app/contexts/connection';
 import { fromLamports, wadToLamports } from 'utils/utils';
 
-import { useLendingReserve } from './useLendingReserves';
+import { useReserve } from './useReserves';
 import { useUserObligationByReserve } from './useUserObligationByReserve';
 
 export function useBorrowedAmount(address?: string | PublicKey) {
@@ -20,7 +20,7 @@ export function useBorrowedAmount(address?: string | PublicKey) {
     ltv: 0,
     health: 0,
   });
-  const reserve = useLendingReserve(address);
+  const reserve = useReserve(address);
   const liquidityMint = useMint(reserve?.info.liquidity.mintPubkey);
 
   useEffect(() => {

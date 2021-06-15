@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 
 import { TotalInfo } from 'components/common/TotalInfo';
 import { BorrowCard } from 'components/pages/borrow/BorrowCard';
-import { useLendingReserves } from 'hooks';
+import { useReserves } from 'hooks';
 
 const CardsWrapper = styled.div`
   display: grid;
@@ -15,7 +15,7 @@ const CardsWrapper = styled.div`
 `;
 
 export const Borrow: FC = () => {
-  const { reserveAccounts } = useLendingReserves();
+  const { reserveAccounts } = useReserves();
 
   return (
     <>

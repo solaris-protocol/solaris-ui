@@ -9,8 +9,8 @@ import { simulateMarketOrderFill, useMarkets } from 'app/contexts/market';
 import { collateralToLiquidity, Obligation, Reserve } from 'app/models/lending';
 import { fromLamports, getTokenName, wadToLamports } from 'utils/utils';
 
-import { useLendingObligations } from './useLendingObligations';
-import { useLendingReserves } from './useLendingReserves';
+import { useObligations } from './useObligations';
+import { useReserves } from './useReserves';
 
 interface EnrichedLendingObligationInfo extends Obligation {
   ltv: number;
@@ -28,8 +28,8 @@ export interface EnrichedLendingObligation {
 }
 
 export function useEnrichedLendingObligations() {
-  const { obligations } = useLendingObligations();
-  const { reserveAccounts } = useLendingReserves();
+  const { obligations } = useObligations();
+  const { reserveAccounts } = useReserves();
   const { tokenMap } = useConnectionConfig();
   const { marketEmitter, midPriceInUSD } = useMarkets();
 

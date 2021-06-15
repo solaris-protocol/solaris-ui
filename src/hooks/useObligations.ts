@@ -12,7 +12,7 @@ const getLendingObligations = () => {
     .filter((acc) => acc !== undefined) as ParsedAccount<Obligation>[];
 };
 
-export function useLendingObligations() {
+export function useObligations() {
   const [obligations, setObligations] = useState(getLendingObligations());
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export function useLendingObligations() {
   };
 }
 
-export function useLendingObligation(address?: string | PublicKey) {
+export function useObligation(address?: string | PublicKey) {
   const id = typeof address === 'string' ? address : address?.toBase58();
   const [obligationAccount, setObligationAccount] = useState(cache.get(id || '') as ParsedAccount<Obligation>);
 

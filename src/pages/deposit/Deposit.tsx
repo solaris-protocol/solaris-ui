@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 
 import { TotalInfo } from 'components/common/TotalInfo';
 import { DepositCard } from 'components/pages/deposit/DepositCard';
-import { useLendingReserves, useUserDeposits } from 'hooks';
+import { useReserves, useUserDeposits } from 'hooks';
 import { formatNumber } from 'utils/utils';
 
 const CardsWrapper = styled.div`
@@ -16,7 +16,7 @@ const CardsWrapper = styled.div`
 `;
 
 export const Deposit: FC = () => {
-  const { reserveAccounts } = useLendingReserves();
+  const { reserveAccounts } = useReserves();
   const { totalInQuote } = useUserDeposits();
 
   const columns = useMemo(() => {

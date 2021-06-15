@@ -7,7 +7,7 @@ import { useMidPriceInUSD } from 'app/contexts/pyth';
 import { fromLamports } from 'utils/utils';
 
 import { useLendingMarket } from './useLendingMarket';
-import { getLendingReserves, useLendingReserve } from './useLendingReserves';
+import { getReserves, useReserve } from './useReserves';
 import { useUserDeposits } from './useUserDeposits';
 import { useUserObligations } from './useUserObligations';
 
@@ -22,7 +22,7 @@ export function useBorrowingPower(
     () => (typeof reserveAddress === 'string' ? reserveAddress : reserveAddress?.toBase58() || ''),
     [reserveAddress]
   );
-  const reserve = useLendingReserve(key);
+  const reserve = useReserve(key);
   const liquidityMintInfo = useMint(reserve?.info.liquidity.mintPubkey);
 
   const liquidityMint = reserve?.info.liquidity.mintPubkey;
@@ -38,7 +38,7 @@ export function useBorrowingPower(
 
   const exclude = useMemo(() => new Set([key]), [key]);
   const inlcude = useMemo(() => {
-    const quoteReserve = getLendingReserves().find((r) => r.info.liquidity.mintPubkey.toBase58() === quoteMintAddess);
+    const quoteReserve = getReserves().find((r) => r.info.liquidity.mintPubkey.toBase58() === quoteMintAddess);
     return onlyQuoteAllowed && quoteReserve ? new Set([quoteReserve.pubkey.toBase58()]) : undefined;
   }, [onlyQuoteAllowed, quoteMintAddess]);
 

@@ -11,8 +11,8 @@ import {
   borrowInstruction,
   initObligationInstruction,
   LendingMarket,
-  LendingObligationLayout,
   Obligation,
+  ObligationLayout,
   TokenAccount,
 } from 'app/models';
 import { LEND_HOST_FEE_ADDRESS, LENDING_PROGRAM_ID } from 'utils/ids';
@@ -71,7 +71,7 @@ export const borrow = async (
     : createUninitializedObligation(
         instructions,
         wallet.publicKey,
-        await connection.getMinimumBalanceForRentExemption(LendingObligationLayout.span),
+        await connection.getMinimumBalanceForRentExemption(ObligationLayout.span),
         signers
       );
 
