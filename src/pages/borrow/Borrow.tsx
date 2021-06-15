@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 
 import { TotalInfo } from 'components/common/TotalInfo';
 import { BorrowCard } from 'components/pages/borrow/BorrowCard';
-// import { useLendingReserves, useUserObligations } from 'hooks';
+import { useLendingReserves } from 'hooks';
 
 const CardsWrapper = styled.div`
   display: grid;
@@ -15,16 +15,15 @@ const CardsWrapper = styled.div`
 `;
 
 export const Borrow: FC = () => {
-  // const { userObligations } = useUserObligations();
+  const { reserveAccounts } = useLendingReserves();
 
   return (
     <>
       <TotalInfo type="borrow" columns={[]} />
       <CardsWrapper>
-        <BorrowCard key="1" />
-        {/*{userObligations.map((item) => (*/}
-        {/*  <BorrowCard key={item.obligation.account.pubkey.toBase58()} obligation={item.obligation} />*/}
-        {/*))}*/}
+        {reserveAccounts.map((account) => (
+          <BorrowCard key={account.pubkey.toBase58()} reserve={account.info} />
+        ))}
       </CardsWrapper>
     </>
   );

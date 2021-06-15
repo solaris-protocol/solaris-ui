@@ -63,7 +63,6 @@ export function PythProvider({ children = null as any }) {
   const { endpoint } = useConnectionConfig();
   const connection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
   const pythByPriceAddressMap = useRef<ISymbolMap>({});
-  const pythByMintMap = useRef<ISymbolMap>({});
 
   const handlePriceInfo = (
     priceAddress: string,
@@ -81,7 +80,7 @@ export function PythProvider({ children = null as any }) {
 
     // console.log(price);
 
-    // console.log(`Product ${symbol} key: ${key} price: ${accountInfo.data.} ${price.price}`);
+    // console.log(`Product ${symbol} key: ${priceAddress} product: `, product, 'price:', price);
 
     pythByPriceAddressMap.current = createSetPriceAccountMapUpdater(
       priceAddress,

@@ -1,12 +1,13 @@
 import React, { FC } from 'react';
 
 import { styled } from '@linaria/react';
-import { PublicKey } from '@solana/web3.js';
 
-import WalletIcon from 'assets/icons/wallet-icon.svg';
+import { calculateBorrowAPY, Reserve } from 'app/models';
+// import WalletIcon from 'assets/icons/wallet-icon.svg';
 import { TokenIcon } from 'components/common/TokenIcon';
-import { formatNumber } from 'utils/utils';
+import { useTokenName } from 'hooks';
 
+// import { formatNumber } from 'utils/utils';
 import { StateType } from '../types';
 import { APR } from './APR';
 
@@ -35,45 +36,45 @@ const Symbol = styled.span`
   letter-spacing: 0.02em;
 `;
 
-const WalletBalance = styled.div`
-  display: flex;
-  align-items: center;
-
-  color: #fff;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 17px;
-  letter-spacing: 0.02em;
-`;
+// const WalletBalance = styled.div`
+//   display: flex;
+//   align-items: center;
+//
+//   color: #fff;
+//   font-weight: 600;
+//   font-size: 14px;
+//   line-height: 17px;
+//   letter-spacing: 0.02em;
+// `;
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-const WalletIconStyled = styled(WalletIcon)`
-  width: 20px;
-  margin-right: 10px;
-`;
+// const WalletIconStyled = styled(WalletIcon)`
+//   width: 20px;
+//   margin-right: 10px;
+// `;
 
 interface Props {
+  reserve: Reserve;
   state: StateType;
 }
 
-export const Top: FC<Props> = ({ state }) => {
-  const name = 'SOL';
-  const apr = 1;
-  const liquidityMint = new PublicKey('So11111111111111111111111111111111111111112');
-  const tokenBalance = 0.0001;
+export const Top: FC<Props> = ({ reserve, state }) => {
+  const name = useTokenName(reserve.liquidity.mintPubkey);
+  const apr = calculateBorrowAPY(reserve);
+  // const tokenBalance = 0;
 
   return (
     <Wrapper>
       <Left>
-        <TokenIconStyled mintAddress={liquidityMint} size={40} />
+        <TokenIconStyled mintAddress={reserve.liquidity.mintPubkey} size={40} />
         <Symbol>{name}</Symbol>
         <APR apr={apr} isActive={state === 'borrow'} />
       </Left>
-      <WalletBalance title={String(tokenBalance)}>
-        <WalletIconStyled />
-        {formatNumber.format(tokenBalance)}
-      </WalletBalance>
+      {/*<WalletBalance title={String(tokenBalance)}>*/}
+      {/*  <WalletIconStyled />*/}
+      {/*  {formatNumber.format(tokenBalance)}*/}
+      {/*</WalletBalance>*/}
     </Wrapper>
   );
 };

@@ -22,10 +22,10 @@ const Content = styled.div`
 `;
 
 interface Props {
-  obligation?: EnrichedLendingObligation;
+  reserve: Reserve;
 }
 
-export const BorrowCard: FC<Props> = ({ obligation }) => {
+export const BorrowCard: FC<Props> = ({ reserve }) => {
   const [state, setState] = useState<StateType>('balance');
 
   const renderContent = () => {
@@ -42,7 +42,7 @@ export const BorrowCard: FC<Props> = ({ obligation }) => {
 
   return (
     <Card className={classNames({ hasBorrow: true })}>
-      <Top state={state} />
+      <Top reserve={reserve} state={state} />
       <Content>{renderContent()}</Content>
     </Card>
   );
