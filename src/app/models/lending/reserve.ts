@@ -5,6 +5,8 @@ import * as BufferLayout from 'buffer-layout';
 import * as Layout from 'utils/layout';
 import { wadToLamports } from 'utils/utils';
 
+import { LastUpdate } from './lastUpdate';
+
 // Instructions Params
 export interface depositReserveLiquidityParams {
   liquidityAmount: number;
@@ -34,13 +36,6 @@ export interface redeemReserveCollateralParams {
 
 // Reserve
 type Decimal = BN;
-
-export interface LastUpdate {
-  /// Last slot when updated
-  slot: BN;
-  /// True when marked stale, false when slot updated
-  stale: boolean;
-}
 
 export interface ReserveLiquidity {
   /// Reserve liquidity mint address
