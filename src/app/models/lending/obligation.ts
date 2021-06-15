@@ -15,7 +15,6 @@ import { LendingInstructions } from './index';
 import { LastUpdate } from './lastUpdate';
 
 // Instructions Params
-
 export interface InitObligationParams {
   obligationPubkey: PublicKey;
   lendingMarketPubkey: PublicKey;

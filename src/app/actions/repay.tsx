@@ -5,7 +5,7 @@ import { ParsedAccount } from 'app/contexts/accounts';
 import { sendTransaction } from 'app/contexts/connection';
 import { WalletAdapter } from 'app/contexts/wallet';
 import { Reserve } from 'app/models';
-import { approve, LendingObligation, TokenAccount } from 'app/models';
+import { approve, Obligation, TokenAccount } from 'app/models';
 import { repayInstruction } from 'app/models/lending/repay';
 import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID } from 'utils/ids';
 import { notify } from 'utils/notifications';
@@ -17,7 +17,7 @@ export const repay = async (
   repayAmount: number,
 
   // which loan to repay
-  obligation: ParsedAccount<LendingObligation>,
+  obligation: ParsedAccount<Obligation>,
 
   obligationToken: TokenAccount,
 

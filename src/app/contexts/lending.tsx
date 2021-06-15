@@ -4,10 +4,10 @@ import { AccountInfo, PublicKey } from '@solana/web3.js';
 
 import {
   isLendingMarket,
-  isLendingObligation,
   isLendingReserve,
+  isObligation,
   LendingMarketParser,
-  LendingObligationParser,
+  ObligationParser,
   Reserve,
   ReserveParser,
 } from 'app/models/lending';
@@ -37,8 +37,8 @@ export const useLending = () => {
       return reserve;
     } else if (isLendingMarket(item.account)) {
       return cache.add(item.pubkey.toBase58(), item.account, LendingMarketParser);
-    } else if (isLendingObligation(item.account)) {
-      return cache.add(item.pubkey.toBase58(), item.account, LendingObligationParser);
+    } else if (isObligation(item.account)) {
+      return cache.add(item.pubkey.toBase58(), item.account, ObligationParser);
     }
   }, []);
 

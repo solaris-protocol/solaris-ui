@@ -6,13 +6,13 @@ import { PublicKey } from '@solana/web3.js';
 import { cache, ParsedAccount } from 'app/contexts/accounts';
 import { useConnectionConfig } from 'app/contexts/connection';
 import { simulateMarketOrderFill, useMarkets } from 'app/contexts/market';
-import { collateralToLiquidity, LendingObligation, Reserve } from 'app/models/lending';
+import { collateralToLiquidity, Obligation, Reserve } from 'app/models/lending';
 import { fromLamports, getTokenName, wadToLamports } from 'utils/utils';
 
 import { useLendingObligations } from './useLendingObligations';
 import { useLendingReserves } from './useLendingReserves';
 
-interface EnrichedLendingObligationInfo extends LendingObligation {
+interface EnrichedLendingObligationInfo extends Obligation {
   ltv: number;
   health: number;
   borrowedInQuote: number;
@@ -23,7 +23,7 @@ interface EnrichedLendingObligationInfo extends LendingObligation {
 }
 
 export interface EnrichedLendingObligation {
-  account: ParsedAccount<LendingObligation>;
+  account: ParsedAccount<Obligation>;
   info: EnrichedLendingObligationInfo;
 }
 

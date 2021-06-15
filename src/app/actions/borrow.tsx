@@ -11,8 +11,8 @@ import {
   borrowInstruction,
   initObligationInstruction,
   LendingMarket,
-  LendingObligation,
   LendingObligationLayout,
+  Obligation,
   TokenAccount,
 } from 'app/models';
 import { LEND_HOST_FEE_ADDRESS, LENDING_PROGRAM_ID } from 'utils/ids';
@@ -40,7 +40,7 @@ export const borrow = async (
 
   depositReserve: ParsedAccount<Reserve>,
 
-  existingObligation?: ParsedAccount<LendingObligation>,
+  existingObligation?: ParsedAccount<Obligation>,
 
   obligationAccount?: PublicKey
 ) => {

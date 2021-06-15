@@ -5,7 +5,7 @@ import { cache, ParsedAccount } from 'app/contexts/accounts';
 import { sendTransaction } from 'app/contexts/connection';
 import { WalletAdapter } from 'app/contexts/wallet';
 import { Reserve } from 'app/models';
-import { approve, LendingMarket, LendingObligation, TokenAccount } from 'app/models';
+import { approve, LendingMarket, Obligation, TokenAccount } from 'app/models';
 import { liquidateInstruction } from 'app/models/lending/liquidate';
 import { LENDING_PROGRAM_ID } from 'utils/ids';
 import { notify } from 'utils/notifications';
@@ -19,7 +19,7 @@ export const liquidate = async (
   amountLamports: number, // in liquidty token (lamports)
 
   // which loan to repay
-  obligation: ParsedAccount<LendingObligation>,
+  obligation: ParsedAccount<Obligation>,
 
   repayReserve: ParsedAccount<Reserve>,
 

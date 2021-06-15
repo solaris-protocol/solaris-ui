@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey } from '@solana/web3.js';
 
-import { cache, ParsedAccount } from "../app/contexts/accounts";
-import { LendingObligation, LendingObligationParser } from "../app/models/lending";
+import { cache, ParsedAccount } from '../app/contexts/accounts';
+import { Obligation, ObligationParser } from '../app/models/lending';
 
 const getLendingObligations = () => {
   return cache
-    .byParser(LendingObligationParser)
+    .byParser(ObligationParser)
     .map((id) => cache.get(id))
-    .filter((acc) => acc !== undefined) as ParsedAccount<LendingObligation>[];
+    .filter((acc) => acc !== undefined) as ParsedAccount<Obligation>[];
 };
 
 export function useLendingObligations() {
@@ -17,7 +17,7 @@ export function useLendingObligations() {
 
   useEffect(() => {
     const dispose = cache.emitter.onCache((args) => {
-      if (args.parser === LendingObligationParser) {
+      if (args.parser === ObligationParser) {
         setObligations(getLendingObligations());
       }
     });
@@ -33,15 +33,13 @@ export function useLendingObligations() {
 }
 
 export function useLendingObligation(address?: string | PublicKey) {
-  const id = typeof address === "string" ? address : address?.toBase58();
-  const [obligationAccount, setObligationAccount] = useState(
-    cache.get(id || "") as ParsedAccount<LendingObligation>
-  );
+  const id = typeof address === 'string' ? address : address?.toBase58();
+  const [obligationAccount, setObligationAccount] = useState(cache.get(id || '') as ParsedAccount<Obligation>);
 
   useEffect(() => {
     const dispose = cache.emitter.onCache((args) => {
       if (args.id === id) {
-        setObligationAccount(cache.get(id) as ParsedAccount<LendingObligation>);
+        setObligationAccount(cache.get(id) as ParsedAccount<Obligation>);
       }
     });
 
