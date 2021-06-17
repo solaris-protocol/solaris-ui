@@ -72,15 +72,15 @@ export class PhantomWalletAdapter extends EventEmitter implements WalletAdapter 
   }
 
   connect() {
-    if (!this._provider) {
-      return;
-    }
-
     if (!(window as any).solana.isPhantom) {
       notify({
         message: 'Phantom Error',
         description: 'Please install Phantom wallet from Chrome ',
       });
+      return;
+    }
+
+    if (!this._provider) {
       return;
     }
 
