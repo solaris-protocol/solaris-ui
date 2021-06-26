@@ -4,6 +4,7 @@ import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 
 import { withdraw } from 'app/actions';
+import { useMint } from 'app/contexts/accounts';
 import { useConnection } from 'app/contexts/connection';
 import { useWallet } from 'app/contexts/wallet';
 import { Reserve } from 'app/models';
@@ -11,8 +12,9 @@ import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
-import { useUserBalance, useUserCollateralBalance } from 'hooks';
+import { useUserBalance, useUserCollateralBalance, useUserObligationByReserve } from 'hooks';
 import { notify } from 'utils/notifications';
+import { fromLamports } from 'utils/utils';
 
 import { Bottom, MaxButton } from '../common/styled';
 import { StateType } from '../types';
@@ -31,15 +33,24 @@ interface Props {
 }
 
 export const Withdraw: FC<Props> = ({ reserve, address, setState }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [value, setValue] = useState('');
-
   const connection = useConnection();
   const { wallet } = useWallet();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [value, setValue] = useState('');
+  const { userObligationsByReserve } = useUserObligationByReserve(undefined, address);
+
   const { accounts: fromAccounts, balanceLamports: collateralBalanceLamports } = useUserBalance(
     reserve?.collateral.mintPubkey
   );
-  const { balance: collateralBalanceInLiquidity } = useUserCollateralBalance(reserve);
+  // const { balance: collateralBalanceInLiquidity } = useUserCollateralBalance(reserve);
+
+  const obligation = userObligationsByReserve.length ? userObligationsByReserve[0] : null;
+  const depositReserve = obligation
+    ? obligation.info.deposits.find((deposit) => deposit.depositReserve.equals(address))
+    : null;
+  const mintInfo = useMint(reserve.collateral.mintPubkey);
+  const collateralBalanceInLiquidity = depositReserve ? fromLamports(depositReserve.depositedAmount, mintInfo) : 0;
 
   const handleValueChange = (nextValue: string) => {
     setValue(nextValue);
@@ -49,8 +60,14 @@ export const Withdraw: FC<Props> = ({ reserve, address, setState }) => {
     setValue(collateralBalanceInLiquidity.toString());
   };
 
+  console.log(111, Math.ceil(collateralBalanceLamports * (parseFloat(value) / collateralBalanceInLiquidity)));
+
   const handleWithdrawClick = async () => {
     if (!wallet?.publicKey) {
+      return;
+    }
+
+    if (!obligation) {
       return;
     }
 
@@ -58,12 +75,13 @@ export const Withdraw: FC<Props> = ({ reserve, address, setState }) => {
 
     try {
       await withdraw(
+        connection,
+        wallet,
         fromAccounts[0],
         Math.ceil(collateralBalanceLamports * (parseFloat(value) / collateralBalanceInLiquidity)),
         reserve,
         address,
-        connection,
-        wallet
+        obligation
       );
 
       setValue('');
@@ -84,7 +102,11 @@ export const Withdraw: FC<Props> = ({ reserve, address, setState }) => {
   return (
     <>
       <CollateralBalanceWrapper>
-        <CollateralInput priceAddress={reserve.liquidity.oraclePubkey} value={value} onChange={handleValueChange} />
+        <CollateralInput
+          mintAddress={reserve.liquidity.mintPubkey.toBase58()}
+          value={value}
+          onChange={handleValueChange}
+        />
         <MaxButton onClick={handleMaxClick}>Max</MaxButton>
       </CollateralBalanceWrapper>
       <Bottom>

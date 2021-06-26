@@ -3,20 +3,31 @@ import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/
 
 import { sendTransaction } from 'app/contexts/connection/connection';
 import { WalletAdapter } from 'app/contexts/wallet';
-import { approve, TokenAccount } from 'app/models';
-import { depositReserveLiquidityInstruction, refreshReserveInstruction, Reserve } from 'app/models/lending';
+import {
+  approve,
+  depositObligationCollateralInstruction,
+  depositReserveLiquidityInstruction,
+  initObligationInstruction,
+  ObligationLayout,
+  refreshObligationInstruction,
+  refreshReserveInstruction,
+  Reserve,
+  TokenAccount,
+} from 'app/models';
+import { EnrichedLendingObligation } from 'hooks';
 import { LENDING_PROGRAM_ID } from 'utils/ids';
 import { notify } from 'utils/notifications';
 
-import { createUninitializedAccount, ensureSplAccount, findOrCreateAccountByMint } from './account';
+import { createUninitializedObligation, ensureSplAccount, findOrCreateAccountByMint } from './account';
 
 export const deposit = async (
-  from: TokenAccount,
-  amountLamports: number,
+  connection: Connection,
+  wallet: WalletAdapter,
+  source: TokenAccount,
+  liquidityAmount: number,
   reserve: Reserve,
   reserveAddress: PublicKey,
-  connection: Connection,
-  wallet: WalletAdapter
+  obligation?: EnrichedLendingObligation
 ) => {
   if (!wallet.publicKey) {
     throw new Error('Wallet is not connected');
@@ -28,67 +39,107 @@ export const deposit = async (
     type: 'warn',
   });
 
-  const isInitialized = true; // TODO: finish reserve init
-
   // user from account
   const signers: Account[] = [];
   const instructions: TransactionInstruction[] = [];
   const cleanupInstructions: TransactionInstruction[] = [];
 
   const accountRentExempt = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
+  const obligationRentExempt = await connection.getMinimumBalanceForRentExemption(ObligationLayout.span);
 
-  const [authority] = await PublicKey.findProgramAddress(
+  const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
     [reserve.lendingMarket.toBuffer()], // which account should be authority
     LENDING_PROGRAM_ID
   );
 
-  const fromAccount = ensureSplAccount(
+  const sourceLiquidityAccount = ensureSplAccount(
     instructions,
     cleanupInstructions,
-    from,
+    source,
     wallet.publicKey,
-    amountLamports + accountRentExempt,
+    liquidityAmount + accountRentExempt,
     signers
   );
 
   // create approval for transfer transactions
-  const transferAuthority = approve(instructions, cleanupInstructions, fromAccount, wallet.publicKey, amountLamports);
-
+  const transferAuthority = approve(
+    instructions,
+    cleanupInstructions,
+    sourceLiquidityAccount,
+    wallet.publicKey,
+    liquidityAmount
+  );
   signers.push(transferAuthority);
 
-  let toAccount: PublicKey;
-  if (isInitialized) {
-    // get destination account
-    toAccount = await findOrCreateAccountByMint(
-      wallet.publicKey,
-      wallet.publicKey,
-      instructions,
-      cleanupInstructions,
-      accountRentExempt,
+  /*
+   *  Reserve
+   */
+  // get destination account
+
+  const destinationCollateralAccount = await findOrCreateAccountByMint(
+    wallet.publicKey,
+    wallet.publicKey,
+    instructions,
+    cleanupInstructions,
+    accountRentExempt,
+    reserve.collateral.mintPubkey,
+    signers
+  );
+
+  instructions.push(refreshReserveInstruction(reserveAddress, reserve.liquidity.oraclePubkey));
+  instructions.push(
+    depositReserveLiquidityInstruction(
+      liquidityAmount,
+      sourceLiquidityAccount,
+      destinationCollateralAccount,
+      reserveAddress,
+      reserve.liquidity.supplyPubkey,
       reserve.collateral.mintPubkey,
-      signers
-    );
+      reserve.lendingMarket,
+      lendingMarketAuthority,
+      transferAuthority.publicKey
+    )
+  );
+
+  /*
+   *  Obligation
+   */
+  const collateralAmount = liquidityAmount;
+  const sourceCollateral = destinationCollateralAccount;
+
+  let obligationAccount;
+  // if obligation exists
+  if (obligation) {
+    obligationAccount = obligation.account.pubkey;
   } else {
-    toAccount = createUninitializedAccount(instructions, wallet.publicKey, accountRentExempt, signers);
+    obligationAccount = createUninitializedObligation(instructions, wallet.publicKey, obligationRentExempt, signers);
+    instructions.push(initObligationInstruction(obligationAccount, reserve.lendingMarket, wallet.publicKey));
   }
 
-  if (isInitialized) {
-    instructions.push(refreshReserveInstruction(reserveAddress, reserve.liquidity.oraclePubkey));
-    instructions.push(
-      depositReserveLiquidityInstruction({
-        liquidityAmount: amountLamports,
-        sourceLiquidityPubkey: fromAccount,
-        destinationCollateralPubkey: toAccount,
-        reservePubkey: reserveAddress,
-        reserveLiquiditySupplyPubkey: reserve.liquidity.supplyPubkey,
-        reserveCollateralMintPubkey: reserve.collateral.mintPubkey,
-        lendingMarketPubkey: reserve.lendingMarket,
-        lendingMarketDerivedAuthorityPubkey: authority,
-        userTransferAuthorityPubkey: transferAuthority.publicKey,
-        pythPricePubkey: reserve.liquidity.oraclePubkey,
-      })
-    );
-  }
+  // create approval for deposit obligation collateral transactions
+  const depositObligationCollateralAuthority = approve(
+    instructions,
+    cleanupInstructions,
+    destinationCollateralAccount,
+    wallet.publicKey,
+    collateralAmount
+  );
+  signers.push(depositObligationCollateralAuthority);
+
+  instructions.push(refreshReserveInstruction(reserveAddress, reserve.liquidity.oraclePubkey));
+  instructions.push(
+    depositObligationCollateralInstruction(
+      collateralAmount,
+      sourceCollateral,
+      reserve.collateral.supplyPubkey,
+      reserveAddress,
+      obligationAccount,
+      reserve.lendingMarket,
+      lendingMarketAuthority,
+      wallet.publicKey,
+      depositObligationCollateralAuthority.publicKey
+    )
+  );
 
   try {
     const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
@@ -100,6 +151,7 @@ export const deposit = async (
     });
   } catch (error) {
     // TODO:
+    console.error(error);
     throw error;
   }
 };

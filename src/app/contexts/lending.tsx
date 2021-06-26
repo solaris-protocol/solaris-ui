@@ -4,14 +4,14 @@ import { AccountInfo, PublicKey } from '@solana/web3.js';
 
 import {
   isLendingMarket,
-  isLendingReserve,
   isObligation,
+  isReserve,
   LendingMarketParser,
   ObligationParser,
   Reserve,
   ReserveParser,
-} from 'app/models/lending';
-import { useReserves } from 'hooks';
+} from 'app/models';
+import { useLendingReserves } from 'hooks';
 import { LENDING_PROGRAM_ID } from 'utils/ids';
 
 import { cache, getMultipleAccounts, MintParser, ParsedAccount } from './accounts';
@@ -22,19 +22,30 @@ export interface LendingContextState {}
 
 const LendingContext = React.createContext<LendingContextState | null>(null);
 
+export function LendingProvider({ children = null as any }) {
+  const { accounts } = useLending();
+  return (
+    <LendingContext.Provider
+      value={{
+        accounts,
+      }}
+    >
+      {children}
+    </LendingContext.Provider>
+  );
+}
+
 export const useLending = () => {
   const connection = useConnection();
   const [lendingAccounts, setLendingAccounts] = useState<any[]>([]);
-  const { reserveAccounts } = useReserves();
+  const { reserveAccounts } = useLendingReserves();
   const precacheMarkets = usePrecacheMarket();
 
   // TODO: query for all the dex from reserves
 
   const processAccount = useCallback((item: { pubkey: PublicKey; account: AccountInfo<Buffer> }) => {
-    if (isLendingReserve(item.account)) {
-      const reserve = cache.add(item.pubkey.toBase58(), item.account, ReserveParser);
-
-      return reserve;
+    if (isReserve(item.account)) {
+      return cache.add(item.pubkey.toBase58(), item.account, ReserveParser);
     } else if (isLendingMarket(item.account)) {
       return cache.add(item.pubkey.toBase58(), item.account, LendingMarketParser);
     } else if (isObligation(item.account)) {
@@ -58,7 +69,7 @@ export const useLending = () => {
       const accounts = programAccounts.map(processAccount).filter((item) => item !== undefined);
 
       const lendingReserves = accounts
-        .filter((acc) => (acc?.info as Reserve).lendingMarket !== undefined)
+        .filter((acc) => acc?.info.data && isReserve(acc.info))
         .map((acc) => acc as ParsedAccount<Reserve>);
 
       const toQuery = [
@@ -96,9 +107,10 @@ export const useLending = () => {
     const subID = connection.onProgramAccountChange(
       LENDING_PROGRAM_ID,
       async (info) => {
-        const id = info.accountId as unknown as string;
+        const pubkey =
+          typeof info.accountId === 'string' ? new PublicKey(info.accountId as unknown as string) : info.accountId;
         const item = {
-          pubkey: new PublicKey(id),
+          pubkey,
           account: info.accountInfo,
         };
         processAccount(item);
@@ -113,16 +125,3 @@ export const useLending = () => {
 
   return { accounts: lendingAccounts };
 };
-
-export function LendingProvider({ children = null as any }) {
-  const { accounts } = useLending();
-  return (
-    <LendingContext.Provider
-      value={{
-        accounts,
-      }}
-    >
-      {children}
-    </LendingContext.Provider>
-  );
-}

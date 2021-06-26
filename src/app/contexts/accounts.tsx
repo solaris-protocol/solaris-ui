@@ -1,16 +1,14 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { AccountLayout, MintInfo, MintLayout, u64 } from '@solana/spl-token';
-import { AccountInfo, ConfirmedSignatureInfo, ConfirmedTransaction, Connection, PublicKey } from '@solana/web3.js';
+import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 
-import { PoolInfo, TokenAccount } from 'app/models';
-import { useUserAccounts } from 'hooks/useUserAccounts';
+import { useConnection } from 'app/contexts/connection';
+import { useWallet } from 'app/contexts/wallet';
+import { TokenAccount } from 'app/models';
 import { EventEmitter } from 'utils/eventEmitter';
 import { LEND_HOST_FEE_ADDRESS, programIds, WRAPPED_SOL_MINT } from 'utils/ids';
 import { chunks } from 'utils/utils';
-
-import { useConnection } from './connection/connection';
-import { useWallet } from './wallet/wallet';
 
 const AccountsContext = React.createContext<any>(null);
 
@@ -18,13 +16,6 @@ const pendingCalls = new Map<string, Promise<ParsedAccountBase>>();
 const genericCache = new Map<string, ParsedAccountBase>();
 const pendingMintCalls = new Map<string, Promise<MintInfo>>();
 const mintCache = new Map<string, MintInfo>();
-const transactionCache = new Map<string, ParsedLocalTransaction | null>();
-
-export interface ParsedLocalTransaction {
-  transactionType: number;
-  signature: ConfirmedSignatureInfo;
-  confirmedTx: ConfirmedTransaction | null;
-}
 
 export interface ParsedAccountBase {
   pubkey: PublicKey;
@@ -113,6 +104,9 @@ export const cache = {
       return account;
     }
 
+    // Note: If the request to get the account fails the error is captured as a rejected Promise and would stay in pendingCalls forever
+    // It means if the first request fails for a transient reason it would never recover from the state and account would never be returned
+    // TODO: add logic to detect transient errors and remove the Promises from  pendingCalls
     let query = pendingCalls.get(address);
     if (query) {
       return query;
@@ -121,7 +115,7 @@ export const cache = {
     // TODO: refactor to use multiple accounts query with flush like behavior
     query = connection.getAccountInfo(id).then((data) => {
       if (!data) {
-        throw new Error('Account not found');
+        throw new Error(`Account ${id.toBase58()} not found`);
       }
 
       return cache.add(id, data, parser);
@@ -212,6 +206,9 @@ export const cache = {
       return mint;
     }
 
+    // Note: If the request to get the mint  fails the error is captured as a rejected Promise and would stay in pendingMintCalls forever
+    // It means if the first request fails for a transient reason it would never recover from the state and mint would never be returned
+    // TODO: add logic to detect transient errors and remove the Promises from  pendingMintCalls
     let query = pendingMintCalls.get(address);
     if (query) {
       return query;
@@ -243,27 +240,9 @@ export const cache = {
     mintCache.set(id, mint);
     return mint;
   },
-  addTransaction: (signature: string, tx: ParsedLocalTransaction | null) => {
-    transactionCache.set(signature, tx);
-    return tx;
-  },
-  addBulkTransactions: (txs: Array<ParsedLocalTransaction>) => {
-    for (const tx of txs) {
-      transactionCache.set(tx.signature.signature, tx);
-    }
-    return txs;
-  },
-  getTransaction: (signature: string) => {
-    const transaction = transactionCache.get(signature);
-    return transaction;
-  },
-  getAllTransactions: () => {
-    return transactionCache;
-  },
   clear: () => {
     genericCache.clear();
     mintCache.clear();
-    transactionCache.clear();
     cache.emitter.raiseCacheCleared();
   },
 };
@@ -283,6 +262,7 @@ function wrapNativeAccount(pubkey: PublicKey, account?: AccountInfo<Buffer>): To
     pubkey: pubkey,
     account,
     info: {
+      address: pubkey,
       mint: WRAPPED_SOL_MINT,
       owner: pubkey,
       amount: new u64(account.lamports),
@@ -294,19 +274,6 @@ function wrapNativeAccount(pubkey: PublicKey, account?: AccountInfo<Buffer>): To
       rentExemptReserve: null,
       closeAuthority: null,
     },
-  };
-}
-
-export function useCachedPool(legacy = false) {
-  const context = useContext(AccountsContext);
-
-  const allPools = context.pools as PoolInfo[];
-  const pools = useMemo(() => {
-    return allPools.filter((p) => p.legacy === legacy);
-  }, [allPools, legacy]);
-
-  return {
-    pools,
   };
 }
 
@@ -326,38 +293,44 @@ const UseNativeAccount = () => {
 
   const updateCache = useCallback(
     (account) => {
+      if (wallet && wallet.publicKey) {
+        const wrapped = wrapNativeAccount(wallet.publicKey, account);
+        if (wrapped !== undefined && wallet) {
+          const id = wallet.publicKey?.toBase58();
+          cache.registerParser(id, TokenAccountParser);
+          genericCache.set(id, wrapped as TokenAccount);
+          cache.emitter.raiseCacheUpdated(id, false, TokenAccountParser);
+        }
+      }
+    },
+    [wallet]
+  );
+
+  useEffect(() => {
+    let subId = 0;
+    const updateAccount = (account: AccountInfo<Buffer> | null) => {
+      if (account) {
+        updateCache(account);
+        setNativeAccount(account);
+      }
+    };
+
+    (async () => {
       if (!connection || !wallet?.publicKey) {
         return;
       }
 
-      const wrapped = wrapNativeAccount(wallet.publicKey, account);
-      if (wrapped !== undefined) {
-        const id = wallet.publicKey.toBase58();
-        cache.registerParser(id, TokenAccountParser);
-        genericCache.set(id, wrapped as TokenAccount);
-        cache.emitter.raiseCacheUpdated(id, false, TokenAccountParser);
-      }
-    },
-    [wallet, wallet?.publicKey, connection]
-  );
+      const account = await connection.getAccountInfo(wallet.publicKey);
+      updateAccount(account);
 
-  useEffect(() => {
-    if (!connection || !wallet?.publicKey) {
-      return;
-    }
+      subId = connection.onAccountChange(wallet.publicKey, updateAccount);
+    })();
 
-    connection.getAccountInfo(wallet.publicKey).then((acc) => {
-      if (acc) {
-        updateCache(acc);
-        setNativeAccount(acc);
+    return () => {
+      if (subId) {
+        connection.removeAccountChangeListener(subId);
       }
-    });
-    connection.onAccountChange(wallet.publicKey, (acc) => {
-      if (acc) {
-        updateCache(acc);
-        setNativeAccount(acc);
-      }
-    });
+    };
   }, [setNativeAccount, wallet, wallet?.publicKey, connection, updateCache]);
 
   return { nativeAccount };
@@ -372,7 +345,7 @@ const precacheUserTokenAccounts = async (connection: Connection, owner?: PublicK
   // used for filtering account updates over websocket
   PRECACHED_OWNERS.add(owner.toBase58());
 
-  // user accounts are update via ws subscription
+  // user accounts are updated via ws subscription
   const accounts = await connection.getTokenAccountsByOwner(owner, {
     programId: programIds().token,
   });
@@ -389,18 +362,12 @@ export function AccountsProvider({ children = null as any }) {
   const { nativeAccount } = UseNativeAccount();
 
   const selectUserAccounts = useCallback(() => {
-    if (!wallet?.publicKey) {
-      return [];
-    }
-
-    const publicKey = wallet.publicKey.toBase58();
-
     return cache
       .byParser(TokenAccountParser)
       .map((id) => cache.get(id))
-      .filter((a) => a && a.info.owner.toBase58() === publicKey)
+      .filter((a) => a && a.info.owner.toBase58() === wallet?.publicKey?.toBase58())
       .map((a) => a as TokenAccount);
-  }, [wallet, wallet?.publicKey]);
+  }, [wallet]);
 
   useEffect(() => {
     const accounts = selectUserAccounts().filter((a) => a !== undefined) as TokenAccount[];
@@ -408,9 +375,7 @@ export function AccountsProvider({ children = null as any }) {
   }, [nativeAccount, wallet, tokenAccounts, selectUserAccounts]);
 
   useEffect(() => {
-    // TODO: why not using?
     const subs: number[] = [];
-
     cache.emitter.onCache((args) => {
       if (args.isNew) {
         const id = args.id;
@@ -557,17 +522,6 @@ export function useMint(key?: string | PublicKey) {
   return mint;
 }
 
-export const useAccountByMint = (mint: string) => {
-  const { userAccounts } = useUserAccounts();
-  const index = userAccounts.findIndex((acc) => acc.info.mint.toBase58() === mint);
-
-  if (index !== -1) {
-    return userAccounts[index];
-  }
-
-  return;
-};
-
 export function useAccount(pubKey?: PublicKey) {
   const connection = useConnection();
   const [account, setAccount] = useState<TokenAccount>();
@@ -606,7 +560,7 @@ export function useAccount(pubKey?: PublicKey) {
 }
 
 // TODO: expose in spl package
-const deserializeAccount = (data: Buffer) => {
+export const deserializeAccount = (data: Buffer) => {
   const accountInfo = AccountLayout.decode(data);
   accountInfo.mint = new PublicKey(accountInfo.mint);
   accountInfo.owner = new PublicKey(accountInfo.owner);
@@ -641,7 +595,7 @@ const deserializeAccount = (data: Buffer) => {
 };
 
 // TODO: expose in spl package
-const deserializeMint = (data: Buffer) => {
+export const deserializeMint = (data: Buffer) => {
   if (data.length !== MintLayout.span) {
     throw new Error('Not a valid Mint');
   }

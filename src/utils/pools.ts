@@ -20,7 +20,7 @@ const toPoolInfo = (item: any, program: PublicKey) => {
   return {
     pubkeys: {
       account: item.pubkey,
-      program: program,
+      program,
       mint: item.data.tokenPool,
       holdingMints: [] as PublicKey[],
       holdingAccounts: [item.data.tokenAccountA, item.data.tokenAccountB],
@@ -143,7 +143,7 @@ export const usePools = () => {
           const account = info.accountInfo;
           const updated = {
             data: programIds().swapLayout.decode(account.data),
-            account: account,
+            account,
             pubkey: new PublicKey(id),
           };
 

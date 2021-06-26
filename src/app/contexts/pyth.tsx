@@ -1,173 +1,122 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+// https://github.com/solana-labs/oyster/blob/11d8ba6047d8b8218e905138b21f49de09be9657/packages/lending/src/contexts/pyth.tsx
+
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { parseMappingData, parsePriceData, parseProductData } from '@pythnetwork/client';
-import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import throttle from 'lodash/throttle';
 
-import { getMultipleAccounts, ParsedAccountBase } from 'app/contexts/accounts';
-import { useConnectionConfig } from 'app/contexts/connection';
-import { EventEmitter, PriceUpdateEvent } from 'utils/eventEmitter';
+import { PYTH_PROGRAM_ID } from 'utils/ids';
 
-export const PriceParser = (pubKey: PublicKey, info: AccountInfo<Buffer>) => {
-  const buffer = Buffer.from(info.data);
+import { getMultipleAccounts } from './accounts';
+import { useConnection, useConnectionConfig } from './connection';
 
-  const data = parsePriceData(buffer);
+type Products = Record<string, Product>;
+type Prices = Record<string, number>;
 
-  return {
-    pubkey: pubKey,
-    account: {
-      ...info,
-    },
-    info: data,
-  } as ParsedAccountBase;
-};
-
-const DEFAULT_PYTH_MAPPING_ID = new PublicKey('ArppEFcsybCLE8CRtQJLQ9tLv2peGmQoKWFuiUWm4KBP');
-
-const priceEmitter = new EventEmitter();
+type Subscription = { id: number; count: number } | undefined;
+type Subscriptions = Record<string, Subscription>;
 
 export interface PythContextState {
-  midPriceInUSD: (priceAddress: string) => number;
-  priceEmitter: EventEmitter;
+  products: Products;
+  prices: Prices;
+  getPrice: (mint: string) => number;
 }
 
-const PythContext = React.createContext<PythContextState | null>(null);
+const PythContext = React.createContext<PythContextState>({
+  products: {},
+  prices: {},
+  getPrice: (mint: string) => 0,
+});
 
-const createSetPriceAccountMapUpdater =
-  (priceAddress: string, symbol: string, product: any, price: any) => (prev: any) => {
-    if (!prev[priceAddress] || prev[priceAddress].price['currentSlot'] < price.currentSlot) {
-      return {
-        ...prev,
-        [priceAddress]: {
-          symbol,
-          product,
-          price,
-        },
-      };
-    }
-
-    return prev;
-  };
-
-type PythType = {
-  symbol: string;
-  product: any;
-  price: ReturnType<typeof parsePriceData>;
-};
-
-interface ISymbolMap {
-  [index: string]: PythType;
-}
-
+// TODO: reduce rerendering
+// TODO: unsubscribe
 export function PythProvider({ children = null as any }) {
-  const { endpoint } = useConnectionConfig();
-  const connection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
-  const pythByPriceAddressMap = useRef<ISymbolMap>({});
-
-  const handlePriceInfo = (
-    priceAddress: string,
-    symbol: string,
-    product: any,
-    accountInfo: AccountInfo<Buffer> | null
-  ) => {
-    if (!accountInfo || !accountInfo.data) {
-      return;
-    }
-    const price = parsePriceData(accountInfo.data);
-    if (price.priceType !== 1) {
-      console.log(symbol, price.priceType, price.nextPriceAccountKey?.toString());
-    }
-
-    // console.log(price);
-
-    // console.log(`Product ${symbol} key: ${priceAddress} product: `, product, 'price:', price);
-
-    pythByPriceAddressMap.current = createSetPriceAccountMapUpdater(
-      priceAddress,
-      symbol,
-      product,
-      price
-    )(pythByPriceAddressMap.current);
-    // setPriceAccountMap(createSetPriceAccountMapUpdater(priceAddress, symbol, product, price));
-  };
+  const connection = useConnection();
+  const { tokenMap } = useConnectionConfig();
+  const [products, setProducts] = useState<Products>({});
+  const [prices, setPrices] = useState<Prices>({});
+  const [subscriptions, setSubscriptions] = useState<Subscriptions>({});
 
   useEffect(() => {
-    const subscriptionIds: number[] = [];
-
     (async () => {
-      const accountInfo = await connection.getAccountInfo(DEFAULT_PYTH_MAPPING_ID);
-      if (!accountInfo || !accountInfo.data) {
+      try {
+        const accountInfo = await connection.getAccountInfo(PYTH_PROGRAM_ID);
+        if (!accountInfo || !accountInfo.data) {
+          return;
+        }
+
+        const { productAccountKeys } = parseMappingData(accountInfo.data);
+
+        const productInfos = await getMultipleAccounts(
+          connection,
+          productAccountKeys.map((p) => p.toBase58()),
+          'confirmed'
+        );
+
+        const products = productInfos.array.reduce((products, p) => {
+          const product = parseProductData(p.data);
+          const symbol = product.product['symbol'];
+          products[symbol] = product;
+          return products;
+        }, {} as Products);
+        setProducts(products);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [connection, setProducts]);
+
+  const subscribeToPrice = useCallback(
+    (mint: string) => {
+      let subscription = subscriptions[mint];
+      if (subscription) {
         return;
       }
 
-      const { productAccountKeys } = parseMappingData(accountInfo.data);
+      const symbol = tokenMap.get(mint)?.symbol;
+      if (!symbol) {
+        return;
+      }
 
-      const productsMultiple = await getMultipleAccounts(
-        connection,
-        productAccountKeys.map((productAccountInfo) => productAccountInfo.toBase58()),
-        'confirmed'
+      const product = products[`${symbol}/USD`];
+      if (!product) {
+        return;
+      }
+
+      const id = connection.onAccountChange(
+        product.priceAccountKey,
+        throttle((accountInfo) => {
+          try {
+            const price = parsePriceData(accountInfo.data);
+            setPrices({ ...prices, [mint]: price.price });
+          } catch (e) {
+            console.error(e);
+          }
+        }, 2000)
       );
-      const productsData = productsMultiple.array.map((productAccountInfo) =>
-        parseProductData(productAccountInfo.data)
-      );
-      // const priceMultiple = await getMultipleAccounts(
-      //   connection,
-      //   productsData.map((data) => data.priceAccountKey.toBase58()),
-      //   'confirmed'
-      // );
 
-      for (let i = 0; i < productsMultiple.keys.length; i++) {
-        // const key = productsMultiple.keys[i];
-
-        const productData = productsData[i];
-        const product = productData.product;
-        const symbol = product['symbol'];
-        const priceAccountKey = productData.priceAccountKey;
-        // const priceInfo = priceMultiple.array[i];
-        // const price = parsePriceData(priceInfo.data);
-
-        // console.log(`Product ${symbol} key: ${key} price: ${priceMultiple.keys[i]} ${price.price}`);
-
-        // handlePriceInfo(priceAccountKey.toBase58(), symbol, product, accountInfo);
-
-        const subscriptionId = connection.onAccountChange(
-          priceAccountKey,
-          throttle((accountInfo) => {
-            handlePriceInfo(priceAccountKey.toBase58(), symbol, product, accountInfo);
-            priceEmitter.raisePriceUpdated(priceAccountKey.toBase58());
-          }, 5000)
-        );
-        subscriptionIds.push(subscriptionId);
-      }
-    })();
-
-    return () => {
-      for (const subscriptionId of subscriptionIds) {
-        connection.removeAccountChangeListener(subscriptionId).catch(() => {
-          console.warn(`Unsuccessfully attempted to remove listener for subscription id ${subscriptionId}`);
-        });
-      }
-    };
-  }, [connection]);
-
-  const midPriceInUSD = useCallback(
-    (priceAddress: string) => {
-      const price = pythByPriceAddressMap.current[priceAddress];
-
-      if (!price) {
-        return 0.0;
-      }
-
-      return price.price.price;
+      // @TODO: add subscription counting / removal
+      subscription = { id, count: 1 };
+      setSubscriptions({ ...subscriptions, [mint]: subscription });
     },
-    [pythByPriceAddressMap.current]
+    [subscriptions, tokenMap, products, connection, prices, setPrices, setSubscriptions]
+  );
+
+  const getPrice = useCallback(
+    (mint: string) => {
+      subscribeToPrice(mint);
+      return prices[mint] || 0;
+    },
+    [subscribeToPrice, prices]
   );
 
   return (
     <PythContext.Provider
       value={{
-        midPriceInUSD,
-        priceEmitter,
+        products,
+        prices,
+        getPrice,
       }}
     >
       {children}
@@ -176,32 +125,29 @@ export function PythProvider({ children = null as any }) {
 }
 
 export const usePyth = () => {
-  const context = useContext(PythContext);
-  return context as PythContextState;
+  return useContext(PythContext);
 };
 
-export const useMidPriceInUSD = (priceAddress: PublicKey | string) => {
-  const address = typeof priceAddress === 'string' ? priceAddress : priceAddress.toBase58();
-  const { midPriceInUSD, priceEmitter } = useContext(PythContext) as PythContextState;
-  const [price, setPrice] = useState<number>(0);
+export const usePrice = (mint: string) => {
+  const { getPrice } = useContext(PythContext);
+  const [price, setPrice] = useState(0);
 
   useEffect(() => {
-    const update = (args?: PriceUpdateEvent) => {
-      if (args && args.id !== address) {
-        return;
-      }
+    setPrice(getPrice(mint));
+  }, [setPrice, getPrice, mint]);
 
-      if (midPriceInUSD) {
-        setPrice(midPriceInUSD(address));
-      }
-    };
-    update();
-
-    const dispose = priceEmitter.onPrice(update);
-    return () => {
-      dispose();
-    };
-  }, [midPriceInUSD, address, priceEmitter]);
-
-  return { price, isBase: price === 1.0 };
+  return price;
 };
+
+interface Product {
+  magic: number;
+  version: number;
+  type: number;
+  size: number;
+  priceAccountKey: PublicKey;
+  product: ProductAttributes;
+}
+
+interface ProductAttributes {
+  [index: string]: string;
+}

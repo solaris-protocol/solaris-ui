@@ -35,6 +35,8 @@ module.exports = {
     'prettier/prettier': 'off',
 
     '@typescript-eslint/no-empty-function': 'off',
+    '@typescript-eslint/no-empty-interface': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
 
     // sort
     'sort-imports': 'off',

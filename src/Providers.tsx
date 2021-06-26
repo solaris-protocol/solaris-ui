@@ -14,11 +14,11 @@ export const Providers: FC = ({ children }) => {
       <WalletProvider>
         <ModalsProvider>
           <AccountsProvider>
-            <MarketProvider>
-              <PythProvider>
+            <PythProvider>
+              <MarketProvider>
                 <LendingProvider>{children}</LendingProvider>
-              </PythProvider>
-            </MarketProvider>
+              </MarketProvider>
+            </PythProvider>
           </AccountsProvider>
         </ModalsProvider>
       </WalletProvider>

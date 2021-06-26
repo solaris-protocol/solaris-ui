@@ -7,7 +7,7 @@ import BN from 'bn.js';
 
 import { PoolInfo, TokenAccount } from 'app/models';
 
-import { LAMPORTS_PER_SOL, WAD, ZERO } from '../constants';
+import { WAD, ZERO } from '../constants';
 
 export type KnownTokenMap = Map<string, TokenInfo>;
 
@@ -61,6 +61,20 @@ export function getTokenName(map: KnownTokenMap, mint?: string | PublicKey, shor
   const knownSymbol = map.get(mintAddress)?.symbol;
   if (knownSymbol) {
     return knownSymbol;
+  }
+
+  return shorten ? `${mintAddress.substring(0, 5)}...` : mintAddress;
+}
+export function getVerboseTokenName(map: KnownTokenMap, mint?: string | PublicKey, shorten = true): string {
+  const mintAddress = typeof mint === 'string' ? mint : mint?.toBase58();
+
+  if (!mintAddress) {
+    return 'N/A';
+  }
+
+  const knownName = map.get(mintAddress)?.name;
+  if (knownName) {
+    return knownName;
   }
 
   return shorten ? `${mintAddress.substring(0, 5)}...` : mintAddress;
@@ -126,6 +140,14 @@ export function fromLamports(account?: TokenAccount | number | BN, mint?: MintIn
   return (amount / precision) * rate;
 }
 
+export const tryParseKey = (key: string): PublicKey | null => {
+  try {
+    return new PublicKey(key);
+  } catch (error) {
+    return null;
+  }
+};
+
 const SI_SYMBOL = ['', 'k', 'M', 'G', 'T', 'P', 'E'];
 
 const abbreviateNumber = (number: number, precision: number) => {
@@ -164,31 +186,21 @@ export const formatUSD = new Intl.NumberFormat('en-US', {
   currency: 'USD',
 });
 
-export const numberFormatter = new Intl.NumberFormat('en-US', {
+const numberFormater = new Intl.NumberFormat('en-US', {
   style: 'decimal',
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
-export const isSmallNumber = (val: number) => {
-  return val < 0.001 && val > 0;
-};
-
 export const formatNumber = {
-  format: (val = 0, useSmall?: boolean) => {
-    if (val && useSmall && isSmallNumber(val)) {
-      return 0.001;
+  format: (val?: number) => {
+    if (!val) {
+      return '--';
     }
 
-    return numberFormatter.format(val);
+    return numberFormater.format(val);
   },
 };
-
-export const feeFormatter = new Intl.NumberFormat('en-US', {
-  style: 'decimal',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 9,
-});
 
 export const formatPct = new Intl.NumberFormat('en-US', {
   style: 'percent',
@@ -209,24 +221,11 @@ export function convert(account?: TokenAccount | number, mint?: MintInfo, rate =
   return result;
 }
 
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function getPoolName(map: KnownTokenMap, pool: PoolInfo, shorten = true) {
   const sorted = pool.pubkeys.holdingMints.map((a) => a.toBase58()).sort();
   return sorted.map((item) => getTokenName(map, item, shorten)).join('/');
-}
-
-export function lamportsToSol(lamports: number | BN): number {
-  if (typeof lamports === 'number') {
-    return Math.abs(lamports) / LAMPORTS_PER_SOL;
-  }
-
-  let signMultiplier = 1;
-  if (lamports.isNeg()) {
-    signMultiplier = -1;
-  }
-
-  const absLamports = lamports.abs();
-  const lamportsString = absLamports.toString(10).padStart(10, '0');
-  const splitIndex = lamportsString.length - 9;
-  const solString = lamportsString.slice(0, splitIndex) + '.' + lamportsString.slice(splitIndex);
-  return signMultiplier * parseFloat(solString);
 }

@@ -69,7 +69,7 @@ export const Top: FC<Props> = ({ reserve, state }) => {
     <Wrapper>
       <Left>
         <TokenIconStyled mintAddress={reserve.liquidity.mintPubkey} size={40} />
-        <Symbol>{name}</Symbol>
+        <Symbol title={reserve.liquidity.mintPubkey.toBase58()}>{name}</Symbol>
         <APY apy={apy} isActive={state === 'deposit'} />
       </Left>
       <WalletBalance title={String(tokenBalance)}>

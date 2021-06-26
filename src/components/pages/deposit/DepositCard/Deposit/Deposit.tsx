@@ -11,7 +11,7 @@ import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
-import { useUserBalance } from 'hooks';
+import { useUserBalance, useUserObligationByReserve } from 'hooks';
 import { notify } from 'utils/notifications';
 
 import { Bottom, MaxButton } from '../common/styled';
@@ -31,6 +31,28 @@ interface Props {
 }
 
 export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
+  const { userObligationsByReserve } = useUserObligationByReserve(undefined, address);
+
+  console.log(666, reserve.liquidity.oraclePubkey.toBase58());
+
+  console.log(
+    111,
+    userObligationsByReserve.map((o) => {
+      return o.info.deposits.map((d) => [
+        d.depositReserve.toBase58(),
+        d.depositedAmount.toString(),
+        d.marketValue.toString(),
+      ]);
+    })
+  );
+  console.log(
+    222,
+    userObligationsByReserve.map((o) => {
+      return o.info.depositedValue.toString();
+    })
+  );
+  console.log(333, userObligationsByReserve[0]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState('');
 
@@ -57,12 +79,13 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
 
     try {
       await deposit(
+        connection,
+        wallet,
         fromAccounts[0],
         Math.ceil(balanceLamports * (parseFloat(value) / balance)),
         reserve,
         address,
-        connection,
-        wallet
+        userObligationsByReserve[0]
       );
 
       setValue('');
@@ -83,7 +106,11 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
   return (
     <>
       <CollateralBalanceWrapper>
-        <CollateralInput priceAddress={reserve.liquidity.oraclePubkey} value={value} onChange={handleValueChange} />
+        <CollateralInput
+          mintAddress={reserve.liquidity.mintPubkey.toBase58()}
+          value={value}
+          onChange={handleValueChange}
+        />
         <MaxButton onClick={handleMaxClick}>Max</MaxButton>
       </CollateralBalanceWrapper>
       <Bottom>
@@ -101,3 +128,5 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
     </>
   );
 };
+
+Deposit.whyDidYouRender = true;

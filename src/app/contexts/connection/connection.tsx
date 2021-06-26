@@ -1,13 +1,22 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { TokenInfo, TokenListProvider } from '@solana/spl-token-registry';
-import { Account, Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import {
+  Account,
+  BlockhashAndFeeCalculator,
+  Commitment,
+  Connection,
+  SignatureStatus,
+  Transaction,
+  TransactionInstruction,
+  TransactionSignature,
+} from '@solana/web3.js';
 
-import { cache, getMultipleAccounts, MintParser } from 'app/contexts/accounts';
-import { WalletAdapter } from 'app/contexts/wallet';
+import { cache } from 'app/contexts/accounts';
+import { SendTransactionError, SignTransactionError } from 'utils/errors';
 import { setProgramIds } from 'utils/ids';
 import { notify } from 'utils/notifications';
-import { useLocalStorageState } from 'utils/utils';
+import { sleep, useLocalStorageState } from 'utils/utils';
 
 import { ExplorerLink } from '../../../old/components/ExplorerLink';
 import { ENDPOINTS } from './constants';
@@ -16,10 +25,11 @@ export type ENV = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet';
 
 const DEFAULT = ENDPOINTS[0].endpoint;
 const DEFAULT_SLIPPAGE = 0.25;
+const DEFAULT_TIMEOUT = 15000;
 
 interface ConnectionConfig {
   connection: Connection;
-  sendConnection: Connection;
+  // sendConnection: Connection;
   endpoint: string;
   slippage: number;
   setSlippage: (val: number) => void;
@@ -35,7 +45,7 @@ const ConnectionContext = React.createContext<ConnectionConfig>({
   slippage: DEFAULT_SLIPPAGE,
   setSlippage: (val: number) => {},
   connection: new Connection(DEFAULT, 'recent'),
-  sendConnection: new Connection(DEFAULT, 'recent'),
+  // sendConnection: new Connection(DEFAULT, 'recent'),
   env: ENDPOINTS[0].name,
   tokens: [],
   tokenMap: new Map<string, TokenInfo>(),
@@ -47,9 +57,9 @@ export function ConnectionProvider({ children = undefined as any }) {
   const [slippage, setSlippage] = useLocalStorageState('slippage', DEFAULT_SLIPPAGE.toString());
 
   const connection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
-  const sendConnection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
+  // const sendConnection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
 
-  const chain = ENDPOINTS.find((end) => end.endpoint === endpoint) || ENDPOINTS[2];
+  const chain = ENDPOINTS.find((end) => end.endpoint === endpoint) || ENDPOINTS[0];
   const env = chain.name;
 
   const [tokens, setTokens] = useState<TokenInfo[]>([]);
@@ -59,27 +69,27 @@ export function ConnectionProvider({ children = undefined as any }) {
     cache.clear();
     // fetch token files
     (async () => {
-      const res = await new TokenListProvider().resolve();
-      const list = res.filterByChainId(chain.chainID).excludeByTag('nft').getList();
-      const knownMints = list.reduce((map, item) => {
+      const container = await new TokenListProvider().resolve();
+      const tokens = container.filterByChainId(chain.chainId).excludeByTag('nft').getList();
+      const tokenMap = tokens.reduce((map, item) => {
         map.set(item.address, item);
         return map;
       }, new Map<string, TokenInfo>());
 
-      const accounts = await getMultipleAccounts(connection, [...knownMints.keys()], 'single');
-      accounts.keys.forEach((key, index) => {
-        const account = accounts.array[index];
-        if (!account) {
-          return;
-        }
+      setTokenMap(tokenMap);
+      setTokens(tokens);
 
-        cache.add(new PublicKey(key), account, MintParser);
-      });
-
-      setTokenMap(knownMints);
-      setTokens(list);
+      // const accounts = await getMultipleAccounts(connection, [...knownMints.keys()], 'single');
+      // accounts.keys.forEach((key, index) => {
+      //   const account = accounts.array[index];
+      //   if (!account) {
+      //     return;
+      //   }
+      //
+      //   cache.add(new PublicKey(key), account, MintParser);
+      // });
     })();
-  }, [connection, chain]);
+  }, [connection, env]);
 
   setProgramIds(env);
 
@@ -100,19 +110,19 @@ export function ConnectionProvider({ children = undefined as any }) {
     };
   }, [connection]);
 
-  useEffect(() => {
-    const id = sendConnection.onAccountChange(new Account().publicKey, () => {});
-    return () => {
-      sendConnection.removeAccountChangeListener(id);
-    };
-  }, [sendConnection]);
-
-  useEffect(() => {
-    const id = sendConnection.onSlotChange(() => null);
-    return () => {
-      sendConnection.removeSlotChangeListener(id);
-    };
-  }, [sendConnection]);
+  // useEffect(() => {
+  //   const id = sendConnection.onAccountChange(new Account().publicKey, () => {});
+  //   return () => {
+  //     sendConnection.removeAccountChangeListener(id);
+  //   };
+  // }, [sendConnection]);
+  //
+  // useEffect(() => {
+  //   const id = sendConnection.onSlotChange(() => null);
+  //   return () => {
+  //     sendConnection.removeSlotChangeListener(id);
+  //   };
+  // }, [sendConnection]);
 
   return (
     <ConnectionContext.Provider
@@ -122,7 +132,7 @@ export function ConnectionProvider({ children = undefined as any }) {
         slippage: parseFloat(slippage),
         setSlippage: (val) => setSlippage(val.toString()),
         connection,
-        sendConnection,
+        // sendConnection,
         tokens,
         tokenMap,
         env,
@@ -137,9 +147,9 @@ export function useConnection() {
   return useContext(ConnectionContext).connection as Connection;
 }
 
-export function useSendConnection() {
-  return useContext(ConnectionContext)?.sendConnection;
-}
+// export function useSendConnection() {
+//   return useContext(ConnectionContext)?.sendConnection;
+// }
 
 export function useConnectionConfig() {
   const context = useContext(ConnectionContext);
@@ -161,7 +171,7 @@ const getErrorForTransaction = async (connection: Connection, txid: string) => {
   // wait for all confirmation before geting transaction
   await connection.confirmTransaction(txid, 'max');
 
-  const tx = await connection.getParsedConfirmedTransaction(txid);
+  const tx = await connection.getParsedConfirmedTransaction(txid, 'confirmed');
 
   const errors: string[] = [];
   if (tx?.meta && tx.meta.logMessages) {
@@ -186,56 +196,183 @@ const getErrorForTransaction = async (connection: Connection, txid: string) => {
 
 export const sendTransaction = async (
   connection: Connection,
-  wallet: WalletAdapter,
+  wallet: any,
   instructions: TransactionInstruction[],
   signers: Account[],
-  awaitConfirmation = true
+  awaitConfirmation = true,
+  commitment: Commitment = 'singleGossip',
+  includesFeePayer = false,
+  block?: BlockhashAndFeeCalculator
 ) => {
-  if (!wallet?.publicKey) {
-    throw new Error('Wallet is not connected');
-  }
-
   let transaction = new Transaction();
   instructions.forEach((instruction) => transaction.add(instruction));
-  transaction.recentBlockhash = (await connection.getRecentBlockhash('max')).blockhash;
-  transaction.setSigners(
-    // fee payied by the wallet owner
-    wallet.publicKey,
-    ...signers.map((s) => s.publicKey)
-  );
+  transaction.recentBlockhash = (block || (await connection.getRecentBlockhash(commitment))).blockhash;
+
+  if (includesFeePayer) {
+    transaction.setSigners(...signers.map((s) => s.publicKey));
+  } else {
+    transaction.setSigners(
+      // fee payed by the wallet owner
+      wallet.publicKey,
+      ...signers.map((s) => s.publicKey)
+    );
+  }
+
   if (signers.length > 0) {
     transaction.partialSign(...signers);
   }
-  transaction = await wallet.signTransaction(transaction);
+
+  if (!includesFeePayer) {
+    try {
+      transaction = await wallet.signTransaction(transaction);
+    } catch (ex) {
+      throw new SignTransactionError(ex);
+    }
+  }
+
   const rawTransaction = transaction.serialize();
   const options = {
     skipPreflight: true,
-    commitment: 'singleGossip',
+    commitment,
   };
 
   const txid = await connection.sendRawTransaction(rawTransaction, options);
+  let slot = 0;
 
   if (awaitConfirmation) {
-    const status = (await connection.confirmTransaction(txid, options && (options.commitment as any))).value;
+    const confirmationStatus = await awaitTransactionSignatureConfirmation(
+      txid,
+      DEFAULT_TIMEOUT,
+      connection,
+      commitment
+    );
 
-    if (status?.err) {
-      const errors = await getErrorForTransaction(connection, txid);
+    slot = confirmationStatus?.slot || 0;
+
+    if (confirmationStatus?.err) {
+      const errors: string[] = [];
+      try {
+        // TODO: This call always throws errors and delays error feedback
+        //       It needs to be investigated but for now I'm commenting it out
+        // errors = await getErrorForTransaction(connection, txid);
+      } catch (ex) {
+        console.error('getErrorForTransaction() error', ex);
+      }
+
       notify({
         message: 'Transaction failed...',
         description: (
           <>
             {errors.map((err) => (
-              <div>{err}</div>
+              <div key={err}>{err}</div>
             ))}
-            <ExplorerLink address={txid} type="transaction" />
+            <ExplorerLink address={txid} type="transaction" short connection={connection} />
           </>
         ),
         type: 'error',
       });
 
-      throw new Error(`Raw transaction ${txid} failed (${JSON.stringify(status)})`);
+      throw new SendTransactionError(
+        `Transaction ${txid} failed (${JSON.stringify(confirmationStatus)})`,
+        txid,
+        confirmationStatus.err
+      );
     }
   }
 
-  return txid;
+  return { txid, slot };
 };
+
+async function awaitTransactionSignatureConfirmation(
+  txid: TransactionSignature,
+  timeout: number,
+  connection: Connection,
+  commitment: Commitment = 'recent',
+  queryStatus = false
+) {
+  let done = false;
+  let status: SignatureStatus | null = {
+    slot: 0,
+    confirmations: 0,
+    err: null,
+  };
+  let subId = 0;
+  await new Promise((resolve, reject) => {
+    (async () => {
+      setTimeout(() => {
+        if (done) {
+          return;
+        }
+        done = true;
+        reject({ timeout: true });
+      }, timeout);
+      try {
+        subId = connection.onSignature(
+          txid,
+          (result, context) => {
+            done = true;
+            status = {
+              err: result.err,
+              slot: context.slot,
+              confirmations: 0,
+            };
+            if (result.err) {
+              console.log('Rejected via websocket', result.err);
+              reject(result.err);
+            } else {
+              console.log('Resolved via websocket', result);
+              resolve(result);
+            }
+          },
+          commitment
+        );
+      } catch (e) {
+        done = true;
+        console.error('WS error in setup', txid, e);
+      }
+      while (!done && queryStatus) {
+        // eslint-disable-next-line no-loop-func
+        (async () => {
+          try {
+            const signatureStatuses = await connection.getSignatureStatuses([txid]);
+            status = signatureStatuses && signatureStatuses.value[0];
+            if (!done) {
+              if (!status) {
+                console.log('REST null result for', txid, status);
+              } else if (status.err) {
+                console.log('REST error for', txid, status);
+                done = true;
+                reject(status.err);
+              } else if (!status.confirmations) {
+                console.log('REST no confirmations for', txid, status);
+              } else {
+                console.log('REST confirmation for', txid, status);
+                done = true;
+                resolve(status);
+              }
+            }
+          } catch (e) {
+            if (!done) {
+              console.log('REST connection error: txid', txid, e);
+            }
+          }
+        })();
+        await sleep(2000);
+      }
+    })();
+  })
+    .catch((err) => {
+      //@ts-ignore
+      if (connection._signatureSubscriptions[subId]) {
+        connection.removeSignatureListener(subId);
+      }
+    })
+    .then((_) => {
+      //@ts-ignore
+      if (connection._signatureSubscriptions[subId]) {
+        connection.removeSignatureListener(subId);
+      }
+    });
+  done = true;
+  return status;
+}

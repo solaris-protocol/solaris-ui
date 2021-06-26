@@ -57,7 +57,7 @@ export class EventEmitter {
     return () => this.emitter.removeListener(MarketUpdateEvent.type, callback);
   }
 
-  raiseMarketUpdated(ids: Set<string>) {
+  raiseMarketUpdated(ids: Set<string>): void {
     this.emitter.emit(MarketUpdateEvent.type, new MarketUpdateEvent(ids));
   }
 
@@ -69,7 +69,7 @@ export class EventEmitter {
     return () => this.emitter.removeListener(PriceUpdateEvent.type, callback);
   }
 
-  raisePriceUpdated(id: string) {
+  raisePriceUpdated(id: string): void {
     this.emitter.emit(PriceUpdateEvent.type, new PriceUpdateEvent(id));
   }
 
@@ -81,15 +81,15 @@ export class EventEmitter {
     return () => this.emitter.removeListener(CacheUpdateEvent.type, callback);
   }
 
-  raiseCacheUpdated(id: string, isNew: boolean, parser: any) {
+  raiseCacheUpdated(id: string, isNew: boolean, parser: any): void {
     this.emitter.emit(CacheUpdateEvent.type, new CacheUpdateEvent(id, isNew, parser));
   }
 
-  raiseCacheDeleted(id: string) {
+  raiseCacheDeleted(id: string): void {
     this.emitter.emit(CacheDeleteEvent.type, new CacheDeleteEvent(id));
   }
 
-  raiseCacheCleared() {
+  raiseCacheCleared(): void {
     this.emitter.emit(CacheClearEvent.type, new CacheClearEvent());
   }
 }

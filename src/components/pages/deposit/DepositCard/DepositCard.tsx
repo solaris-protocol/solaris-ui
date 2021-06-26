@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 import classNames from 'classnames';
 
-import { Reserve } from 'app/models/lending';
+import { Reserve } from 'app/models';
 import { Card } from 'components/common/Card';
 import { useUserCollateralBalance } from 'hooks';
 

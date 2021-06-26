@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 import classNames from 'classnames';
 
-import { useMidPriceInUSD } from 'app/contexts/pyth';
+import { usePrice } from 'app/contexts/pyth';
 import { formatNumber } from 'utils/utils';
 
 const WrapperLabel = styled.label`
@@ -58,13 +58,13 @@ const BalanceUSD = styled.span`
 `;
 
 interface Props {
-  priceAddress: string | PublicKey;
+  mintAddress: string;
   value: string;
   onChange: (nextValue: string) => void;
 }
 
-export const CollateralInput: FC<Props> = ({ priceAddress, value, onChange }) => {
-  const { price } = useMidPriceInUSD(priceAddress);
+export const CollateralInput: FC<Props> = ({ mintAddress, value, onChange }) => {
+  const price = usePrice(mintAddress);
   const valueIsUSD = price * (parseFloat(value) || 0);
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {

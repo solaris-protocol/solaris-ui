@@ -1,9 +1,9 @@
 import { AccountLayout, MintLayout, Token } from '@solana/spl-token';
 import { Account, PublicKey, SystemProgram, TransactionInstruction } from '@solana/web3.js';
 
-import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID, WRAPPED_SOL_MINT } from '../../utils/ids';
-import { cache, TokenAccountParser } from '../contexts/accounts';
-import { ObligationLayout, TokenAccount } from '../models';
+import { cache, TokenAccountParser } from 'app/contexts/accounts';
+import { ObligationLayout, TokenAccount } from 'app/models';
+import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID, WRAPPED_SOL_MINT } from 'utils/ids';
 
 export function ensureSplAccount(
   instructions: TransactionInstruction[],
