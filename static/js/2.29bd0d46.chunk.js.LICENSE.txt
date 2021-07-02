@@ -31,6 +31,13 @@ object-assign
  */
 
 /*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <https://feross.org>
+ * @license  MIT
+ */
+
+/*!
 Copyright (C) 2013-2017 by Andrea Giammarchi - @WebReflection
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -54,6 +61,8 @@ THE SOFTWARE.
 */
 
 /*! https://mths.be/punycode v1.4.1 by @mathias */
+
+/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 
