@@ -1,17 +1,11 @@
 import { AccountLayout } from '@solana/spl-token';
+import { WalletAdapter } from '@solana/wallet-base';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-import { cache, ParsedAccount } from 'app/contexts/accounts';
+import { ParsedAccount } from 'app/contexts/accounts';
 import { sendTransaction } from 'app/contexts/connection/connection';
-import { WalletAdapter } from 'app/contexts/wallet';
-import {
-  approve,
-  refreshObligationInstruction,
-  TokenAccount,
-  withdrawObligationCollateralInstruction,
-} from 'app/models';
+import { approve, Obligation, TokenAccount, withdrawObligationCollateralInstruction } from 'app/models';
 import { redeemReserveCollateralInstruction, refreshReserveInstruction, Reserve } from 'app/models';
-import { EnrichedLendingObligation } from 'hooks';
 import { LENDING_PROGRAM_ID } from 'utils/ids';
 import { notify } from 'utils/notifications';
 
@@ -23,9 +17,8 @@ export const withdraw = async (
   wallet: WalletAdapter,
   source: TokenAccount, // CollateralAccount
   collateralAmount: number, // in collateral token (lamports)
-  reserve: Reserve,
-  reserveAddress: PublicKey,
-  obligation: EnrichedLendingObligation
+  reserve: ParsedAccount<Reserve>,
+  obligation: ParsedAccount<Obligation>
 ) => {
   if (!wallet.publicKey) {
     throw new Error('Wallet is not connected');
@@ -45,7 +38,7 @@ export const withdraw = async (
   const accountRentExempt = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
 
   const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
-    [reserve.lendingMarket.toBuffer()],
+    [reserve.info.lendingMarket.toBuffer()],
     LENDING_PROGRAM_ID
   );
 
@@ -68,54 +61,22 @@ export const withdraw = async (
     instructions,
     cleanupInstructions,
     accountRentExempt,
-    reserve.collateral.mintPubkey,
+    reserve.info.collateral.mintPubkey,
     signers
   );
 
   /*
    * Obligation
    */
-  // const depositPubkeys = obligation.info.deposits.map((collateral) => collateral.depositReserve);
-  // const borrowPubkeys = obligation.info.borrows.map((liquidity) => liquidity.borrowReserve);
-  //
-  // const obligationReservesAndOraclesPubkeys = [...new Set([...depositPubkeys, ...borrowPubkeys])].map(
-  //   (reservePubkey) => {
-  //     const reserveAccountInfo = cache.get(reservePubkey);
-  //
-  //     if (!reserveAccountInfo) {
-  //       throw 'Error: cannot find the reserve account';
-  //     }
-  //
-  //     return {
-  //       reservePubkey: reservePubkey,
-  //       oraclePubkey: reserveAccountInfo.info.liquidity.oraclePubkey,
-  //     };
-  //   }
-  // );
-  //
-  // for (const reserveAndOraclePubkeys of obligationReservesAndOraclesPubkeys) {
-  //   instructions.push(
-  //     refreshReserveInstruction(reserveAndOraclePubkeys.reservePubkey, reserveAndOraclePubkeys.oraclePubkey)
-  //   );
-  // }
-
   instructions.push(...(await refreshObligationAndReserves(connection, obligation)));
-
-  instructions.push(
-    refreshObligationInstruction(
-      obligation.account.pubkey,
-      obligation.info.deposits.map((collateral) => collateral.depositReserve),
-      obligation.info.borrows.map((liquidity) => liquidity.borrowReserve)
-    )
-  );
   instructions.push(
     withdrawObligationCollateralInstruction(
       collateralAmount,
-      reserve.collateral.supplyPubkey,
+      reserve.info.collateral.supplyPubkey,
       destinationCollateral,
-      reserveAddress,
-      obligation.account.pubkey,
-      reserve.lendingMarket,
+      reserve.pubkey,
+      obligation.pubkey,
+      reserve.info.lendingMarket,
       lendingMarketAuthority,
       wallet.publicKey
     )
@@ -131,35 +92,38 @@ export const withdraw = async (
     instructions,
     cleanupInstructions,
     accountRentExempt,
-    reserve.liquidity.mintPubkey,
+    reserve.info.liquidity.mintPubkey,
     signers
   );
 
-  instructions.push(refreshReserveInstruction(reserveAddress, reserve.liquidity.oraclePubkey));
+  instructions.push(refreshReserveInstruction(reserve.pubkey, reserve.info.liquidity.oraclePubkey));
   instructions.push(
     redeemReserveCollateralInstruction(
       collateralAmount,
       sourceCollateral,
       destinationLiquidity,
-      reserveAddress,
-      reserve.collateral.mintPubkey,
-      reserve.liquidity.supplyPubkey,
-      reserve.lendingMarket,
+      reserve.pubkey,
+      reserve.info.collateral.mintPubkey,
+      reserve.info.liquidity.supplyPubkey,
+      reserve.info.lendingMarket,
       lendingMarketAuthority,
       transferAuthority.publicKey
     )
   );
 
+  // FIXME: need for recalculation data for max withdraw/borrow/repay amount
+  instructions.push(...(await refreshObligationAndReserves(connection, obligation)));
+
   try {
-    const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
+    const { txid } = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
     notify({
       message: 'Funds withdrawn.',
       type: 'success',
-      description: `Transaction - ${tx}`,
+      description: `Transaction - ${txid}`,
     });
   } catch (error) {
-    // TODO:
-    throw error;
+    console.error(error);
+    throw new Error(error);
   }
 };

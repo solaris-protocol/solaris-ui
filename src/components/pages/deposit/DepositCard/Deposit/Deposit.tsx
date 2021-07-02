@@ -4,6 +4,7 @@ import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 
 import { deposit } from 'app/actions';
+import { ParsedAccount } from 'app/contexts/accounts';
 import { useConnection } from 'app/contexts/connection';
 import { useWallet } from 'app/contexts/wallet';
 import { Reserve } from 'app/models';
@@ -25,40 +26,21 @@ const CollateralBalanceWrapper = styled.div`
 `;
 
 interface Props {
-  reserve: Reserve;
-  address: PublicKey;
+  reserve: ParsedAccount<Reserve>;
   setState: (state: StateType) => void;
 }
 
-export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
-  const { userObligationsByReserve } = useUserObligationByReserve(undefined, address);
-
-  console.log(666, reserve.liquidity.oraclePubkey.toBase58());
-
-  console.log(
-    111,
-    userObligationsByReserve.map((o) => {
-      return o.info.deposits.map((d) => [
-        d.depositReserve.toBase58(),
-        d.depositedAmount.toString(),
-        d.marketValue.toString(),
-      ]);
-    })
-  );
-  console.log(
-    222,
-    userObligationsByReserve.map((o) => {
-      return o.info.depositedValue.toString();
-    })
-  );
-  console.log(333, userObligationsByReserve[0]);
+export const Deposit: FC<Props> = ({ reserve, setState }) => {
+  const connection = useConnection();
+  const { wallet } = useWallet();
 
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState('');
 
-  const connection = useConnection();
-  const { wallet } = useWallet();
-  const { accounts: fromAccounts, balance, balanceLamports } = useUserBalance(reserve?.liquidity.mintPubkey);
+  const { userObligationsByReserve } = useUserObligationByReserve(undefined, reserve.pubkey);
+  const obligation = userObligationsByReserve[0]?.obligation || null;
+
+  const { accounts: sourceAccounts, balance, balanceLamports } = useUserBalance(reserve.info.liquidity.mintPubkey);
 
   const handleValueChange = (nextValue: string) => {
     setValue(nextValue);
@@ -69,8 +51,6 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
   };
 
   const handleDepositClick = async () => {
-    // TODO: deposit
-
     if (!wallet?.publicKey) {
       return;
     }
@@ -78,15 +58,10 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
     setIsLoading(true);
 
     try {
-      await deposit(
-        connection,
-        wallet,
-        fromAccounts[0],
-        Math.ceil(balanceLamports * (parseFloat(value) / balance)),
-        reserve,
-        address,
-        userObligationsByReserve[0]
-      );
+      const sourceTokenAccount = sourceAccounts[0];
+      const liquidityAmount = Math.ceil(balanceLamports * (parseFloat(value) / balance));
+
+      await deposit(connection, wallet, sourceTokenAccount, liquidityAmount, reserve, obligation);
 
       setValue('');
       setState('balance');
@@ -103,11 +78,13 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
     }
   };
 
+  const isDepositDisabled = sourceAccounts.length === 0 || !value;
+
   return (
     <>
       <CollateralBalanceWrapper>
         <CollateralInput
-          mintAddress={reserve.liquidity.mintPubkey.toBase58()}
+          mintAddress={reserve.info.liquidity.mintPubkey.toBase58()}
           value={value}
           onChange={handleValueChange}
         />
@@ -118,7 +95,7 @@ export const Deposit: FC<Props> = ({ reserve, address, setState }) => {
           <ButtonLoading />
         ) : (
           <ButtonConnect>
-            <Button disabled={fromAccounts.length === 0} onClick={handleDepositClick} className="full">
+            <Button disabled={isDepositDisabled} onClick={handleDepositClick} className="full">
               Deposit
             </Button>
             <Button onClick={() => setState('balance')}>Cancel</Button>

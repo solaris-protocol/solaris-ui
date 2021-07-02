@@ -71,10 +71,3 @@ export const depositReserveLiquidityInstruction = (
     data,
   });
 };
-
-export const calculateDepositAPY = (reserve: Reserve) => {
-  const currentUtilization = calculateUtilizationRatio(reserve);
-
-  const borrowAPY = calculateBorrowAPY(reserve);
-  return currentUtilization * borrowAPY;
-};

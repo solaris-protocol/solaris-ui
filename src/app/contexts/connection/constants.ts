@@ -10,6 +10,6 @@ export const ENDPOINTS = [
   // },
   // { name: 'testnet' as ENV, endpoint: clusterApiUrl('testnet') },
   // TODO: devnet
-  { name: 'devnet' as ENV, endpoint: clusterApiUrl('devnet'), chainId: ChainId.MainnetBeta },
+  { name: 'devnet' as ENV, endpoint: clusterApiUrl('devnet'), chainId: ChainId.Devnet },
   // { name: 'localnet' as ENV, endpoint: 'http://127.0.0.1:8899' },
 ];

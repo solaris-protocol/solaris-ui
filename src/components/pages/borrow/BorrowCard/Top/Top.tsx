@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 
 import { styled } from '@linaria/react';
 
+import { ParsedAccount } from 'app/contexts/accounts';
 import { calculateBorrowAPY, Reserve } from 'app/models';
 // import WalletIcon from 'assets/icons/wallet-icon.svg';
 import { TokenIcon } from 'components/common/TokenIcon';
@@ -55,19 +56,19 @@ const Symbol = styled.span`
 // `;
 
 interface Props {
-  reserve: Reserve;
+  reserve: ParsedAccount<Reserve>;
   state: StateType;
 }
 
 export const Top: FC<Props> = ({ reserve, state }) => {
-  const name = useTokenName(reserve.liquidity.mintPubkey);
-  const apr = calculateBorrowAPY(reserve);
+  const name = useTokenName(reserve.info.liquidity.mintPubkey);
+  const apr = calculateBorrowAPY(reserve.info);
   // const tokenBalance = 0;
 
   return (
     <Wrapper>
       <Left>
-        <TokenIconStyled mintAddress={reserve.liquidity.mintPubkey} size={40} />
+        <TokenIconStyled mintAddress={reserve.info.liquidity.mintPubkey} size={40} />
         <Symbol>{name}</Symbol>
         <APR apr={apr} isActive={state === 'borrow'} />
       </Left>

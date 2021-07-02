@@ -91,7 +91,7 @@ export interface ReserveFees {
   hostFeePercentage: number;
 }
 
-export const ReserveLayout = BufferLayout.struct([
+export const ReserveLayout = BufferLayout.struct<Reserve>([
   BufferLayout.u8('version'),
 
   LastUpdateLayout,
@@ -189,4 +189,33 @@ export const collateralToLiquidity = (collateralAmount: BN | number, reserve?: R
 export const liquidityToCollateral = (liquidityAmount: BN | number, reserve?: Reserve) => {
   const amount = typeof liquidityAmount === 'number' ? liquidityAmount : liquidityAmount.toNumber();
   return Math.floor(amount * collateralExchangeRate(reserve));
+};
+
+// deposit APY utilization currentUtilizationRate * borrowAPY
+
+export const calculateBorrowAPY = (reserve: Reserve) => {
+  const currentUtilization = calculateUtilizationRatio(reserve);
+  const optimalUtilization = reserve.config.optimalUtilizationRate / 100;
+
+  let borrowAPY;
+  if (optimalUtilization === 1.0 || currentUtilization < optimalUtilization) {
+    const normalizedFactor = currentUtilization / optimalUtilization;
+    const optimalBorrowRate = reserve.config.optimalBorrowRate / 100;
+    const minBorrowRate = reserve.config.minBorrowRate / 100;
+    borrowAPY = normalizedFactor * (optimalBorrowRate - minBorrowRate) + minBorrowRate;
+  } else {
+    const normalizedFactor = (currentUtilization - optimalUtilization) / (1 - optimalUtilization);
+    const optimalBorrowRate = reserve.config.optimalBorrowRate / 100;
+    const maxBorrowRate = reserve.config.maxBorrowRate / 100;
+    borrowAPY = normalizedFactor * (maxBorrowRate - optimalBorrowRate) + optimalBorrowRate;
+  }
+
+  return borrowAPY;
+};
+
+export const calculateDepositAPY = (reserve: Reserve) => {
+  const currentUtilization = calculateUtilizationRatio(reserve);
+
+  const borrowAPY = calculateBorrowAPY(reserve);
+  return currentUtilization * borrowAPY;
 };

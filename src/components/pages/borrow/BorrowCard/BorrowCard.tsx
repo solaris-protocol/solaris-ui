@@ -1,13 +1,12 @@
 import React, { FC, useState } from 'react';
 
 import { styled } from '@linaria/react';
+import { PublicKey } from '@solana/web3.js';
 import classNames from 'classnames';
 
-import { cache, ParsedAccount, useMint } from 'app/contexts/accounts';
+import { ParsedAccount } from 'app/contexts/accounts';
 import { Reserve } from 'app/models';
 import { Card } from 'components/common/Card';
-import { EnrichedLendingObligation, useUserCollateralBalance } from 'hooks';
-import { fromLamports, wadToLamports } from 'utils/utils';
 
 import { Balance } from './Balance';
 import { Borrow } from './Borrow';
@@ -22,26 +21,28 @@ const Content = styled.div`
 `;
 
 interface Props {
-  reserve: Reserve;
+  reserve: ParsedAccount<Reserve>;
 }
 
 export const BorrowCard: FC<Props> = ({ reserve }) => {
   const [state, setState] = useState<StateType>('balance');
 
+  const hasBorrow = false;
+
   const renderContent = () => {
     switch (state) {
       case 'borrow':
-        return <Borrow setState={setState} />;
+        return <Borrow reserve={reserve} setState={setState} />;
       case 'repay':
-        return <Repay setState={setState} />;
+        return <Repay reserve={reserve} setState={setState} />;
       case 'balance':
       default:
-        return <Balance setState={setState} />;
+        return <Balance reserve={reserve} setState={setState} />;
     }
   };
 
   return (
-    <Card className={classNames({ hasBorrow: true })}>
+    <Card className={classNames({ hasBorrow })}>
       <Top reserve={reserve} state={state} />
       <Content>{renderContent()}</Content>
     </Card>

@@ -65,7 +65,7 @@ export interface ProtoObligation {
   dataFlat: Buffer;
 }
 
-export const ObligationLayout = BufferLayout.struct([
+export const ObligationLayout = BufferLayout.struct<ProtoObligation>([
   BufferLayout.u8('version'),
 
   LastUpdateLayout,
@@ -82,13 +82,13 @@ export const ObligationLayout = BufferLayout.struct([
   BufferLayout.blob(776, 'dataFlat'),
 ]);
 
-export const ObligationCollateralLayout = BufferLayout.struct([
+export const ObligationCollateralLayout = BufferLayout.struct<ObligationCollateral>([
   Layout.publicKey('depositReserve'),
   Layout.uint64('depositedAmount'),
   Layout.uint128('marketValue'),
 ]);
 
-export const ObligationLiquidityLayout = BufferLayout.struct([
+export const ObligationLiquidityLayout = BufferLayout.struct<ObligationLiquidity>([
   Layout.publicKey('borrowReserve'),
   Layout.uint128('cumulativeBorrowRateWads'),
   Layout.uint128('borrowedAmountWads'),

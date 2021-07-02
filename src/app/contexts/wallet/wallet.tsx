@@ -1,8 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import Wallet from '@project-serum/sol-wallet-adapter';
-import { PublicKey, Transaction } from '@solana/web3.js';
-import EventEmitter from 'eventemitter3';
+import { WalletAdapter } from '@solana/wallet-base';
 
 import { useConnectionConfig } from 'app/contexts/connection';
 import { useModals } from 'app/contexts/modals';
@@ -10,13 +9,6 @@ import { notify } from 'utils/notifications';
 import { shortenAddress, useLocalStorageState } from 'utils/utils';
 
 import { WALLET_PROVIDERS } from './constants';
-
-export interface WalletAdapter extends EventEmitter {
-  publicKey: PublicKey | null;
-  signTransaction: (transaction: Transaction) => Promise<Transaction>;
-  connect: () => any;
-  disconnect: () => any;
-}
 
 const WalletContext = React.createContext<{
   wallet: WalletAdapter | undefined;
@@ -50,33 +42,41 @@ export function WalletProvider({ children = null as any }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
+    const handleConnect = () => {
+      if (!wallet?.publicKey) {
+        return;
+      }
+
+      setConnected(true);
+
+      const walletPublicKey = wallet.publicKey.toBase58();
+      const keyToDisplay = walletPublicKey.length > 20 ? shortenAddress(walletPublicKey, 7) : walletPublicKey;
+
+      notify({
+        message: 'Wallet update',
+        description: 'Connected to wallet ' + keyToDisplay,
+      });
+    };
+
+    const handleDisconnect = () => {
+      setConnected(false);
+      notify({
+        message: 'Wallet update',
+        description: 'Disconnected from wallet',
+      });
+    };
+
     if (wallet) {
-      wallet.on('connect', () => {
-        if (wallet.publicKey) {
-          setConnected(true);
-
-          const walletPublicKey = wallet.publicKey.toBase58();
-          const keyToDisplay = walletPublicKey.length > 20 ? shortenAddress(walletPublicKey, 7) : walletPublicKey;
-
-          notify({
-            message: 'Wallet update',
-            description: 'Connected to wallet ' + keyToDisplay,
-          });
-        }
-      });
-
-      wallet.on('disconnect', () => {
-        setConnected(false);
-        notify({
-          message: 'Wallet update',
-          description: 'Disconnected from wallet',
-        });
-      });
+      wallet.on('connect', handleConnect);
+      wallet.on('disconnect', handleDisconnect);
     }
 
     return () => {
       setConnected(false);
       if (wallet) {
+        wallet.off('connect', handleConnect);
+        wallet.off('disconnect', handleDisconnect);
+
         wallet.disconnect();
       }
     };

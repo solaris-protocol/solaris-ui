@@ -1,20 +1,25 @@
+import React from 'react';
+
 import { AccountLayout } from '@solana/spl-token';
+import { WalletAdapter } from '@solana/wallet-base';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
+import { refreshObligationAndReserves } from 'app/actions/helpers/refreshObligationAndReserves';
+import { ParsedAccount } from 'app/contexts/accounts';
 import { sendTransaction } from 'app/contexts/connection/connection';
-import { WalletAdapter } from 'app/contexts/wallet';
 import {
-  approve,
+  collateralExchangeRate,
   depositObligationCollateralInstruction,
   depositReserveLiquidityInstruction,
   initObligationInstruction,
+  Obligation,
   ObligationLayout,
   refreshObligationInstruction,
   refreshReserveInstruction,
   Reserve,
   TokenAccount,
 } from 'app/models';
-import { EnrichedLendingObligation } from 'hooks';
+import { ExplorerLink } from 'components/common/ExplorerLink';
 import { LENDING_PROGRAM_ID } from 'utils/ids';
 import { notify } from 'utils/notifications';
 
@@ -25,9 +30,8 @@ export const deposit = async (
   wallet: WalletAdapter,
   source: TokenAccount,
   liquidityAmount: number,
-  reserve: Reserve,
-  reserveAddress: PublicKey,
-  obligation?: EnrichedLendingObligation
+  reserve: ParsedAccount<Reserve>,
+  obligation?: ParsedAccount<Obligation>
 ) => {
   if (!wallet.publicKey) {
     throw new Error('Wallet is not connected');
@@ -39,7 +43,6 @@ export const deposit = async (
     type: 'warn',
   });
 
-  // user from account
   const signers: Account[] = [];
   const instructions: TransactionInstruction[] = [];
   const cleanupInstructions: TransactionInstruction[] = [];
@@ -48,7 +51,7 @@ export const deposit = async (
   const obligationRentExempt = await connection.getMinimumBalanceForRentExemption(ObligationLayout.span);
 
   const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
-    [reserve.lendingMarket.toBuffer()], // which account should be authority
+    [reserve.info.lendingMarket.toBuffer()], // which account should be authority
     LENDING_PROGRAM_ID
   );
 
@@ -62,96 +65,105 @@ export const deposit = async (
   );
 
   // create approval for transfer transactions
-  const transferAuthority = approve(
-    instructions,
-    cleanupInstructions,
-    sourceLiquidityAccount,
-    wallet.publicKey,
-    liquidityAmount
-  );
-  signers.push(transferAuthority);
+  // const transferAuthority = approve(
+  //   instructions,
+  //   cleanupInstructions,
+  //   sourceLiquidityAccount,
+  //   wallet.publicKey,
+  //   liquidityAmount
+  // );
+  // signers.push(transferAuthority);
 
   /*
    *  Reserve
    */
   // get destination account
-
   const destinationCollateralAccount = await findOrCreateAccountByMint(
     wallet.publicKey,
     wallet.publicKey,
     instructions,
     cleanupInstructions,
     accountRentExempt,
-    reserve.collateral.mintPubkey,
+    reserve.info.collateral.mintPubkey,
     signers
   );
 
-  instructions.push(refreshReserveInstruction(reserveAddress, reserve.liquidity.oraclePubkey));
+  instructions.push(refreshReserveInstruction(reserve.pubkey, reserve.info.liquidity.oraclePubkey));
   instructions.push(
     depositReserveLiquidityInstruction(
       liquidityAmount,
       sourceLiquidityAccount,
       destinationCollateralAccount,
-      reserveAddress,
-      reserve.liquidity.supplyPubkey,
-      reserve.collateral.mintPubkey,
-      reserve.lendingMarket,
+      reserve.pubkey,
+      reserve.info.liquidity.supplyPubkey,
+      reserve.info.collateral.mintPubkey,
+      reserve.info.lendingMarket,
       lendingMarketAuthority,
-      transferAuthority.publicKey
+      wallet.publicKey // transferAuthority.publicKey
     )
   );
 
   /*
    *  Obligation
    */
-  const collateralAmount = liquidityAmount;
+  // TODO: check calculation, need to get collateral amount
+  const collateralAmount = liquidityAmount * collateralExchangeRate(reserve.info);
   const sourceCollateral = destinationCollateralAccount;
 
   let obligationAccount;
   // if obligation exists
   if (obligation) {
-    obligationAccount = obligation.account.pubkey;
+    obligationAccount = obligation.pubkey;
   } else {
     obligationAccount = createUninitializedObligation(instructions, wallet.publicKey, obligationRentExempt, signers);
-    instructions.push(initObligationInstruction(obligationAccount, reserve.lendingMarket, wallet.publicKey));
+    instructions.push(initObligationInstruction(obligationAccount, reserve.info.lendingMarket, wallet.publicKey));
   }
 
   // create approval for deposit obligation collateral transactions
-  const depositObligationCollateralAuthority = approve(
-    instructions,
-    cleanupInstructions,
-    destinationCollateralAccount,
-    wallet.publicKey,
-    collateralAmount
-  );
-  signers.push(depositObligationCollateralAuthority);
+  // const depositObligationCollateralAuthority = approve(
+  //   instructions,
+  //   cleanupInstructions,
+  //   destinationCollateralAccount,
+  //   wallet.publicKey,
+  //   collateralAmount
+  // );
+  // signers.push(depositObligationCollateralAuthority);
 
-  instructions.push(refreshReserveInstruction(reserveAddress, reserve.liquidity.oraclePubkey));
+  instructions.push(refreshReserveInstruction(reserve.pubkey, reserve.info.liquidity.oraclePubkey));
   instructions.push(
     depositObligationCollateralInstruction(
       collateralAmount,
       sourceCollateral,
-      reserve.collateral.supplyPubkey,
-      reserveAddress,
+      reserve.info.collateral.supplyPubkey,
+      reserve.pubkey,
       obligationAccount,
-      reserve.lendingMarket,
+      reserve.info.lendingMarket,
       lendingMarketAuthority,
       wallet.publicKey,
-      depositObligationCollateralAuthority.publicKey
+      wallet.publicKey //depositObligationCollateralAuthority.publicKey
     )
   );
 
+  if (obligation) {
+    // FIXME: need also if we created obligation above
+    // FIXME: need for recalculation data for max withdraw/borrow/repay amount
+    instructions.push(...(await refreshObligationAndReserves(connection, obligation)));
+  }
+
   try {
-    const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
+    const { txid } = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
     notify({
       message: 'Funds deposited.',
       type: 'success',
-      description: `Transaction - ${tx}`,
+      description: (
+        <>
+          Transaction - <ExplorerLink address={txid} type="transaction" short connection={connection} />
+        </>
+      ),
     });
   } catch (error) {
-    // TODO:
     console.error(error);
-    throw error;
+    throw new Error(error);
   }
 };

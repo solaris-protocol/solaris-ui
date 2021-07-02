@@ -4,6 +4,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { parseMappingData, parsePriceData, parseProductData } from '@pythnetwork/client';
 import { PublicKey } from '@solana/web3.js';
+import BN from 'bn.js';
 import throttle from 'lodash/throttle';
 
 import { PYTH_PROGRAM_ID } from 'utils/ids';
@@ -89,6 +90,12 @@ export function PythProvider({ children = null as any }) {
         throttle((accountInfo) => {
           try {
             const price = parsePriceData(accountInfo.data);
+
+            // console.log('price: ', price);
+            //
+            // const exponent = Math.abs(price.exponent);
+            // const decimals = new BN(10).pow(new BN(exponent.toString()));
+
             setPrices({ ...prices, [mint]: price.price });
           } catch (e) {
             console.error(e);
@@ -128,9 +135,11 @@ export const usePyth = () => {
   return useContext(PythContext);
 };
 
-export const usePrice = (mint: string) => {
+export const usePrice = (mintAddress: string | PublicKey) => {
   const { getPrice } = useContext(PythContext);
   const [price, setPrice] = useState(0);
+
+  const mint = typeof mintAddress === 'string' ? mintAddress : mintAddress.toBase58();
 
   useEffect(() => {
     setPrice(getPrice(mint));

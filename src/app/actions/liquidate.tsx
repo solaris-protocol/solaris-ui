@@ -1,10 +1,10 @@
 import { AccountLayout } from '@solana/spl-token';
+import { WalletAdapter } from '@solana/wallet-base';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 import { cache, ParsedAccount } from 'app/contexts/accounts';
 import { sendTransaction } from 'app/contexts/connection';
-import { WalletAdapter } from 'app/contexts/wallet';
-import { liquidateInstruction, Reserve } from 'app/models';
+import { Reserve } from 'app/models';
 import { approve, LendingMarket, Obligation, TokenAccount } from 'app/models';
 import { LENDING_PROGRAM_ID } from 'utils/ids';
 import { notify } from 'utils/notifications';
@@ -84,39 +84,44 @@ export const liquidate = async (
 
   const market = cache.get(withdrawReserve.info.lendingMarket) as ParsedAccount<LendingMarket>;
 
-  const dexOrderBookSide = market.info.quoteTokenMint.equals(repayReserve.info.liquidity.mintPubkey)
-    ? dexMarket?.info.asks
-    : dexMarket?.info.bids;
+  // const dexOrderBookSide = market.info.quoteTokenMint.equals(repayReserve.info.liquidity.mintPubkey)
+  //   ? dexMarket?.info.asks
+  //   : dexMarket?.info.bids;
 
   const memory = createTempMemoryAccount(instructions, wallet.publicKey, signers, LENDING_PROGRAM_ID);
 
   // TODO: rewrite
   // instructions.push(accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey));
 
-  instructions.push(
-    liquidateInstruction(
-      amountLamports,
-      fromAccount,
-      toAccount,
-      repayReserve.pubkey,
-      repayReserve.info.liquidity.supplyPubkey,
-      withdrawReserve.pubkey,
-      withdrawReserve.info.collateral.supplyPubkey,
-      obligation.pubkey,
-      repayReserve.info.lendingMarket,
-      authority,
-      transferAuthority.publicKey,
-      dexMarketAddress,
-      dexOrderBookSide,
-      memory
-    )
-  );
+  // instructions.push(
+  //   liquidateInstruction(
+  //     amountLamports,
+  //     fromAccount,
+  //     toAccount,
+  //     repayReserve.pubkey,
+  //     repayReserve.info.liquidity.supplyPubkey,
+  //     withdrawReserve.pubkey,
+  //     withdrawReserve.info.collateral.supplyPubkey,
+  //     obligation.pubkey,
+  //     repayReserve.info.lendingMarket,
+  //     authority,
+  //     transferAuthority.publicKey,
+  //     dexMarketAddress,
+  //     dexOrderBookSide,
+  //     memory
+  //   )
+  // );
 
-  const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
+  try {
+    const { txid } = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
-  notify({
-    message: 'Funds liquidated.',
-    type: 'success',
-    description: `Transaction - ${tx}`,
-  });
+    notify({
+      message: 'Funds liquidated.',
+      type: 'success',
+      description: `Transaction - ${txid}`,
+    });
+  } catch (error) {
+    console.error(error);
+    throw new Error(error);
+  }
 };

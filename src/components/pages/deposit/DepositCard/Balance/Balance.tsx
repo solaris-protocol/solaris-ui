@@ -1,13 +1,15 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 
 import { styled } from '@linaria/react';
 
-import { usePyth } from 'app/contexts/pyth';
+import { ParsedAccount, useMint } from 'app/contexts/accounts';
+import { usePrice } from 'app/contexts/pyth';
 import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { CollateralBalance } from 'components/common/CollateralBalance';
-import { useUserCollateralBalance } from 'hooks';
+import { calculateCollateralBalance, useUserObligationByReserve } from 'hooks';
+import { fromLamports } from 'utils/utils';
 
 import { Bottom } from '../common/styled';
 import { StateType } from '../types';
@@ -22,17 +24,33 @@ const CollateralBalanceWrapper = styled.div`
 `;
 
 interface Props {
-  reserve: Reserve;
+  reserve: ParsedAccount<Reserve>;
   setState: (state: StateType) => void;
 }
 
 export const Balance: FC<Props> = ({ reserve, setState }) => {
-  const { balance, balanceInUSD } = useUserCollateralBalance(reserve);
+  const { userObligationsByReserve } = useUserObligationByReserve(undefined, reserve.pubkey);
+  const mintInfo = useMint(reserve.info.collateral.mintPubkey);
+  const price = usePrice(reserve.info.liquidity.mintPubkey.toBase58() || '');
+
+  const obligation = userObligationsByReserve[0]?.obligation || null;
+  const depositReserve = obligation
+    ? obligation.info.deposits.find((deposit) => deposit.depositReserve.equals(reserve.pubkey))
+    : null;
+
+  const { collateralBalanceInLiquidity, collateralBalanceInLiquidityInUSD } = useMemo(() => {
+    const collateralBalanceLamports = depositReserve
+      ? calculateCollateralBalance(reserve.info, depositReserve.depositedAmount.toNumber())
+      : 0;
+    const collateralBalanceInLiquidity = depositReserve ? fromLamports(collateralBalanceLamports, mintInfo) : 0;
+    const collateralBalanceInLiquidityInUSD = collateralBalanceInLiquidity * price;
+    return { collateralBalanceInLiquidity, collateralBalanceInLiquidityInUSD };
+  }, [depositReserve, mintInfo, price, reserve]);
 
   return (
     <>
       <CollateralBalanceWrapper>
-        <CollateralBalance balance={balance} balanceInUSD={balanceInUSD} />
+        <CollateralBalance balance={collateralBalanceInLiquidity} balanceInUSD={collateralBalanceInLiquidityInUSD} />
       </CollateralBalanceWrapper>
       <Bottom>
         <ButtonConnect>

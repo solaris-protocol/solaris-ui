@@ -138,7 +138,7 @@ export function MarketProvider({ children = null as any }) {
         toQuery.add(decoded.info.asks.toBase58());
       });
 
-      // await refreshAccounts(connection, [...toQuery.keys()]);
+      await refreshAccounts(connection, [...toQuery.keys()]);
 
       marketEmitter.raiseMarketUpdated(new Set([...marketByMint.keys()]));
 

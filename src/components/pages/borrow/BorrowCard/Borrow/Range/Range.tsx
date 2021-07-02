@@ -123,12 +123,19 @@ const Riskier = styled.span`
   color: #dc1fff;
 `;
 
-interface Props {}
+interface Props {
+  value: number;
+  onChange: (val: number) => void;
+}
 
-export const Range: FC<Props> = ({ children }) => {
+export const Range: FC<Props> = ({ value, onChange }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(Number(e.target.value));
+  };
+
   return (
     <Wrapper>
-      <RangeInput type="range" />
+      <RangeInput type="range" value={value} onChange={handleChange} />
       <Marks>
         <Safer>Safer</Safer>
         <Riskier>Riskier</Riskier>

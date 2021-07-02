@@ -8,4 +8,7 @@ export interface LastUpdate {
   stale: boolean;
 }
 
-export const LastUpdateLayout = BufferLayout.struct([Layout.uint64('slot'), BufferLayout.u8('stale')], 'lastUpdate');
+export const LastUpdateLayout = BufferLayout.struct<LastUpdate>(
+  [Layout.uint64('slot'), BufferLayout.u8('stale')],
+  'lastUpdate'
+);

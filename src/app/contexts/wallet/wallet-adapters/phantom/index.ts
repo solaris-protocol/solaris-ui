@@ -1,7 +1,7 @@
+import { WalletAdapter } from '@solana/wallet-base';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import EventEmitter from 'eventemitter3';
 
-import { WalletAdapter } from 'app/contexts/wallet';
 import { notify } from 'utils/notifications';
 
 type PhantomEvent = 'disconnect' | 'connect';
@@ -17,29 +17,15 @@ interface PhantomProvider {
   disconnect: () => Promise<void>;
   on: (event: PhantomEvent, handler: (args: any) => void) => void;
   request: (method: PhantomRequestMethod, params: any) => Promise<any>;
-  listeners: (event: PhantomEvent) => (() => void)[];
 }
 
 export class PhantomWalletAdapter extends EventEmitter implements WalletAdapter {
+  _provider: PhantomProvider | undefined;
+  _cachedCorrectKey?: PublicKey;
   constructor() {
     super();
     this.connect = this.connect.bind(this);
   }
-
-  private get _provider(): PhantomProvider | undefined {
-    if ((window as any)?.solana?.isPhantom) {
-      return (window as any).solana;
-    }
-    return undefined;
-  }
-
-  private _handleConnect = (...args: any) => {
-    this.emit('connect', ...args);
-  };
-
-  private _handleDisconnect = (...args: any) => {
-    this.emit('disconnect', ...args);
-  };
 
   get connected() {
     return this._provider?.isConnected || false;
@@ -49,7 +35,6 @@ export class PhantomWalletAdapter extends EventEmitter implements WalletAdapter 
     return this._provider?.autoApprove || false;
   }
 
-  // eslint-disable-next-line
   async signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
     if (!this._provider) {
       return transactions;
@@ -59,10 +44,13 @@ export class PhantomWalletAdapter extends EventEmitter implements WalletAdapter 
   }
 
   get publicKey() {
-    return this._provider?.publicKey!;
+    // Due to weird phantom bug where their public key isnt quite like ours
+    if (!this._cachedCorrectKey && this._provider?.publicKey)
+      this._cachedCorrectKey = new PublicKey(this._provider.publicKey.toBase58());
+
+    return this._cachedCorrectKey || null;
   }
 
-  // eslint-disable-next-line
   async signTransaction(transaction: Transaction) {
     if (!this._provider) {
       return transaction;
@@ -71,8 +59,16 @@ export class PhantomWalletAdapter extends EventEmitter implements WalletAdapter 
     return this._provider.signTransaction(transaction);
   }
 
-  connect() {
-    if (!(window as any).solana.isPhantom) {
+  connect = async () => {
+    if (this._provider) {
+      return;
+    }
+
+    let provider: PhantomProvider;
+    if ((window as any)?.solana?.isPhantom) {
+      provider = (window as any).solana;
+    } else {
+      window.open('https://phantom.app/', '_blank');
       notify({
         message: 'Phantom Error',
         description: 'Please install Phantom wallet from Chrome ',
@@ -80,22 +76,29 @@ export class PhantomWalletAdapter extends EventEmitter implements WalletAdapter 
       return;
     }
 
-    if (!this._provider) {
-      return;
+    provider.on('connect', () => {
+      this._provider = provider;
+      this.emit('connect');
+    });
+
+    provider.on('disconnect', () => {
+      this._provider = undefined;
+      this.emit('disconnect');
+    });
+
+    if (!provider.isConnected) {
+      await provider.connect();
     }
 
-    if (this._provider && !this._provider.listeners('connect').length) {
-      this._provider?.on('connect', this._handleConnect);
-    }
-    if (!this._provider.listeners('disconnect').length) {
-      this._provider?.on('disconnect', this._handleDisconnect);
-    }
-    return this._provider?.connect();
-  }
+    // this._provider = provider;
+    // this.emit('connect');
+  };
 
   disconnect() {
     if (this._provider) {
       this._provider.disconnect();
+      // this._provider = undefined;
+      // this.emit('disconnect');
     }
   }
 }

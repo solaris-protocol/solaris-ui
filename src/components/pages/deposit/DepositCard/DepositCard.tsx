@@ -4,6 +4,7 @@ import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 import classNames from 'classnames';
 
+import { ParsedAccount } from 'app/contexts/accounts';
 import { Reserve } from 'app/models';
 import { Card } from 'components/common/Card';
 import { useUserCollateralBalance } from 'hooks';
@@ -21,20 +22,22 @@ const Content = styled.div`
 `;
 
 interface Props {
-  reserve: Reserve;
-  address: PublicKey;
+  reserve: ParsedAccount<Reserve>;
 }
 
-export const DepositCard: FC<Props> = ({ reserve, address }) => {
+export const DepositCard: FC<Props> = ({ reserve }) => {
   const [state, setState] = useState<StateType>('balance');
-  const { hasBalance } = useUserCollateralBalance(reserve);
+
+  // const { hasBalance } = useUserCollateralBalance(reserve);
+
+  const hasBalance = false;
 
   const renderContent = () => {
     switch (state) {
       case 'deposit':
-        return <Deposit reserve={reserve} address={address} setState={setState} />;
+        return <Deposit reserve={reserve} setState={setState} />;
       case 'withdraw':
-        return <Withdraw reserve={reserve} address={address} setState={setState} />;
+        return <Withdraw reserve={reserve} setState={setState} />;
       case 'balance':
       default:
         return <Balance reserve={reserve} setState={setState} />;

@@ -194,11 +194,7 @@ const numberFormater = new Intl.NumberFormat('en-US', {
 
 export const formatNumber = {
   format: (val?: number) => {
-    if (!val) {
-      return '--';
-    }
-
-    return numberFormater.format(val);
+    return numberFormater.format(val || 0);
   },
 };
 

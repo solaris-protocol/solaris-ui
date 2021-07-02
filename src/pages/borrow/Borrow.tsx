@@ -1,10 +1,11 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 
 import { styled } from '@linaria/react';
 
 import { TotalInfo } from 'components/common/TotalInfo';
 import { BorrowCard } from 'components/pages/borrow/BorrowCard';
-import { useLendingReserves } from 'hooks';
+import { useReserves, useUserObligations } from 'hooks';
+import { formatNumber } from 'utils/utils';
 
 const CardsWrapper = styled.div`
   display: grid;
@@ -15,14 +16,19 @@ const CardsWrapper = styled.div`
 `;
 
 export const Borrow: FC = () => {
-  const { reserveAccounts } = useLendingReserves();
+  const { reserveAccounts } = useReserves();
+  const { totalBorrowedValue } = useUserObligations();
+
+  const columns = useMemo(() => {
+    return [{ title: 'Borrowed', value: `$${formatNumber.format(totalBorrowedValue)}` }];
+  }, [totalBorrowedValue]);
 
   return (
     <>
-      <TotalInfo type="borrow" columns={[]} />
+      <TotalInfo type="borrow" columns={columns} />
       <CardsWrapper>
         {reserveAccounts.map((account) => (
-          <BorrowCard key={account.pubkey.toBase58()} reserve={account.info} />
+          <BorrowCard key={account.pubkey.toBase58()} reserve={account} />
         ))}
       </CardsWrapper>
     </>

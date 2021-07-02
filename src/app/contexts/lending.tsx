@@ -11,7 +11,7 @@ import {
   Reserve,
   ReserveParser,
 } from 'app/models';
-import { useLendingReserves } from 'hooks';
+import { useReserves } from 'hooks';
 import { LENDING_PROGRAM_ID } from 'utils/ids';
 
 import { cache, getMultipleAccounts, MintParser, ParsedAccount } from './accounts';
@@ -38,7 +38,7 @@ export function LendingProvider({ children = null as any }) {
 export const useLending = () => {
   const connection = useConnection();
   const [lendingAccounts, setLendingAccounts] = useState<any[]>([]);
-  const { reserveAccounts } = useLendingReserves();
+  const { reserveAccounts } = useReserves();
   const precacheMarkets = usePrecacheMarket();
 
   // TODO: query for all the dex from reserves

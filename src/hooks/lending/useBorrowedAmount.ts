@@ -4,9 +4,9 @@ import { PublicKey } from '@solana/web3.js';
 
 import { useMint } from 'app/contexts/accounts';
 import { useConnection } from 'app/contexts/connection';
+import { useReserve } from 'hooks';
 import { fromLamports, wadToLamports } from 'utils/utils';
 
-import { useLendingReserve } from './useLendingReserves';
 import { useUserObligationByReserve } from './useUserObligationByReserve';
 
 export function useBorrowedAmount(address?: string | PublicKey) {
@@ -15,57 +15,51 @@ export function useBorrowedAmount(address?: string | PublicKey) {
   const [borrowedInfo, setBorrowedInfo] = useState({
     borrowedLamports: 0,
     borrowedInUSD: 0,
-    colateralInUSD: 0,
+    collateralInUSD: 0,
     ltv: 0,
     health: 0,
   });
-  const reserve = useLendingReserve(address);
+  const reserve = useReserve(address);
   const liquidityMint = useMint(reserve?.info.liquidity.mintPubkey);
 
   useEffect(() => {
     setBorrowedInfo({
       borrowedLamports: 0,
       borrowedInUSD: 0,
-      colateralInUSD: 0,
+      collateralInUSD: 0,
       ltv: 0,
       health: 0,
     });
 
     (async () => {
       const result = {
-        borrowedLamports: 0,
+        borrowedLamports: wadToLamports(reserve.info.liquidity.borrowedAmountWads).toNumber(),
         borrowedInUSD: 0,
-        colateralInUSD: 0,
+        collateralInUSD: 0,
         ltv: 0,
         health: 0,
       };
 
-      let liquidationThreshold = 0;
+      const liquidationThreshold = reserve.info.config.liquidationThreshold;
 
-      userObligationsByReserve.forEach((obligation) => {
-        // @FIXME: support multiple borrows, and decimals may be different than lamports
-        const borrowedLamports = wadToLamports(obligation.info.borrows[0].borrowedAmountWads).toNumber();
-
-        // @FIXME: obligation tokens
-        result.borrowedLamports += borrowedLamports;
-        result.borrowedInUSD += obligation.info.borrowedInQuote;
-        result.colateralInUSD += obligation.info.collateralInQuote;
-        // @FIXME: BigNumber
-        liquidationThreshold = obligation.info.liquidationThreshold;
+      // @FIXME: see if this requires obligations
+      userObligationsByReserve.forEach((item) => {
+        result.borrowedInUSD += item.obligation.info.borrowedValue;
+        result.collateralInUSD += item.obligation.info.depositedValue;
       }, 0);
 
       if (userObligationsByReserve.length === 1) {
-        result.ltv = userObligationsByReserve[0].info.ltv;
-        result.health = userObligationsByReserve[0].info.health;
+        result.ltv = userObligationsByReserve[0].obligation.info.ltv;
+        result.health = userObligationsByReserve[0].obligation.info.health;
       } else {
-        result.ltv = (100 * result.borrowedInUSD) / result.colateralInUSD;
-        result.health = (result.colateralInUSD * liquidationThreshold) / 100 / result.borrowedInUSD;
+        result.ltv = (100 * result.borrowedInUSD) / result.collateralInUSD;
+        result.health = (result.collateralInUSD * liquidationThreshold) / 100 / result.borrowedInUSD;
         result.health = Number.isFinite(result.health) ? result.health : 0;
       }
 
       setBorrowedInfo(result);
     })();
-  }, [connection, userObligationsByReserve, setBorrowedInfo]);
+  }, [connection, reserve, userObligationsByReserve, setBorrowedInfo]);
 
   return {
     borrowed: fromLamports(borrowedInfo.borrowedLamports, liquidityMint),

@@ -6,11 +6,11 @@ import { cache, ParsedAccount } from 'app/contexts/accounts';
 import { useConnectionConfig } from 'app/contexts/connection/connection';
 import { usePyth } from 'app/contexts/pyth';
 import { calculateDepositAPY, Reserve, TokenAccount } from 'app/models';
+import { useReserves } from 'hooks';
 import { fromLamports, getTokenName } from 'utils/utils';
 
 import { useUserAccounts } from '../system/useUserAccounts';
 import { calculateCollateralBalance } from './useCollateralBalance';
-import { useLendingReserves } from './useLendingReserves';
 
 export interface UserDeposit {
   account: TokenAccount;
@@ -26,7 +26,7 @@ export interface UserDeposit {
 
 export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
   const { userAccounts } = useUserAccounts();
-  const { reserveAccounts } = useLendingReserves();
+  const { reserveAccounts } = useReserves();
   const [userDeposits, setUserDeposits] = useState<UserDeposit[]>([]);
   const { getPrice } = usePyth();
   const { tokenMap } = useConnectionConfig();

@@ -3,20 +3,21 @@ import { useMemo } from 'react';
 import { PublicKey } from '@solana/web3.js';
 
 import { usePrice } from 'app/contexts/pyth';
-
-import { useLendingReserve } from './useLendingReserves';
-import { useUserDeposits } from './useUserDeposits';
-import { useUserObligations } from './useUserObligations';
+import { useReserve, useUserDeposits, useUserObligations } from 'hooks';
 
 // TODO: add option to decrease buying power by overcollateralization factor
 // TODO: add support for balance in the wallet
-export function useBorrowingPower(reserveAddress: string | PublicKey | undefined) {
+export function useBorrowingPower(
+  reserveAddress: string | PublicKey | undefined,
+  includeWallet = false,
+  overcollateralize = true
+) {
   const key = useMemo(
     () => (typeof reserveAddress === 'string' ? reserveAddress : reserveAddress?.toBase58() || ''),
     [reserveAddress]
   );
 
-  const reserve = useLendingReserve(key);
+  const reserve = useReserve(key);
 
   const liquidityMint = reserve?.info.liquidity.mintPubkey;
   const liquidityMintAddress = liquidityMint?.toBase58();
@@ -25,7 +26,7 @@ export function useBorrowingPower(reserveAddress: string | PublicKey | undefined
 
   const price = usePrice(liquidityMintAddress);
 
-  const { borrowedInQuote: loansValue } = useUserObligations();
+  const { totalDepositedValue: loansValue } = useUserObligations();
 
   const totalDeposits = loansValue + totalInQuote;
 

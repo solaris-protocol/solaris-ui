@@ -18,7 +18,7 @@ import { setProgramIds } from 'utils/ids';
 import { notify } from 'utils/notifications';
 import { sleep, useLocalStorageState } from 'utils/utils';
 
-import { ExplorerLink } from '../../../old/components/ExplorerLink';
+import { ExplorerLink } from '../../../components/common/ExplorerLink';
 import { ENDPOINTS } from './constants';
 
 export type ENV = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet';
@@ -225,8 +225,8 @@ export const sendTransaction = async (
   if (!includesFeePayer) {
     try {
       transaction = await wallet.signTransaction(transaction);
-    } catch (ex) {
-      throw new SignTransactionError(ex);
+    } catch (error) {
+      throw new SignTransactionError(error);
     }
   }
 
@@ -255,8 +255,8 @@ export const sendTransaction = async (
         // TODO: This call always throws errors and delays error feedback
         //       It needs to be investigated but for now I'm commenting it out
         // errors = await getErrorForTransaction(connection, txid);
-      } catch (ex) {
-        console.error('getErrorForTransaction() error', ex);
+      } catch (error) {
+        console.error('getErrorForTransaction() error', error);
       }
 
       notify({
@@ -331,32 +331,30 @@ async function awaitTransactionSignatureConfirmation(
         console.error('WS error in setup', txid, e);
       }
       while (!done && queryStatus) {
-        // eslint-disable-next-line no-loop-func
-        (async () => {
-          try {
-            const signatureStatuses = await connection.getSignatureStatuses([txid]);
-            status = signatureStatuses && signatureStatuses.value[0];
-            if (!done) {
-              if (!status) {
-                console.log('REST null result for', txid, status);
-              } else if (status.err) {
-                console.log('REST error for', txid, status);
-                done = true;
-                reject(status.err);
-              } else if (!status.confirmations) {
-                console.log('REST no confirmations for', txid, status);
-              } else {
-                console.log('REST confirmation for', txid, status);
-                done = true;
-                resolve(status);
-              }
-            }
-          } catch (e) {
-            if (!done) {
-              console.log('REST connection error: txid', txid, e);
+        try {
+          const signatureStatuses = await connection.getSignatureStatuses([txid]);
+          status = signatureStatuses && signatureStatuses.value[0];
+          if (!done) {
+            if (!status) {
+              console.log('REST null result for', txid, status);
+            } else if (status.err) {
+              console.log('REST error for', txid, status);
+              done = true;
+              reject(status.err);
+            } else if (!status.confirmations) {
+              console.log('REST no confirmations for', txid, status);
+            } else {
+              console.log('REST confirmation for', txid, status);
+              done = true;
+              resolve(status);
             }
           }
-        })();
+        } catch (e) {
+          if (!done) {
+            console.log('REST connection error: txid', txid, e);
+          }
+        }
+
         await sleep(2000);
       }
     })();

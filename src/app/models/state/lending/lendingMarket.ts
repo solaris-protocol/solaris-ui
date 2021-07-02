@@ -12,7 +12,7 @@ export interface LendingMarket {
   oracleProgramId: PublicKey;
 }
 
-export const LendingMarketLayout = BufferLayout.struct([
+export const LendingMarketLayout = BufferLayout.struct<LendingMarket>([
   BufferLayout.u8('version'),
   BufferLayout.u8('bumpSeed'),
   Layout.publicKey('owner'),

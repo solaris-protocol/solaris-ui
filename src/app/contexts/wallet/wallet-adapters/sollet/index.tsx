@@ -1,8 +1,8 @@
 import SolletWalletAdapter from '@project-serum/sol-wallet-adapter';
+import { WalletAdapter } from '@solana/wallet-base';
 import { Transaction } from '@solana/web3.js';
 import EventEmitter from 'eventemitter3';
 
-import { WalletAdapter } from 'app/contexts/wallet';
 import { notify } from 'utils/notifications';
 
 export class SolanaWalletAdapter extends EventEmitter implements WalletAdapter {
@@ -26,6 +26,10 @@ export class SolanaWalletAdapter extends EventEmitter implements WalletAdapter {
 
   async signTransaction(transaction: Transaction) {
     return this._provider.signTransaction(transaction);
+  }
+
+  async signAllTransactions(transaction: Transaction[]) {
+    return this._provider.signAllTransactions(transaction);
   }
 
   connect = () => {

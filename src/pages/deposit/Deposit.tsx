@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 
 import { TotalInfo } from 'components/common/TotalInfo';
 import { DepositCard } from 'components/pages/deposit/DepositCard';
-import { useLendingReserves, useUserDeposits, useUserObligations } from 'hooks';
+import { useReserves, useUserObligations } from 'hooks';
 import { formatNumber } from 'utils/utils';
 
 const CardsWrapper = styled.div`
@@ -16,27 +16,19 @@ const CardsWrapper = styled.div`
 `;
 
 export const Deposit: FC = () => {
-  const { reserveAccounts } = useLendingReserves();
-  // const { collateralInQuote, borrowedInQuote } = useUserObligations();
-  const { totalInQuote } = useUserDeposits();
-
-  console.log(
-    333,
-    reserveAccounts.map((r) => r.pubkey.toBase58())
-  );
-
-  // console.log(111, collateralInQuote, borrowedInQuote);
+  const { reserveAccounts } = useReserves();
+  const { totalDepositedValue } = useUserObligations();
 
   const columns = useMemo(() => {
-    return [{ title: 'Deposited', value: `$${formatNumber.format(totalInQuote)}` }];
-  }, [totalInQuote]);
+    return [{ title: 'Deposited', value: `$${formatNumber.format(totalDepositedValue)}` }];
+  }, [totalDepositedValue]);
 
   return (
     <>
       <TotalInfo type="deposit" columns={columns} />
       <CardsWrapper>
         {reserveAccounts.map((account) => (
-          <DepositCard key={account.pubkey.toBase58()} reserve={account.info} address={account.pubkey} />
+          <DepositCard key={account.pubkey.toBase58()} reserve={account} />
         ))}
       </CardsWrapper>
     </>

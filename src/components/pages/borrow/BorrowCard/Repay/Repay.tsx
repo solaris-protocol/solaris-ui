@@ -1,77 +1,107 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 
 import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 
+import { repay } from 'app/actions';
+import { ParsedAccount } from 'app/contexts/accounts';
+import { useConnection } from 'app/contexts/connection';
+import { useWallet } from 'app/contexts/wallet';
+import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
+import { useSliderInput, useUserBalance, useUserObligationByReserve } from 'hooks';
+import { notify } from 'utils/notifications';
 
 import { Bottom } from '../common/styled';
 import { StateType } from '../types';
 import { Range } from './Range';
 
 const CollateralBalanceWrapper = styled.div`
-  display: flex;
+  display: grid;
   flex: 1;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
   align-items: center;
   justify-content: space-between;
-`;
 
-const MaxButton = styled.button`
-  height: 26px;
-  padding: 0 10px;
-
-  color: #fff;
-  font-weight: bold;
-  font-size: 12px;
-  line-height: 15px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-
-  background-color: transparent;
-  border: 1px solid #fff;
-  border-radius: 5px;
-  opacity: 0.5;
-
-  transition: opacity 200ms ease-in-out;
-
-  &:hover {
-    opacity: 1;
-  }
+  column-gap: 10px;
 `;
 
 interface Props {
+  reserve: ParsedAccount<Reserve>;
   setState: (state: StateType) => void;
 }
 
-export const Repay: FC<Props> = ({ setState }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [value, setValue] = useState('');
+export const Repay: FC<Props> = ({ reserve, setState }) => {
+  const connection = useConnection();
+  const { wallet } = useWallet();
 
-  const liquidityMint = new PublicKey('So11111111111111111111111111111111111111112');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { userObligationsByReserve } = useUserObligationByReserve(undefined, reserve.pubkey);
+  const obligation = userObligationsByReserve[0]?.obligation || null;
+
+  const { accounts: sourceAccounts, balance, balanceLamports } = useUserBalance(reserve.info.liquidity.mintPubkey);
+
+  console.log(1111111, balance);
+
+  const convert = useCallback(
+    (val: string | number) => {
+      if (typeof val === 'string') {
+        return (parseFloat(val) / balance) * 100;
+      } else {
+        return (val * balance) / 100;
+      }
+    },
+    [balance]
+  );
+
+  const { value, setValue, pct, setPct } = useSliderInput(convert);
 
   const handleValueChange = (nextValue: string) => {
     setValue(nextValue);
   };
 
-  const handleMaxClick = () => {
-    // setValue(balance.toString());
-  };
-
   const handleRepayClick = async () => {
+    if (!wallet?.publicKey) {
+      return;
+    }
+
     setIsLoading(true);
-    // TODO: deposit
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setState('balance');
+
+    try {
+      const sourceTokenAccount = sourceAccounts[0];
+      const liquidityAmount = Math.ceil(balanceLamports * (parseFloat(value) / balance));
+
+      await repay(connection, wallet, liquidityAmount, sourceTokenAccount, reserve, obligation);
+
+      setValue('');
+      setState('balance');
+    } catch (error) {
+      // TODO:
+      console.log(error);
+      notify({
+        message: 'Error in repay.',
+        type: 'error',
+        description: error.message,
+      });
+
+      setIsLoading(false);
+    }
   };
 
   return (
     <>
       <CollateralBalanceWrapper>
-        <CollateralInput mintAddress={liquidityMint.toBase58()} value={value} onChange={handleValueChange} />
-        <Range />
+        <CollateralInput
+          mintAddress={reserve.info.liquidity.mintPubkey.toBase58()}
+          value={value}
+          onChange={handleValueChange}
+        />
+        <Range value={pct} onChange={(val) => setPct(val)} />
       </CollateralBalanceWrapper>
       <Bottom>
         {isLoading ? (

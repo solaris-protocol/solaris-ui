@@ -402,25 +402,35 @@ export function AccountsProvider({ children = null as any }) {
         setTokenAccounts(selectUserAccounts());
       });
 
+      // only get accounts that are owned by user
+      const filters = [
+        {
+          memcmp: {
+            offset: 32,
+            bytes: publicKey.toBase58(),
+          },
+        },
+        {
+          dataSize: AccountLayout.span,
+        },
+      ];
+
       // This can return different types of accounts: token-account, mint, multisig
-      // TODO: web3.js expose ability to filter.
-      // this should use only filter syntax to only get accounts that are owned by user
       const tokenSubID = connection.onProgramAccountChange(
         programIds().token,
         (info) => {
-          // TODO: fix type in web3.js
-          const id = info.accountId as unknown as string;
           // TODO: do we need a better way to identify layout (maybe a enum identifing type?)
           if (info.accountInfo.data.length === AccountLayout.span) {
             const data = deserializeAccount(info.accountInfo.data);
 
             if (PRECACHED_OWNERS.has(data.owner.toBase58())) {
-              cache.add(id, info.accountInfo, TokenAccountParser);
+              cache.add(info.accountId, info.accountInfo, TokenAccountParser);
               setTokenAccounts(selectUserAccounts());
             }
           }
         },
-        'singleGossip'
+        'singleGossip',
+        filters
       );
 
       return () => {
@@ -494,9 +504,10 @@ const getMultipleAccountsCore = async (connection: any, keys: string[], commitme
 
 export function useMint(key?: string | PublicKey) {
   const connection = useConnection();
-  const [mint, setMint] = useState<MintInfo>();
 
   const id = typeof key === 'string' ? key : key?.toBase58();
+
+  const [mint, setMint] = useState<MintInfo | undefined>(id ? cache.getMint(id) : undefined);
 
   useEffect(() => {
     if (!id) {
@@ -504,14 +515,16 @@ export function useMint(key?: string | PublicKey) {
     }
 
     cache
-      .query(connection, id, MintParser)
-      .then((acc) => setMint(acc.info as any))
+      .queryMint(connection, id)
+      .then((mintInfo) => {
+        setMint(mintInfo);
+      })
       .catch((err) => console.log(err));
 
     const dispose = cache.emitter.onCache((e) => {
       const event = e;
       if (event.id === id) {
-        cache.query(connection, id, MintParser).then((mint) => setMint(mint.info as any));
+        cache.queryMint(connection, id).then((mintInfo) => setMint(mintInfo));
       }
     });
     return () => {

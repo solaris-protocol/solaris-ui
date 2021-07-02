@@ -13,26 +13,26 @@ export function useUserObligationByReserve(borrowReserve?: string | PublicKey, d
     const borrowReservePubkey = typeof borrowReserve === 'string' ? borrowReserve : borrowReserve?.toBase58();
     const depositReservePubkey = typeof depositReserve === 'string' ? depositReserve : depositReserve?.toBase58();
 
-    return userObligations.filter((obligation) => {
+    return userObligations.filter((item) => {
       if (borrowReservePubkey && depositReservePubkey) {
         return (
-          obligation.info.borrows.some(
+          item.obligation.info.borrows.some(
             (liquidity: ObligationLiquidity) => liquidity.borrowReserve.toBase58() === borrowReservePubkey
           ) &&
-          obligation.info.deposits.some(
+          item.obligation.info.deposits.some(
             (collateral: ObligationCollateral) => collateral.depositReserve.toBase58() === depositReservePubkey
           )
         );
       }
 
       if (borrowReservePubkey) {
-        return obligation.info.borrows.some(
+        return item.obligation.info.borrows.some(
           (liquidity: ObligationLiquidity) => liquidity.borrowReserve.toBase58() === borrowReservePubkey
         );
       }
 
       if (depositReservePubkey) {
-        return obligation.info.deposits.some(
+        return item.obligation.info.deposits.some(
           (collateral: ObligationCollateral) => collateral.depositReserve.toBase58() === depositReservePubkey
         );
       }

@@ -1,11 +1,15 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 
 import { styled } from '@linaria/react';
 
+import { ParsedAccount, useMint } from 'app/contexts/accounts';
+import { usePrice } from 'app/contexts/pyth';
 import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { CollateralBalance } from 'components/common/CollateralBalance';
+import { calculateCollateralBalance, useUserObligationByReserve } from 'hooks';
+import { fromLamports, wadToLamports } from 'utils/utils';
 
 import { Bottom } from '../common/styled';
 import { StateType } from '../types';
@@ -20,24 +24,41 @@ const CollateralBalanceWrapper = styled.div`
 `;
 
 interface Props {
+  reserve: ParsedAccount<Reserve>;
   setState: (state: StateType) => void;
 }
 
-export const Balance: FC<Props> = ({ setState }) => {
-  const balance = 1;
-  const balanceInUSD = 0;
+export const Balance: FC<Props> = ({ reserve, setState }) => {
+  const { userObligationsByReserve } = useUserObligationByReserve(reserve.pubkey, undefined);
+  const mintInfo = useMint(reserve.info.collateral.mintPubkey);
+  const price = usePrice(reserve?.info.liquidity.mintPubkey.toBase58() || '');
+
+  const obligation = userObligationsByReserve[0]?.obligation || null;
+  const borrowReserve = obligation
+    ? obligation.info.borrows.find((deposit) => deposit.borrowReserve.equals(reserve.pubkey))
+    : null;
+
+  const { collateralBalanceInLiquidity, collateralBalanceInLiquidityInUSD } = useMemo(() => {
+    const collateralBalanceLamports = borrowReserve
+      ? calculateCollateralBalance(reserve.info, wadToLamports(borrowReserve.borrowedAmountWads).toNumber())
+      : 0;
+    const collateralBalanceInLiquidity = borrowReserve ? fromLamports(collateralBalanceLamports, mintInfo) : 0;
+    const collateralBalanceInLiquidityInUSD = collateralBalanceInLiquidity * price;
+
+    return { collateralBalanceInLiquidity, collateralBalanceInLiquidityInUSD };
+  }, [borrowReserve, mintInfo, price, reserve]);
 
   return (
     <>
       <CollateralBalanceWrapper>
-        <CollateralBalance balance={balance} balanceInUSD={balanceInUSD} />
+        <CollateralBalance balance={collateralBalanceInLiquidity} balanceInUSD={collateralBalanceInLiquidityInUSD} />
       </CollateralBalanceWrapper>
       <Bottom>
         <ButtonConnect>
           <Button onClick={() => setState('borrow')} className="full">
             Borrow
           </Button>
-          {balance ? (
+          {collateralBalanceInLiquidity ? (
             <Button onClick={() => setState('repay')} className="full">
               Repay
             </Button>

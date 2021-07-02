@@ -1,30 +1,22 @@
 import { AccountLayout, NATIVE_MINT, Token } from '@solana/spl-token';
-import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { Account, Connection, TransactionInstruction } from '@solana/web3.js';
 
 import { ParsedAccount } from 'app/contexts/accounts';
 import { sendTransaction } from 'app/contexts/connection';
-import { WalletAdapter } from 'app/contexts/wallet';
-import { approve, Obligation, repayInstruction, Reserve, TokenAccount } from 'app/models';
-import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID } from 'utils/ids';
+import { approve, Obligation, repayObligationLiquidityInstruction, Reserve, TokenAccount } from 'app/models';
+import { TOKEN_PROGRAM_ID } from 'utils/ids';
 import { notify } from 'utils/notifications';
 
-import { createTokenAccount, findOrCreateAccountByMint } from './account';
+import { createTokenAccount } from './account';
+import { refreshObligationAndReserves } from './helpers/refreshObligationAndReserves';
 
 export const repay = async (
-  from: TokenAccount,
-  repayAmount: number,
-
-  // which loan to repay
-  obligation: ParsedAccount<Obligation>,
-
-  obligationToken: TokenAccount,
-
-  repayReserve: ParsedAccount<Reserve>,
-
-  withdrawReserve: ParsedAccount<Reserve>,
-
   connection: Connection,
-  wallet: WalletAdapter
+  wallet: any,
+  liquidityAmount: number,
+  source: TokenAccount,
+  repayReserve: ParsedAccount<Reserve>,
+  obligation: ParsedAccount<Obligation>
 ) => {
   if (!wallet.publicKey) {
     throw new Error('Wallet is not connected');
@@ -43,79 +35,58 @@ export const repay = async (
 
   const accountRentExempt = await connection.getMinimumBalanceForRentExemption(AccountLayout.span);
 
-  const [authority] = await PublicKey.findProgramAddress(
-    [repayReserve.info.lendingMarket.toBuffer()],
-    LENDING_PROGRAM_ID
-  );
-
-  let fromAccount = from.pubkey;
-  if (wallet.publicKey.equals(fromAccount) && repayReserve.info.liquidity.mintPubkey.equals(NATIVE_MINT)) {
-    fromAccount = createTokenAccount(
+  let sourceLiquidity = source.pubkey;
+  if (wallet.publicKey.equals(sourceLiquidity) && repayReserve.info.liquidity.mintPubkey.equals(NATIVE_MINT)) {
+    sourceLiquidity = createTokenAccount(
       instructions,
       wallet.publicKey,
-      accountRentExempt + repayAmount,
+      accountRentExempt + liquidityAmount,
       NATIVE_MINT,
       wallet.publicKey,
       signers
     );
     cleanupInstructions.push(
-      Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, fromAccount, wallet.publicKey, wallet.publicKey, [])
+      Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, sourceLiquidity, wallet.publicKey, wallet.publicKey, [])
     );
   }
 
   // create approval for transfer transactions
-  const transferAuthority = approve(instructions, cleanupInstructions, fromAccount, wallet.publicKey, repayAmount);
+  const transferAuthority = approve(
+    instructions,
+    cleanupInstructions,
+    sourceLiquidity,
+    wallet.publicKey,
+    liquidityAmount
+  );
+
   signers.push(transferAuthority);
 
-  // get destination account
-  const toAccount = await findOrCreateAccountByMint(
-    wallet.publicKey,
-    wallet.publicKey,
-    instructions,
-    cleanupInstructions,
-    accountRentExempt,
-    withdrawReserve.info.collateral.mintPubkey,
-    signers
-  );
-
-  // create approval for transfer transactions
-  approve(
-    instructions,
-    cleanupInstructions,
-    obligationToken.pubkey,
-    wallet.publicKey,
-    obligationToken.info.amount.toNumber(),
-    true,
-    // reuse transfer authority
-    transferAuthority.publicKey
-  );
-
-  // TODO: rewrite
-  // instructions.push(accrueInterestInstruction(repayReserve.pubkey, withdrawReserve.pubkey));
-
   instructions.push(
-    repayInstruction(
-      repayAmount,
-      fromAccount,
-      toAccount,
-      repayReserve.pubkey,
+    ...(await refreshObligationAndReserves(connection, obligation)),
+    repayObligationLiquidityInstruction(
+      liquidityAmount,
+      sourceLiquidity,
       repayReserve.info.liquidity.supplyPubkey,
-      withdrawReserve.pubkey,
-      withdrawReserve.info.collateral.supplyPubkey,
+      repayReserve.pubkey,
       obligation.pubkey,
-      obligation.info.tokenMint,
-      obligationToken.pubkey,
       repayReserve.info.lendingMarket,
-      authority,
       transferAuthority.publicKey
     )
   );
 
-  const tx = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
+  // FIXME: need for recalculation data for max withdraw/borrow/repay amount
+  instructions.push(...(await refreshObligationAndReserves(connection, obligation)));
 
-  notify({
-    message: 'Funds repaid.',
-    type: 'success',
-    description: `Transaction - ${tx}`,
-  });
+  try {
+    const { txid } = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
+
+    notify({
+      message: 'Funds repaid.',
+      type: 'success',
+      description: `Transaction - ${txid}`,
+    });
+  } catch (error) {
+    console.error(error);
+    throw new Error(error);
+  }
 };

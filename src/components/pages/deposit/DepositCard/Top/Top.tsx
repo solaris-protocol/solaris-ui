@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 
 import { styled } from '@linaria/react';
 
+import { ParsedAccount } from 'app/contexts/accounts';
 import { calculateDepositAPY, Reserve } from 'app/models';
 import WalletIcon from 'assets/icons/wallet-icon.svg';
 import { TokenIcon } from 'components/common/TokenIcon';
@@ -55,21 +56,21 @@ const WalletIconStyled = styled(WalletIcon)`
 `;
 
 interface Props {
-  reserve: Reserve;
+  reserve: ParsedAccount<Reserve>;
   state: StateType;
 }
 
 export const Top: FC<Props> = ({ reserve, state }) => {
-  const name = useTokenName(reserve.liquidity.mintPubkey);
-  const { balance: tokenBalance } = useUserBalance(reserve.liquidity.mintPubkey);
+  const name = useTokenName(reserve.info.liquidity.mintPubkey);
+  const { balance: tokenBalance } = useUserBalance(reserve.info.liquidity.mintPubkey);
 
-  const apy = calculateDepositAPY(reserve);
+  const apy = calculateDepositAPY(reserve.info);
 
   return (
     <Wrapper>
       <Left>
-        <TokenIconStyled mintAddress={reserve.liquidity.mintPubkey} size={40} />
-        <Symbol title={reserve.liquidity.mintPubkey.toBase58()}>{name}</Symbol>
+        <TokenIconStyled mintAddress={reserve.info.liquidity.mintPubkey} size={40} />
+        <Symbol title={reserve.info.liquidity.mintPubkey.toBase58()}>{name}</Symbol>
         <APY apy={apy} isActive={state === 'deposit'} />
       </Left>
       <WalletBalance title={String(tokenBalance)}>

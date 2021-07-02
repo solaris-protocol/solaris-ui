@@ -5,31 +5,20 @@ import { PublicKey } from '@solana/web3.js';
 import { cache, ParsedAccount } from 'app/contexts/accounts';
 import { Obligation, ObligationParser } from 'app/models';
 
-const getLendingObligations = () => {
+const getObligations = () => {
   return cache
     .byParser(ObligationParser)
     .map((id) => cache.get(id))
     .filter((acc) => acc !== undefined) as ParsedAccount<Obligation>[];
 };
 
-export function useLendingObligations() {
-  const [obligations, setObligations] = useState(getLendingObligations());
-
-  // console.log(
-  //   111,
-  //   obligations.map((o) => {
-  //     return o.info.deposits.map((d) => [
-  //       d.depositReserve.toBase58(),
-  //       d.depositedAmount.toString(),
-  //       d.marketValue.toString(),
-  //     ]);
-  //   })
-  // );
+export function useObligations() {
+  const [obligations, setObligations] = useState(getObligations());
 
   useEffect(() => {
     const dispose = cache.emitter.onCache((args) => {
       if (args.parser === ObligationParser) {
-        setObligations(getLendingObligations());
+        setObligations(getObligations());
       }
     });
 
@@ -43,7 +32,7 @@ export function useLendingObligations() {
   };
 }
 
-export function useLendingObligation(address?: string | PublicKey) {
+export function useObligation(address?: string | PublicKey) {
   const id = typeof address === 'string' ? address : address?.toBase58();
   const [obligationAccount, setObligationAccount] = useState(cache.get(id || '') as ParsedAccount<Obligation>);
 

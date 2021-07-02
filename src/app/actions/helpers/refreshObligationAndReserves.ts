@@ -3,10 +3,15 @@
 import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 import { cache, ParsedAccount } from 'app/contexts/accounts';
-import { refreshObligationInstruction, refreshReserveInstruction, Reserve, ReserveParser } from 'app/models';
-import { EnrichedLendingObligation } from 'hooks';
+import {
+  Obligation,
+  refreshObligationInstruction,
+  refreshReserveInstruction,
+  Reserve,
+  ReserveParser,
+} from 'app/models';
 
-export const refreshObligationAndReserves = async (connection: Connection, obligation: EnrichedLendingObligation) => {
+export const refreshObligationAndReserves = async (connection: Connection, obligation: ParsedAccount<Obligation>) => {
   const instructions = [] as TransactionInstruction[];
   const reserves = {} as Record<string, PublicKey>;
 
@@ -27,7 +32,7 @@ export const refreshObligationAndReserves = async (connection: Connection, oblig
 
   instructions.push(
     refreshObligationInstruction(
-      obligation.account.pubkey,
+      obligation.pubkey,
       obligation.info.deposits.map((collateral) => collateral.depositReserve),
       obligation.info.borrows.map((liquidity) => liquidity.borrowReserve)
     )
