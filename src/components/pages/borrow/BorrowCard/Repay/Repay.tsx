@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 import { PublicKey } from '@solana/web3.js';
 
 import { repay } from 'app/actions';
-import { ParsedAccount } from 'app/contexts/accounts';
+import { ParsedAccount, useMint } from 'app/contexts/accounts';
 import { useConnection } from 'app/contexts/connection';
 import { useWallet } from 'app/contexts/wallet';
 import { Reserve } from 'app/models';
@@ -12,8 +12,9 @@ import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
-import { useSliderInput, useUserBalance, useUserObligationByReserve } from 'hooks';
+import { calculateCollateralBalance, useSliderInput, useUserBalance, useUserObligationByReserve } from 'hooks';
 import { notify } from 'utils/notifications';
+import { fromLamports, wadToLamports } from 'utils/utils';
 
 import { Bottom } from '../common/styled';
 import { StateType } from '../types';
@@ -35,6 +36,7 @@ interface Props {
   setState: (state: StateType) => void;
 }
 
+// TODO: show something if user don't have liqudity to repay
 export const Repay: FC<Props> = ({ reserve, setState }) => {
   const connection = useConnection();
   const { wallet } = useWallet();
@@ -42,21 +44,29 @@ export const Repay: FC<Props> = ({ reserve, setState }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { userObligationsByReserve } = useUserObligationByReserve(undefined, reserve.pubkey);
+  const liquidityMint = useMint(reserve.info.liquidity.mintPubkey);
+
   const obligation = userObligationsByReserve[0]?.obligation || null;
+  const borrowReserve = obligation
+    ? obligation.info.borrows.find((borrow) => borrow.borrowReserve.equals(reserve.pubkey))
+    : null;
+
+  const collateralBalanceLamports = borrowReserve
+    ? calculateCollateralBalance(reserve.info, wadToLamports(borrowReserve.borrowedAmountWads).toNumber())
+    : 0;
+  const collateralBalanceInLiquidity = borrowReserve ? fromLamports(collateralBalanceLamports, liquidityMint) : 0;
 
   const { accounts: sourceAccounts, balance, balanceLamports } = useUserBalance(reserve.info.liquidity.mintPubkey);
-
-  console.log(1111111, balance);
 
   const convert = useCallback(
     (val: string | number) => {
       if (typeof val === 'string') {
-        return (parseFloat(val) / balance) * 100;
+        return (parseFloat(val) / collateralBalanceInLiquidity) * 100;
       } else {
-        return (val * balance) / 100;
+        return (val * collateralBalanceInLiquidity) / 100;
       }
     },
-    [balance]
+    [collateralBalanceInLiquidity]
   );
 
   const { value, setValue, pct, setPct } = useSliderInput(convert);

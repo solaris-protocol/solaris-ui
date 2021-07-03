@@ -94,23 +94,6 @@ export const borrow = async (
   // FIXME: need for recalculation data for max withdraw/borrow/repay amount
   instructions.push(...(await refreshObligationAndReserves(connection, obligation)));
 
-  /*
-    Withdraw
-   */
-  // instructions.push(...(await refreshObligationAndReserves(connection, obligation)));
-  // instructions.push(
-  //   withdrawObligationCollateralInstruction(
-  //     collateralAmount,
-  //     reserve.collateral.supplyPubkey,
-  //     destinationCollateral,
-  //     reserveAddress,
-  //     obligation.account.pubkey,
-  //     reserve.lendingMarket,
-  //     lendingMarketAuthority,
-  //     wallet.publicKey
-  //   )
-  // );
-
   try {
     const { txid } = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
