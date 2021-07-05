@@ -22,8 +22,8 @@ $ cd solaris-ui
 Edit environments in `.env` file and after that use this commands:
 
 ```bash
-$ yarn start // to start a development
-$ yarn build // to create a production build
+$ yarn start # to start a development
+$ yarn build # to create a production build
 ```
 
 ## Development
