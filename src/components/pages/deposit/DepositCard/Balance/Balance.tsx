@@ -9,6 +9,7 @@ import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { CollateralBalance } from 'components/common/CollateralBalance';
 import { calculateCollateralBalance, useUserObligations } from 'hooks';
+import { useMaxWithdrawValueInLiquidity } from 'hooks/lending/useMaxWithdrawValueInLiquidity';
 import { fromLamports } from 'utils/utils';
 
 import { Bottom } from '../common/styled';
@@ -47,6 +48,10 @@ export const Balance: FC<Props> = ({ reserve, setState }) => {
     return { collateralBalanceInLiquidity, collateralBalanceInLiquidityInUSD };
   }, [depositReserve, mintInfo, price, reserve]);
 
+  const maxWithdrawValueInLiquidity = useMaxWithdrawValueInLiquidity(reserve, obligation);
+
+  const isWithdrawDisabled = !maxWithdrawValueInLiquidity;
+
   return (
     <>
       <CollateralBalanceWrapper>
@@ -57,7 +62,7 @@ export const Balance: FC<Props> = ({ reserve, setState }) => {
           <Button onClick={() => setState('deposit')} className="full">
             Deposit
           </Button>
-          <Button onClick={() => setState('withdraw')} className="full">
+          <Button disabled={isWithdrawDisabled} onClick={() => setState('withdraw')} className="full">
             Withdraw
           </Button>
         </ButtonConnect>

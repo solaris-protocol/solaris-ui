@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 
 import { styled } from '@linaria/react';
 
@@ -12,8 +12,8 @@ import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
 import { useSliderInput, useUserObligations } from 'hooks';
+import { useMaxBorrowValueInLiquidity } from 'hooks/lending/useMaxBorrowValueInLiquidity';
 import { notify } from 'utils/notifications';
-import { wadToLamports } from 'utils/utils';
 
 import { Bottom } from '../common/styled';
 import { StateType } from '../types';
@@ -44,18 +44,7 @@ export const Borrow: FC<Props> = ({ reserve: borrowReserve, setState }) => {
   const { userObligations } = useUserObligations();
   const obligation = userObligations[0]?.obligation || null;
 
-  // Calculate the maximum liquidity value that can be borrowed
-  const maxBorrowValueInLiquidity = useMemo(() => {
-    if (!obligation) {
-      return 0;
-    }
-
-    // remaining_borrow_value
-    // https://github.com/solana-labs/solana-program-library/blob/0b3552b8926a9e4b37074a3d19d06591d47ed50a/token-lending/program/src/state/obligation.rs#L106
-    const remainingBorrowValue = obligation?.info.allowedBorrowValue.sub(obligation?.info.borrowedValue);
-
-    return wadToLamports(remainingBorrowValue).toNumber() / borrowReserve.info.liquidity.marketPrice.toNumber();
-  }, [obligation]);
+  const maxBorrowValueInLiquidity = useMaxBorrowValueInLiquidity(borrowReserve, obligation);
 
   const convert = useCallback(
     (val: string | number) => {
@@ -100,7 +89,7 @@ export const Borrow: FC<Props> = ({ reserve: borrowReserve, setState }) => {
     }
   };
 
-  const isBorrowDisabled = !value && !obligation;
+  const isBorrowDisabled = !value || !obligation;
 
   return (
     <>

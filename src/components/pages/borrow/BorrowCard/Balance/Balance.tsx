@@ -9,6 +9,7 @@ import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { CollateralBalance } from 'components/common/CollateralBalance';
 import { calculateCollateralBalance, useUserObligationByReserve, useUserObligations } from 'hooks';
+import { useMaxBorrowValueInLiquidity } from 'hooks/lending/useMaxBorrowValueInLiquidity';
 import { fromLamports, wadToLamports } from 'utils/utils';
 
 import { Bottom } from '../common/styled';
@@ -48,7 +49,9 @@ export const Balance: FC<Props> = ({ reserve, setState }) => {
     return { collateralBalanceInLiquidity, collateralBalanceInLiquidityInUSD };
   }, [borrowReserve, mintInfo, price, reserve]);
 
-  const isBorrowDisabled = !obligation;
+  const maxBorrowValueInLiquidity = useMaxBorrowValueInLiquidity(reserve, obligation);
+
+  const isBorrowDisabled = !maxBorrowValueInLiquidity || !obligation;
 
   return (
     <>

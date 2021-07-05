@@ -13,6 +13,7 @@ import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
 import { calculateCollateralBalance, useUserBalance, useUserObligations } from 'hooks';
+import { useMaxWithdrawValueInLiquidity } from 'hooks/lending/useMaxWithdrawValueInLiquidity';
 import { notify } from 'utils/notifications';
 import { fromLamports, wadToLamports } from 'utils/utils';
 
@@ -54,29 +55,7 @@ export const Withdraw: FC<Props> = ({ reserve, setState }) => {
   const collateralBalanceInLiquidity = depositReserve ? fromLamports(collateralBalanceLamports, liquidityMint) : 0;
 
   // Calculate the maximum value that can be withdrawn
-  const maxWithdrawValueInLiquidity = useMemo(() => {
-    if (!obligation) {
-      return 0;
-    }
-
-    // max_withdraw_value
-    // https://github.com/solana-labs/solana-program-library/blob/0b3552b8926a9e4b37074a3d19d06591d47ed50a/token-lending/program/src/state/obligation.rs#L94
-
-    const depositedValue = obligation.info.depositedValue; /* obligation.info.deposits.reduce((prev, curr) => {
-      return prev.add(curr.marketValue);
-    }, new BN(0)); */
-
-    const requiredDepositValue = obligation.info.borrowedValue
-      .mul(depositedValue)
-      .div(obligation.info.allowedBorrowValue);
-
-    if (requiredDepositValue.gte(depositedValue)) {
-      return new BN(0);
-    }
-
-    const maxWithdrawValue = depositedValue.sub(requiredDepositValue);
-    return wadToLamports(maxWithdrawValue).toNumber() / reserve.info.liquidity.marketPrice.toNumber();
-  }, [obligation, reserve]);
+  const maxWithdrawValueInLiquidity = useMaxWithdrawValueInLiquidity(reserve, obligation);
 
   const handleValueChange = (nextValue: string) => {
     if (!obligation) {
