@@ -1,7 +1,6 @@
 import React, { FC, useCallback, useState } from 'react';
 
 import { styled } from '@linaria/react';
-import { PublicKey } from '@solana/web3.js';
 
 import { repay } from 'app/actions';
 import { ParsedAccount, useMint } from 'app/contexts/accounts';

@@ -41,9 +41,8 @@ export const Borrow: FC<Props> = ({ reserve: borrowReserve, setState }) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { userObligations } = useUserObligations();
   const { userObligationsByReserve } = useUserObligationByReserve(borrowReserve.pubkey, undefined);
-  const obligation = userObligationsByReserve[0]?.obligation || userObligations[0] || null;
+  const obligation = userObligationsByReserve[0]?.obligation || null;
 
   // Calculate the maximum liquidity value that can be borrowed
   const maxBorrowValueInLiquidity = useMemo(() => {
@@ -101,7 +100,7 @@ export const Borrow: FC<Props> = ({ reserve: borrowReserve, setState }) => {
     }
   };
 
-  const isBorrowDisabled = !value;
+  const isBorrowDisabled = !value && !obligation;
 
   return (
     <>

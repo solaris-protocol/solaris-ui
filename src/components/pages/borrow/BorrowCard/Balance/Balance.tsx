@@ -48,6 +48,8 @@ export const Balance: FC<Props> = ({ reserve, setState }) => {
     return { collateralBalanceInLiquidity, collateralBalanceInLiquidityInUSD };
   }, [borrowReserve, mintInfo, price, reserve]);
 
+  const isBorrowDisabled = !obligation;
+
   return (
     <>
       <CollateralBalanceWrapper>
@@ -55,7 +57,7 @@ export const Balance: FC<Props> = ({ reserve, setState }) => {
       </CollateralBalanceWrapper>
       <Bottom>
         <ButtonConnect>
-          <Button onClick={() => setState('borrow')} className="full">
+          <Button disabled={isBorrowDisabled} onClick={() => setState('borrow')} className="full">
             Borrow
           </Button>
           {collateralBalanceInLiquidity ? (

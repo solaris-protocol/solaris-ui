@@ -35,6 +35,7 @@ export const globalCss = css`
     button {
       white-space: nowrap;
 
+      background-color: transparent;
       border: none;
       cursor: pointer;
 

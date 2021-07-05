@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react';
 
 import { styled } from '@linaria/react';
-import { PublicKey } from '@solana/web3.js';
 import classNames from 'classnames';
 
 import { ParsedAccount } from 'app/contexts/accounts';

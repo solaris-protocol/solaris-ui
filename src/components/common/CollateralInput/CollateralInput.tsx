@@ -82,13 +82,7 @@ export const CollateralInput: FC<Props> = ({ mintAddress, value, onChange }) => 
 
   return (
     <WrapperLabel>
-      <Input
-        value={value}
-        placeholder="0.00"
-        onChange={handleValueChange}
-        className={classNames({ isZero: !value })}
-        contentEditable
-      />
+      <Input value={value} placeholder="0.00" onChange={handleValueChange} className={classNames({ isZero: !value })} />
       <BalanceUSD>${formatNumber.format(valueIsUSD)}</BalanceUSD>
     </WrapperLabel>
   );
