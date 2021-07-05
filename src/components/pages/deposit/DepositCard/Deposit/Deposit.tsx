@@ -12,7 +12,7 @@ import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
-import { useUserBalance, useUserObligationByReserve } from 'hooks';
+import { useUserBalance, useUserObligations } from 'hooks';
 import { notify } from 'utils/notifications';
 
 import { Bottom, MaxButton } from '../common/styled';
@@ -37,8 +37,8 @@ export const Deposit: FC<Props> = ({ reserve, setState }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState('');
 
-  const { userObligationsByReserve } = useUserObligationByReserve(undefined, reserve.pubkey);
-  const obligation = userObligationsByReserve[0]?.obligation || null;
+  const { userObligations } = useUserObligations();
+  const obligation = userObligations[0]?.obligation || null;
 
   const { accounts: sourceAccounts, balance, balanceLamports } = useUserBalance(reserve.info.liquidity.mintPubkey);
 

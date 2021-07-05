@@ -4,10 +4,8 @@ import { PublicKey } from '@solana/web3.js';
 
 import { useMint } from 'app/contexts/accounts';
 import { useConnection } from 'app/contexts/connection';
-import { useReserve } from 'hooks';
+import { useReserve, useUserObligationByReserve } from 'hooks';
 import { fromLamports, wadToLamports } from 'utils/utils';
-
-import { useUserObligationByReserve } from './useUserObligationByReserve';
 
 export function useBorrowedAmount(address?: string | PublicKey) {
   const connection = useConnection();

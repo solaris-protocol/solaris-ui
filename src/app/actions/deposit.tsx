@@ -5,7 +5,7 @@ import { WalletAdapter } from '@solana/wallet-base';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 import { refreshObligationAndReserves } from 'app/actions/helpers/refreshObligationAndReserves';
-import { ParsedAccount } from 'app/contexts/accounts';
+import { cache, ParsedAccount } from 'app/contexts/accounts';
 import { sendTransaction } from 'app/contexts/connection/connection';
 import {
   collateralExchangeRate,
@@ -14,6 +14,7 @@ import {
   initObligationInstruction,
   Obligation,
   ObligationLayout,
+  ObligationParser,
   refreshObligationInstruction,
   refreshReserveInstruction,
   Reserve,
@@ -144,12 +145,6 @@ export const deposit = async (
     )
   );
 
-  if (obligation) {
-    // FIXME: need also if we created obligation above
-    // FIXME: need for recalculation data for max withdraw/borrow/repay amount
-    instructions.push(...(await refreshObligationAndReserves(connection, obligation)));
-  }
-
   try {
     const { txid } = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
@@ -161,6 +156,32 @@ export const deposit = async (
           Transaction - <ExplorerLink address={txid} type="transaction" short connection={connection} />
         </>
       ),
+    });
+  } catch (error) {
+    console.error(error);
+    throw new Error(error);
+  }
+
+  // need for recalculation data for max withdraw/borrow/repay amount
+  try {
+    const updatedObligation = (await cache.query(
+      connection,
+      obligationAccount,
+      ObligationParser
+    )) as ParsedAccount<Obligation>;
+
+    const { txid } = await sendTransaction(
+      connection,
+      wallet,
+      [...(await refreshObligationAndReserves(connection, updatedObligation))],
+      [],
+      true
+    );
+
+    notify({
+      message: 'Obligation and reserves updated.',
+      type: 'success',
+      description: `Transaction - ${txid}`,
     });
   } catch (error) {
     console.error(error);

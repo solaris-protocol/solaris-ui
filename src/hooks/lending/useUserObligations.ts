@@ -16,7 +16,7 @@ export function useUserObligations() {
     return obligations
       .filter((acc) => wallet.publicKey?.equals(acc.info.owner))
       .map((obligation) => ({ obligation }))
-      .sort((a, b) => b.obligation.info.borrowedValue.sub(a.obligation.info.borrowedValue).toNumber());
+      .sort((a, b) => wadToLamports(b.obligation.info.borrowedValue.sub(a.obligation.info.borrowedValue)).toNumber());
   }, [obligations, wallet?.publicKey]);
 
   return {

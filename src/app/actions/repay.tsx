@@ -1,9 +1,16 @@
-import { AccountLayout, NATIVE_MINT, Token } from '@solana/spl-token';
+import { AccountLayout, MintInfo, NATIVE_MINT, Token } from '@solana/spl-token';
 import { Account, Connection, TransactionInstruction } from '@solana/web3.js';
 
-import { ParsedAccount } from 'app/contexts/accounts';
+import { cache, ParsedAccount } from 'app/contexts/accounts';
 import { sendTransaction } from 'app/contexts/connection';
-import { approve, Obligation, repayObligationLiquidityInstruction, Reserve, TokenAccount } from 'app/models';
+import {
+  approve,
+  Obligation,
+  ObligationParser,
+  repayObligationLiquidityInstruction,
+  Reserve,
+  TokenAccount,
+} from 'app/models';
 import { TOKEN_PROGRAM_ID } from 'utils/ids';
 import { notify } from 'utils/notifications';
 
@@ -74,14 +81,37 @@ export const repay = async (
     )
   );
 
-  // FIXME: need for recalculation data for max withdraw/borrow/repay amount
-  instructions.push(...(await refreshObligationAndReserves(connection, obligation)));
-
   try {
     const { txid } = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
     notify({
       message: 'Funds repaid.',
+      type: 'success',
+      description: `Transaction - ${txid}`,
+    });
+  } catch (error) {
+    console.error(error);
+    throw new Error(error);
+  }
+
+  // need for recalculation data for max withdraw/borrow/repay amount
+  try {
+    const updatedObligation = (await cache.query(
+      connection,
+      obligation.pubkey,
+      ObligationParser
+    )) as ParsedAccount<Obligation>;
+
+    const { txid } = await sendTransaction(
+      connection,
+      wallet,
+      [...(await refreshObligationAndReserves(connection, updatedObligation))],
+      [],
+      true
+    );
+
+    notify({
+      message: 'Obligation and reserves updated.',
       type: 'success',
       description: `Transaction - ${txid}`,
     });

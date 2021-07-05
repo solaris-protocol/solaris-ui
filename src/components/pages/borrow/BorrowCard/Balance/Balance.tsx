@@ -8,7 +8,7 @@ import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { CollateralBalance } from 'components/common/CollateralBalance';
-import { calculateCollateralBalance, useUserObligationByReserve } from 'hooks';
+import { calculateCollateralBalance, useUserObligationByReserve, useUserObligations } from 'hooks';
 import { fromLamports, wadToLamports } from 'utils/utils';
 
 import { Bottom } from '../common/styled';
@@ -29,11 +29,11 @@ interface Props {
 }
 
 export const Balance: FC<Props> = ({ reserve, setState }) => {
-  const { userObligationsByReserve } = useUserObligationByReserve(reserve.pubkey, undefined);
+  const { userObligations } = useUserObligations();
   const mintInfo = useMint(reserve.info.collateral.mintPubkey);
   const price = usePrice(reserve?.info.liquidity.mintPubkey.toBase58() || '');
 
-  const obligation = userObligationsByReserve[0]?.obligation || null;
+  const obligation = userObligations[0]?.obligation || null;
   const borrowReserve = obligation
     ? obligation.info.borrows.find((deposit) => deposit.borrowReserve.equals(reserve.pubkey))
     : null;

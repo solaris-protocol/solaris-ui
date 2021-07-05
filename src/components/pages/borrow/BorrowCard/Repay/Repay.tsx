@@ -11,7 +11,7 @@ import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
-import { calculateCollateralBalance, useSliderInput, useUserBalance, useUserObligationByReserve } from 'hooks';
+import { calculateCollateralBalance, useSliderInput, useUserBalance, useUserObligations } from 'hooks';
 import { notify } from 'utils/notifications';
 import { fromLamports, wadToLamports } from 'utils/utils';
 
@@ -42,10 +42,10 @@ export const Repay: FC<Props> = ({ reserve, setState }) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { userObligationsByReserve } = useUserObligationByReserve(undefined, reserve.pubkey);
+  const { userObligations } = useUserObligations();
   const liquidityMint = useMint(reserve.info.liquidity.mintPubkey);
 
-  const obligation = userObligationsByReserve[0]?.obligation || null;
+  const obligation = userObligations[0]?.obligation || null;
   const borrowReserve = obligation
     ? obligation.info.borrows.find((borrow) => borrow.borrowReserve.equals(reserve.pubkey))
     : null;

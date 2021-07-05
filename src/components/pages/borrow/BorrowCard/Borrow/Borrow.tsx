@@ -11,7 +11,7 @@ import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
 import { CollateralInput } from 'components/common/CollateralInput';
-import { useSliderInput, useUserObligationByReserve, useUserObligations } from 'hooks';
+import { useSliderInput, useUserObligations } from 'hooks';
 import { notify } from 'utils/notifications';
 import { wadToLamports } from 'utils/utils';
 
@@ -41,8 +41,8 @@ export const Borrow: FC<Props> = ({ reserve: borrowReserve, setState }) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { userObligationsByReserve } = useUserObligationByReserve(borrowReserve.pubkey, undefined);
-  const obligation = userObligationsByReserve[0]?.obligation || null;
+  const { userObligations } = useUserObligations();
+  const obligation = userObligations[0]?.obligation || null;
 
   // Calculate the maximum liquidity value that can be borrowed
   const maxBorrowValueInLiquidity = useMemo(() => {

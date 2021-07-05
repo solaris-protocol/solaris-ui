@@ -5,7 +5,7 @@ import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/
 import { refreshObligationAndReserves } from 'app/actions/helpers/refreshObligationAndReserves';
 import { cache, MintParser, ParsedAccount } from 'app/contexts/accounts';
 import { sendTransaction } from 'app/contexts/connection';
-import { borrowObligationLiquidityInstruction, Obligation, Reserve } from 'app/models';
+import { borrowObligationLiquidityInstruction, Obligation, ObligationParser, Reserve } from 'app/models';
 import { LEND_HOST_FEE_ADDRESS, LENDING_PROGRAM_ID } from 'utils/ids';
 import { notify } from 'utils/notifications';
 import { toLamports } from 'utils/utils';
@@ -91,14 +91,37 @@ export const borrow = async (
     )
   );
 
-  // FIXME: need for recalculation data for max withdraw/borrow/repay amount
-  instructions.push(...(await refreshObligationAndReserves(connection, obligation)));
-
   try {
     const { txid } = await sendTransaction(connection, wallet, instructions.concat(cleanupInstructions), signers, true);
 
     notify({
       message: 'Funds borrowed.',
+      type: 'success',
+      description: `Transaction - ${txid}`,
+    });
+  } catch (error) {
+    console.error(error);
+    throw new Error(error);
+  }
+
+  // need for recalculation data for max withdraw/borrow/repay amount
+  try {
+    const updatedObligation = (await cache.query(
+      connection,
+      obligation.pubkey,
+      ObligationParser
+    )) as ParsedAccount<Obligation>;
+
+    const { txid } = await sendTransaction(
+      connection,
+      wallet,
+      [...(await refreshObligationAndReserves(connection, updatedObligation))],
+      [],
+      true
+    );
+
+    notify({
+      message: 'Obligation and reserves updated.',
       type: 'success',
       description: `Transaction - ${txid}`,
     });
