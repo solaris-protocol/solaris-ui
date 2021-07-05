@@ -1,6 +1,7 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 
 import { styled } from '@linaria/react';
+import classNames from 'classnames';
 
 import { TotalInfo } from 'components/common/TotalInfo';
 import { DepositCard } from 'components/pages/deposit/DepositCard';
@@ -19,16 +20,23 @@ export const Deposit: FC = () => {
   const { reserveAccounts } = useReserves();
   const { totalDepositedValue } = useUserObligations();
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const columns = useMemo(() => {
     return [{ title: 'Deposited', value: `$${formatNumber.format(totalDepositedValue)}` }];
   }, [totalDepositedValue]);
 
   return (
     <>
-      <TotalInfo type="deposit" columns={columns} />
+      <TotalInfo type="deposit" columns={columns} className={classNames({ isLoading })} />
       <CardsWrapper>
         {reserveAccounts.map((account) => (
-          <DepositCard key={account.pubkey.toBase58()} reserve={account} />
+          <DepositCard
+            key={account.pubkey.toBase58()}
+            reserve={account}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+          />
         ))}
       </CardsWrapper>
     </>

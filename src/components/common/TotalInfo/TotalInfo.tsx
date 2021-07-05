@@ -10,11 +10,14 @@ const Wrapper = styled.div`
   align-items: center;
   height: 130px;
   padding: 0 30px;
+  overflow: hidden;
 
   column-gap: 30px;
 
   border-radius: 20px;
   opacity: 0.97;
+
+  transition: background 0.2s ease-out;
 
   &.deposit {
     background: linear-gradient(92.18deg, #00c0f2 -43.31%, #06c 102.49%);
@@ -24,7 +27,30 @@ const Wrapper = styled.div`
     background: linear-gradient(92.18deg, #9c32be -43.31%, #a422a1 102.49%);
   }
 
+  &.isLoading {
+    &::before {
+      opacity: 1;
+    }
+  }
+
   &::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -100;
+
+    width: 100%;
+    height: 100%;
+
+    background-image: linear-gradient(91.31deg, rgba(0, 189, 255, 0.97) -15.35%, rgba(0, 255, 163, 0.97) 101.51%);
+    opacity: 0;
+
+    transition: opacity 0.2s ease-out;
+
+    content: '';
+  }
+
+  &::after {
     position: absolute;
     top: 0;
     right: 0;
@@ -69,11 +95,12 @@ const Value = styled.span`
 interface Props {
   type: 'deposit' | 'borrow';
   columns: { title: string; value: number | string }[];
+  className?: string;
 }
 
-export const TotalInfo: FC<Props> = ({ type, columns }) => {
+export const TotalInfo: FC<Props> = ({ type, columns, className }) => {
   return (
-    <Wrapper className={classNames({ [type]: true })}>
+    <Wrapper className={classNames(className, { [type]: true })}>
       {columns.map((column) => (
         <Column key={column.title}>
           <Title>{column.title}</Title>

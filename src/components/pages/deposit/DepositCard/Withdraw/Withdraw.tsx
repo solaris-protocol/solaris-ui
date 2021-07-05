@@ -30,14 +30,15 @@ const CollateralBalanceWrapper = styled.div`
 interface Props {
   reserve: ParsedAccount<Reserve>;
   setState: (state: StateType) => void;
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
 // TODO: show what your need to repay obligation if not available any amount for withdraw
-export const Withdraw: FC<Props> = ({ reserve, setState }) => {
+export const Withdraw: FC<Props> = ({ reserve, setState, isLoading, setIsLoading }) => {
   const connection = useConnection();
   const { wallet } = useWallet();
 
-  const [isLoading, setIsLoading] = useState(false);
   const [value, setValue] = useState('');
 
   const { userObligations } = useUserObligations();
@@ -101,7 +102,7 @@ export const Withdraw: FC<Props> = ({ reserve, setState }) => {
         type: 'error',
         description: error.message,
       });
-
+    } finally {
       setIsLoading(false);
     }
   };

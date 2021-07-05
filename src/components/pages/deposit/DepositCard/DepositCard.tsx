@@ -21,9 +21,11 @@ const Content = styled.div`
 
 interface Props {
   reserve: ParsedAccount<Reserve>;
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
-export const DepositCard: FC<Props> = ({ reserve }) => {
+export const DepositCard: FC<Props> = ({ reserve, isLoading, setIsLoading }) => {
   const [state, setState] = useState<StateType>('balance');
 
   // const { hasBalance } = useUserCollateralBalance(reserve);
@@ -33,9 +35,9 @@ export const DepositCard: FC<Props> = ({ reserve }) => {
   const renderContent = () => {
     switch (state) {
       case 'deposit':
-        return <Deposit reserve={reserve} setState={setState} />;
+        return <Deposit reserve={reserve} setState={setState} isLoading={isLoading} setIsLoading={setIsLoading} />;
       case 'withdraw':
-        return <Withdraw reserve={reserve} setState={setState} />;
+        return <Withdraw reserve={reserve} setState={setState} isLoading={isLoading} setIsLoading={setIsLoading} />;
       case 'balance':
       default:
         return <Balance reserve={reserve} setState={setState} />;

@@ -96,6 +96,12 @@ export const repay = async (
 
   // need for recalculation data for max withdraw/borrow/repay amount
   try {
+    notify({
+      message: 'Updating obligation and reserves.',
+      description: 'Please review transactions to approve.',
+      type: 'warn',
+    });
+
     const updatedObligation = (await cache.query(
       connection,
       obligation.pubkey,

@@ -51,6 +51,16 @@ export const Balance: FC<Props> = ({ reserve, setState }) => {
 
   const maxBorrowValueInLiquidity = useMaxBorrowValueInLiquidity(reserve, obligation);
 
+  const preparedWithdrawTooltip = useMemo(() => {
+    if (!collateralBalanceInLiquidity) {
+      return 'To be able to borrow, you need deposit first';
+    }
+
+    if (!maxBorrowValueInLiquidity) {
+      return 'To be able to borrow, you need deposit more liquidity';
+    }
+  }, [collateralBalanceInLiquidity, maxBorrowValueInLiquidity]);
+
   const isBorrowDisabled = !maxBorrowValueInLiquidity || !obligation;
 
   return (
@@ -60,7 +70,12 @@ export const Balance: FC<Props> = ({ reserve, setState }) => {
       </CollateralBalanceWrapper>
       <Bottom>
         <ButtonConnect>
-          <Button disabled={isBorrowDisabled} onClick={() => setState('borrow')} className="full">
+          <Button
+            disabled={isBorrowDisabled}
+            aria-label={preparedWithdrawTooltip}
+            onClick={() => setState('borrow')}
+            className="full"
+          >
             Borrow
           </Button>
           {collateralBalanceInLiquidity ? (
