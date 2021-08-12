@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 
-import { useWallet } from 'app/contexts/wallet';
+import { useWallet } from '@solana/wallet-adapter-react';
+
 import { useObligations } from 'hooks';
 import { wadToLamports } from 'utils/utils';
 
 export function useUserObligations() {
-  const { wallet } = useWallet();
+  const wallet = useWallet();
   const { obligations } = useObligations();
 
   const userObligations = useMemo(() => {

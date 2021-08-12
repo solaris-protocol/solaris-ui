@@ -15,8 +15,6 @@ module.exports = {
   },
   extends: [
     'react-app', // Use the recommended rules from eslint-config-react-app (bundled with Create React App)
-    'eslint:recommended', // Use the recommened rules from eslint
-    'plugin:@typescript-eslint/recommended', // Use the recommended rules from @typescript-eslint/eslint-plugin
     'plugin:react/recommended', // Use the recommended rules from eslint-plugin-react
     'plugin:prettier/recommended', // Enables eslint-plugin-prettier to display Prettier errors as ESLint errors
   ],

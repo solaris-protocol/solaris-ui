@@ -1,4 +1,4 @@
-import { AccountLayout, MintInfo, NATIVE_MINT, Token } from '@solana/spl-token';
+import { AccountLayout, NATIVE_MINT, Token } from '@solana/spl-token';
 import { Account, Connection, TransactionInstruction } from '@solana/web3.js';
 
 import { cache, ParsedAccount } from 'app/contexts/accounts';

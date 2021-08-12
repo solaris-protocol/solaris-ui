@@ -1,11 +1,11 @@
 import React, { FC, useCallback, useState } from 'react';
 
 import { styled } from '@linaria/react';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 import { borrow } from 'app/actions';
 import { ParsedAccount } from 'app/contexts/accounts';
 import { useConnection } from 'app/contexts/connection';
-import { useWallet } from 'app/contexts/wallet';
 import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
@@ -37,7 +37,7 @@ interface Props {
 
 export const Borrow: FC<Props> = ({ reserve: borrowReserve, setState }) => {
   const connection = useConnection();
-  const { wallet } = useWallet();
+  const wallet = useWallet();
 
   const [isLoading, setIsLoading] = useState(false);
 

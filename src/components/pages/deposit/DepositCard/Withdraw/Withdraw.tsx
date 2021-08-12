@@ -1,12 +1,11 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useState } from 'react';
 
 import { styled } from '@linaria/react';
-import BN from 'bn.js';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 import { withdraw } from 'app/actions';
 import { ParsedAccount, useMint } from 'app/contexts/accounts';
 import { useConnection } from 'app/contexts/connection';
-import { useWallet } from 'app/contexts/wallet';
 import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
@@ -15,7 +14,7 @@ import { CollateralInput } from 'components/common/CollateralInput';
 import { calculateCollateralBalance, useUserBalance, useUserObligations } from 'hooks';
 import { useMaxWithdrawValueInLiquidity } from 'hooks/lending/useMaxWithdrawValueInLiquidity';
 import { notify } from 'utils/notifications';
-import { fromLamports, wadToLamports } from 'utils/utils';
+import { fromLamports } from 'utils/utils';
 
 import { Bottom, MaxButton } from '../common/styled';
 import { StateType } from '../types';
@@ -37,7 +36,7 @@ interface Props {
 // TODO: show what your need to repay obligation if not available any amount for withdraw
 export const Withdraw: FC<Props> = ({ reserve, setState, isLoading, setIsLoading }) => {
   const connection = useConnection();
-  const { wallet } = useWallet();
+  const wallet = useWallet();
 
   const [value, setValue] = useState('');
 

@@ -8,7 +8,7 @@ import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { CollateralBalance } from 'components/common/CollateralBalance';
-import { calculateCollateralBalance, useUserObligationByReserve, useUserObligations } from 'hooks';
+import { calculateCollateralBalance, useUserObligations } from 'hooks';
 import { useMaxBorrowValueInLiquidity } from 'hooks/lending/useMaxBorrowValueInLiquidity';
 import { fromLamports, wadToLamports } from 'utils/utils';
 

@@ -1,6 +1,8 @@
 import React, { FC } from 'react';
 
-import { useWallet } from 'app/contexts/wallet';
+import { useWallet } from '@solana/wallet-adapter-react';
+
+import { useModals } from 'app/contexts/modals';
 
 import { Button } from '../Button';
 
@@ -9,11 +11,12 @@ interface Props {
 }
 
 export const ButtonConnect: FC<Props> = ({ children }) => {
-  const { connected, select } = useWallet();
+  const { connected, connect } = useWallet();
+  const { openModal } = useModals();
 
   if (!connected) {
     return (
-      <Button onClick={select} className="full">
+      <Button onClick={() => (connected ? connect() : openModal('wallet'))} className="full">
         Connect
       </Button>
     );

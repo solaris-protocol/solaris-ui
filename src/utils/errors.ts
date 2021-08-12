@@ -3,6 +3,7 @@ import { TransactionError } from '@solana/web3.js';
 export class SendTransactionError extends Error {
   txError: TransactionError;
   txId: string;
+
   constructor(message: string, txId: string, txError: TransactionError) {
     super(message);
 
@@ -15,11 +16,7 @@ export function isSendTransactionError(error: any): error is SendTransactionErro
   return error instanceof SendTransactionError;
 }
 
-export class SignTransactionError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
+export class SignTransactionError extends Error {}
 
 export function isSignTransactionError(error: any): error is SignTransactionError {
   return error instanceof SignTransactionError;

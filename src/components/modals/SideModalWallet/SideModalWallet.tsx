@@ -1,9 +1,10 @@
-import React, { FC, useEffect } from 'react';
+import React, { FC } from 'react';
 
 import { styled } from '@linaria/react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletName } from '@solana/wallet-adapter-wallets';
 import classNames from 'classnames';
 
-import { useWallet, WALLET_PROVIDERS } from 'app/contexts/wallet';
 import { SideModalPropsType } from 'components/modals/types';
 import useUpdateEffect from 'hooks/react/useUpdateEffect';
 import { shortenAddress } from 'utils/utils';
@@ -79,21 +80,26 @@ const Address = styled.span`
 `;
 
 export const SideModalWallet: FC<SideModalPropsType> = ({ close, ...props }) => {
-  const { connected } = useWallet();
-  const { wallet, selectWallet, provider } = useWallet();
+  const wallet = useWallet();
 
   useUpdateEffect(() => {
-    if (connected) {
+    if (wallet.connected) {
       close();
     }
-  }, [connected]);
+  }, [wallet.connected]);
 
-  const handleWalletClick = (url: string) => () => {
-    selectWallet(url);
+  useUpdateEffect(() => {
+    if (wallet.wallet) {
+      wallet.connect().catch(() => {});
+    }
+  }, [wallet.wallet]);
+
+  const handleWalletClick = (name: WalletName) => () => {
+    wallet.select(name);
   };
 
   const renderWalletAddress = (url: string) => {
-    if (provider?.url !== url || !wallet?.publicKey) {
+    if (wallet.wallet?.url !== url || !wallet?.publicKey) {
       return null;
     }
 
@@ -103,15 +109,15 @@ export const SideModalWallet: FC<SideModalPropsType> = ({ close, ...props }) => 
   return (
     <Modal title="Select wallet" close={close} {...props}>
       <Content>
-        {WALLET_PROVIDERS.map((providerItem) => (
+        {wallet.wallets.map((walletItem) => (
           <Button
-            key={providerItem.name}
-            onClick={handleWalletClick(providerItem.url)}
-            className={classNames({ isActive: provider?.url === providerItem.url })}
+            key={walletItem.name}
+            onClick={handleWalletClick(walletItem.name)}
+            className={classNames({ isActive: wallet.wallet?.url === walletItem.url })}
           >
-            <Img alt={`${providerItem.name}`} src={providerItem.icon} />
-            <Name>{providerItem.name}</Name>
-            {renderWalletAddress(providerItem.url)}
+            <Img alt={`${walletItem.name}`} src={walletItem.icon} />
+            <Name>{walletItem.name}</Name>
+            {renderWalletAddress(walletItem.url)}
           </Button>
         ))}
       </Content>

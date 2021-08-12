@@ -2,9 +2,9 @@ import React, { FC } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { styled } from '@linaria/react';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 import { useModals } from 'app/contexts/modals';
-import { useWallet } from 'app/contexts/wallet';
 import BorrowIcon from 'assets/icons/borrow-icon.svg';
 import DepositIcon from 'assets/icons/deposit-icon.svg';
 import SettingsIcon from 'assets/icons/settings-icon.svg';
@@ -38,7 +38,6 @@ const BottomWrapper = styled.div`
 `;
 
 export const Closed: FC = () => {
-  const { select } = useWallet();
   const { openModal } = useModals();
 
   const handleOpenSideModalClick = (sideModal: SideModalType) => () => {
@@ -61,7 +60,7 @@ export const Closed: FC = () => {
         </NavLink>
       </TopWrapper>
       <BottomWrapper>
-        <ButtonBottomStyled onClick={select}>
+        <ButtonBottomStyled onClick={() => openModal('wallet')}>
           <WalletIcon />
         </ButtonBottomStyled>
         <ButtonBottomStyled onClick={handleOpenSideModalClick('settings')}>

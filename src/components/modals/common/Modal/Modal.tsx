@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useRef } from 'react';
+import React, { FC } from 'react';
 import { CSSTransition } from 'react-transition-group';
 
 import { styled } from '@linaria/react';

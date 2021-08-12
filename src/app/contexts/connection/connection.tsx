@@ -1,11 +1,13 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { TokenInfo, TokenListProvider } from '@solana/spl-token-registry';
+import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
   Account,
-  BlockhashAndFeeCalculator,
+  Blockhash,
   Commitment,
   Connection,
+  FeeCalculator,
   SignatureStatus,
   Transaction,
   TransactionInstruction,
@@ -89,7 +91,7 @@ export function ConnectionProvider({ children = undefined as any }) {
       //   cache.add(new PublicKey(key), account, MintParser);
       // });
     })();
-  }, [connection, env]);
+  }, [connection, chain.chainId, env]);
 
   setProgramIds(env);
 
@@ -144,7 +146,8 @@ export function ConnectionProvider({ children = undefined as any }) {
 }
 
 export function useConnection() {
-  return useContext(ConnectionContext).connection as Connection;
+  const { connection } = useContext(ConnectionContext);
+  return connection;
 }
 
 // export function useSendConnection() {
@@ -167,43 +170,50 @@ export function useSlippageConfig() {
   return { slippage, setSlippage };
 }
 
-const getErrorForTransaction = async (connection: Connection, txid: string) => {
-  // wait for all confirmation before geting transaction
-  await connection.confirmTransaction(txid, 'max');
-
-  const tx = await connection.getParsedConfirmedTransaction(txid, 'confirmed');
-
-  const errors: string[] = [];
-  if (tx?.meta && tx.meta.logMessages) {
-    tx.meta.logMessages.forEach((log) => {
-      const regex = /Error: (.*)/gm;
-      let m;
-      while ((m = regex.exec(log)) !== null) {
-        // This is necessary to avoid infinite loops with zero-width matches
-        if (m.index === regex.lastIndex) {
-          regex.lastIndex++;
-        }
-
-        if (m.length > 1) {
-          errors.push(m[1]);
-        }
-      }
-    });
-  }
-
-  return errors;
-};
+// const getErrorForTransaction = async (connection: Connection, txid: string) => {
+//   // wait for all confirmation before geting transaction
+//   await connection.confirmTransaction(txid, 'max');
+//
+//   const tx = await connection.getParsedConfirmedTransaction(txid, 'confirmed');
+//
+//   const errors: string[] = [];
+//   if (tx?.meta && tx.meta.logMessages) {
+//     tx.meta.logMessages.forEach((log) => {
+//       const regex = /Error: (.*)/gm;
+//       let m;
+//       while ((m = regex.exec(log)) !== null) {
+//         // This is necessary to avoid infinite loops with zero-width matches
+//         if (m.index === regex.lastIndex) {
+//           regex.lastIndex++;
+//         }
+//
+//         if (m.length > 1) {
+//           errors.push(m[1]);
+//         }
+//       }
+//     });
+//   }
+//
+//   return errors;
+// };
 
 export const sendTransaction = async (
   connection: Connection,
-  wallet: any,
+  wallet: WalletContextState,
   instructions: TransactionInstruction[],
   signers: Account[],
   awaitConfirmation = true,
   commitment: Commitment = 'singleGossip',
   includesFeePayer = false,
-  block?: BlockhashAndFeeCalculator
+  block?: {
+    blockhash: Blockhash;
+    feeCalculator: FeeCalculator;
+  }
 ) => {
+  if (!wallet.publicKey) {
+    throw new SignTransactionError('Wallet not connected');
+  }
+
   let transaction = new Transaction();
   instructions.forEach((instruction) => transaction.add(instruction));
   transaction.recentBlockhash = (block || (await connection.getRecentBlockhash(commitment))).blockhash;

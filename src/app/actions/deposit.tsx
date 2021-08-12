@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { AccountLayout } from '@solana/spl-token';
-import { WalletAdapter } from '@solana/wallet-base';
+import { WalletContextState } from '@solana/wallet-adapter-react';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 import { refreshObligationAndReserves } from 'app/actions/helpers/refreshObligationAndReserves';
@@ -15,7 +15,6 @@ import {
   Obligation,
   ObligationLayout,
   ObligationParser,
-  refreshObligationInstruction,
   refreshReserveInstruction,
   Reserve,
   TokenAccount,
@@ -28,7 +27,7 @@ import { createUninitializedObligation, ensureSplAccount, findOrCreateAccountByM
 
 export const deposit = async (
   connection: Connection,
-  wallet: WalletAdapter,
+  wallet: WalletContextState,
   source: TokenAccount,
   liquidityAmount: number,
   reserve: ParsedAccount<Reserve>,

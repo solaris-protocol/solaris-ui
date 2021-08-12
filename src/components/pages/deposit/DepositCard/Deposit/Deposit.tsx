@@ -1,12 +1,11 @@
 import React, { FC, useState } from 'react';
 
 import { styled } from '@linaria/react';
-import { PublicKey } from '@solana/web3.js';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 import { deposit } from 'app/actions';
 import { ParsedAccount } from 'app/contexts/accounts';
 import { useConnection } from 'app/contexts/connection';
-import { useWallet } from 'app/contexts/wallet';
 import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
@@ -34,7 +33,7 @@ interface Props {
 
 export const Deposit: FC<Props> = ({ reserve, setState, isLoading, setIsLoading }) => {
   const connection = useConnection();
-  const { wallet } = useWallet();
+  const wallet = useWallet();
 
   const [value, setValue] = useState('');
 

@@ -1,5 +1,5 @@
 import { AccountLayout } from '@solana/spl-token';
-import { WalletAdapter } from '@solana/wallet-base';
+import { WalletContextState } from '@solana/wallet-adapter-react';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 import { cache, ParsedAccount } from 'app/contexts/accounts';
@@ -20,7 +20,7 @@ import { refreshObligationAndReserves } from './helpers/refreshObligationAndRese
 
 export const withdraw = async (
   connection: Connection,
-  wallet: WalletAdapter,
+  wallet: WalletContextState,
   source: TokenAccount, // CollateralAccount
   collateralAmount: number, // in collateral token (lamports)
   reserve: ParsedAccount<Reserve>,

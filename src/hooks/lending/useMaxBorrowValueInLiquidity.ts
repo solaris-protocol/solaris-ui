@@ -16,7 +16,7 @@ export function useMaxBorrowValueInLiquidity(reserve: ParsedAccount<Reserve>, ob
     const remainingBorrowValue = obligation?.info.allowedBorrowValue.sub(obligation?.info.borrowedValue);
 
     return wadToLamports(remainingBorrowValue).toNumber() / reserve.info.liquidity.marketPrice.toNumber();
-  }, [obligation]);
+  }, [obligation, reserve.info.liquidity.marketPrice]);
 
   return maxBorrowValueInLiquidity;
 }

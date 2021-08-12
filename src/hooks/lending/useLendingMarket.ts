@@ -62,7 +62,7 @@ export function useLendingMarket(address?: string | PublicKey) {
     return () => {
       dispose();
     };
-  }, [id, setLendingMarket]);
+  }, [connection, id, setLendingMarket]);
 
   return lendingMarket;
 }

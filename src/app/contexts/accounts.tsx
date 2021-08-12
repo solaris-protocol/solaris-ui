@@ -1,10 +1,10 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { AccountLayout, MintInfo, MintLayout, u64 } from '@solana/spl-token';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 
 import { useConnection } from 'app/contexts/connection';
-import { useWallet } from 'app/contexts/wallet';
 import { TokenAccount } from 'app/models';
 import { EventEmitter } from 'utils/eventEmitter';
 import { LEND_HOST_FEE_ADDRESS, programIds, WRAPPED_SOL_MINT } from 'utils/ids';
@@ -287,7 +287,7 @@ export const getCachedAccount = (predicate: (account: TokenAccount) => boolean) 
 
 const UseNativeAccount = () => {
   const connection = useConnection();
-  const { wallet } = useWallet();
+  const wallet = useWallet();
 
   const [nativeAccount, setNativeAccount] = useState<AccountInfo<Buffer>>();
 
@@ -356,7 +356,7 @@ const precacheUserTokenAccounts = async (connection: Connection, owner?: PublicK
 
 export function AccountsProvider({ children = null as any }) {
   const connection = useConnection();
-  const { wallet, connected } = useWallet();
+  const wallet = useWallet();
   const [tokenAccounts, setTokenAccounts] = useState<TokenAccount[]>([]);
   const [userAccounts, setUserAccounts] = useState<TokenAccount[]>([]);
   const { nativeAccount } = UseNativeAccount();
@@ -393,7 +393,9 @@ export function AccountsProvider({ children = null as any }) {
 
   const publicKey = wallet?.publicKey;
   useEffect(() => {
-    if (!connection || !publicKey) {
+    if (!connection) {
+      setTokenAccounts([]);
+    } else if (!publicKey) {
       setTokenAccounts([]);
     } else {
       precacheUserTokenAccounts(connection, LEND_HOST_FEE_ADDRESS);
@@ -437,7 +439,7 @@ export function AccountsProvider({ children = null as any }) {
         connection.removeProgramAccountChangeListener(tokenSubID);
       };
     }
-  }, [connection, connected, publicKey, selectUserAccounts]);
+  }, [connection, wallet.connected, publicKey, selectUserAccounts]);
 
   return (
     <AccountsContext.Provider

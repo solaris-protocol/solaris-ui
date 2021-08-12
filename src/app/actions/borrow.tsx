@@ -1,5 +1,5 @@
 import { AccountLayout, MintInfo } from '@solana/spl-token';
-import { WalletAdapter } from '@solana/wallet-base';
+import { WalletContextState } from '@solana/wallet-adapter-react';
 import { Account, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 import { refreshObligationAndReserves } from 'app/actions/helpers/refreshObligationAndReserves';
@@ -14,7 +14,7 @@ import { findOrCreateAccountByMint } from './account';
 
 export const borrow = async (
   connection: Connection,
-  wallet: WalletAdapter,
+  wallet: WalletContextState,
   liquidityAmount: number,
   borrowReserve: ParsedAccount<Reserve>,
   obligation: ParsedAccount<Obligation>

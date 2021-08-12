@@ -1,11 +1,11 @@
 import React, { FC, useCallback, useState } from 'react';
 
 import { styled } from '@linaria/react';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 import { repay } from 'app/actions';
 import { ParsedAccount, useMint } from 'app/contexts/accounts';
 import { useConnection } from 'app/contexts/connection';
-import { useWallet } from 'app/contexts/wallet';
 import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
@@ -38,7 +38,7 @@ interface Props {
 // TODO: show something if user don't have liqudity to repay
 export const Repay: FC<Props> = ({ reserve, setState }) => {
   const connection = useConnection();
-  const { wallet } = useWallet();
+  const wallet = useWallet();
 
   const [isLoading, setIsLoading] = useState(false);
 

@@ -57,7 +57,7 @@ export function ModalsProvider({ children = null as any }) {
 
       return <ModalComponent key={modal.modalId} close={(result?: any) => closeModal(modal.modalId, result)} />;
     });
-  }, [modals]);
+  }, [modals, closeModal]);
 
   return (
     <ModalsContext.Provider

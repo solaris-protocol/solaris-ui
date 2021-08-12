@@ -4,7 +4,6 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { parseMappingData, parsePriceData, parseProductData } from '@pythnetwork/client';
 import { PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
 import throttle from 'lodash/throttle';
 
 import { PYTH_PROGRAM_ID } from 'utils/ids';

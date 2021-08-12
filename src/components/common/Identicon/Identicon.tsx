@@ -32,7 +32,7 @@ export const Identicon: FC<Props> = ({ address, style, className }) => {
         Jazzicon(style?.width || 16, parseInt(bs58.decode(customAddress).toString('hex').slice(5, 15), 16))
       );
     }
-  }, [address, style, className]);
+  }, [address, customAddress, style, className]);
 
   return <Wrapper ref={ref as any} style={style} />;
 };

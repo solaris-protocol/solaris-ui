@@ -5,7 +5,6 @@ import * as BufferLayout from 'buffer-layout';
 import { LENDING_PROGRAM_ID, TOKEN_PROGRAM_ID } from 'utils/ids';
 import * as Layout from 'utils/layout';
 
-import { calculateUtilizationRatio, Reserve } from '../../state/lending/reserve';
 import { LendingInstruction } from './instruction';
 
 /// 10
@@ -81,25 +80,4 @@ export const borrowObligationLiquidityInstruction = (
     programId: LENDING_PROGRAM_ID,
     data,
   });
-};
-
-// deposit APY utilization currentUtilizationRate * borrowAPY
-export const calculateBorrowAPY = (reserve: Reserve) => {
-  const currentUtilization = calculateUtilizationRatio(reserve);
-  const optimalUtilization = reserve.config.optimalUtilizationRate / 100;
-
-  let borrowAPY;
-  if (optimalUtilization === 1.0 || currentUtilization < optimalUtilization) {
-    const normalizedFactor = currentUtilization / optimalUtilization;
-    const optimalBorrowRate = reserve.config.optimalBorrowRate / 100;
-    const minBorrowRate = reserve.config.minBorrowRate / 100;
-    borrowAPY = normalizedFactor * (optimalBorrowRate - minBorrowRate) + minBorrowRate;
-  } else {
-    const normalizedFactor = (currentUtilization - optimalUtilization) / (1 - optimalUtilization);
-    const optimalBorrowRate = reserve.config.optimalBorrowRate / 100;
-    const maxBorrowRate = reserve.config.maxBorrowRate / 100;
-    borrowAPY = normalizedFactor * (maxBorrowRate - optimalBorrowRate) + optimalBorrowRate;
-  }
-
-  return borrowAPY;
 };
