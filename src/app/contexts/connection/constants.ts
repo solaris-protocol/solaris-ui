@@ -1,15 +1,21 @@
 import { ENV as ChainId } from '@solana/spl-token-registry';
-import { clusterApiUrl } from '@solana/web3.js';
+import { Cluster, clusterApiUrl } from '@solana/web3.js';
 
-import { ENV } from 'app/contexts/connection';
+export type ENV = Cluster | 'localnet';
 
-export const ENDPOINTS = [
+export type EndpointType = {
+  env: ENV;
+  chainId: ChainId;
+  endpoint: string;
+};
+
+export const ENDPOINTS: EndpointType[] = [
   // {
-  //   name: 'mainnet-beta' as ENV,
+  //   env: 'mainnet-beta' as ENV,
   //   endpoint: 'https://solana-api.projectserum.com/',
   // },
-  // { name: 'testnet' as ENV, endpoint: clusterApiUrl('testnet') },
+  // { env: 'testnet' as ENV, endpoint: clusterApiUrl('testnet') },
   // TODO: devnet
-  { name: 'devnet' as ENV, endpoint: clusterApiUrl('devnet'), chainId: ChainId.Devnet },
-  // { name: 'localnet' as ENV, endpoint: 'http://127.0.0.1:8899' },
+  { env: 'devnet' as ENV, chainId: ChainId.Devnet, endpoint: clusterApiUrl('devnet') },
+  // { env: 'localnet' as ENV, endpoint: 'http://127.0.0.1:8899' },
 ];

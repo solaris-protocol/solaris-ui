@@ -4,7 +4,7 @@ import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey } from '@solana/web3.js';
 
 import { cache, ParsedAccount } from 'app/contexts/accounts';
-import { useConnectionConfig } from 'app/contexts/connection/connection';
+import { useTokenListContext } from 'app/contexts/tokenList';
 import { Reserve, ReserveParser } from 'app/models';
 import { getTokenByName } from 'utils/utils';
 
@@ -36,7 +36,7 @@ export function useReserves() {
 }
 
 export function useReserve(address?: string | PublicKey) {
-  const { tokenMap } = useConnectionConfig();
+  const { tokenMap } = useTokenListContext();
   const { reserveAccounts } = useReserves();
   let addressName = address;
   if (typeof address === 'string') {

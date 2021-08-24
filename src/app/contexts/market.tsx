@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Market, MARKETS, Orderbook, TOKEN_MINTS } from '@project-serum/serum';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 
+import { useTokenListContext } from 'app/contexts/tokenList';
 import { PoolInfo, Reserve } from 'app/models';
 import { POOLS_WITH_AIRDROP } from 'app/models/airdrops';
 import { MINT_TO_MARKET } from 'app/models/marketOverrides';
@@ -228,7 +229,7 @@ export const useMarkets = () => {
 
 export const useEnrichedPools = (pools: PoolInfo[]) => {
   const context = useContext(MarketsContext);
-  const { tokenMap } = useConnectionConfig();
+  const { tokenMap } = useTokenListContext();
   const [enriched, setEnriched] = useState<any[]>([]);
   const subscribeToMarket = context?.subscribeToMarket;
   const marketEmitter = context?.marketEmitter;

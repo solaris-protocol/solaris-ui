@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { MintInfo } from '@solana/spl-token';
 
 import { cache, ParsedAccount } from 'app/contexts/accounts';
-import { useConnectionConfig } from 'app/contexts/connection/connection';
 import { usePyth } from 'app/contexts/pyth';
+import { useTokenListContext } from 'app/contexts/tokenList';
 import { calculateDepositAPY, Reserve, TokenAccount } from 'app/models';
 import { useReserves } from 'hooks';
 import { fromLamports, getTokenName } from 'utils/utils';
@@ -29,7 +29,7 @@ export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
   const { reserveAccounts } = useReserves();
   const [userDeposits, setUserDeposits] = useState<UserDeposit[]>([]);
   const { getPrice } = usePyth();
-  const { tokenMap } = useConnectionConfig();
+  const { tokenMap } = useTokenListContext();
 
   const reservesByCollateralMint = useMemo(() => {
     return reserveAccounts.reduce((result, item) => {

@@ -1,6 +1,5 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
-import { TokenInfo, TokenListProvider } from '@solana/spl-token-registry';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
   Account,
@@ -15,85 +14,46 @@ import {
 } from '@solana/web3.js';
 
 import { cache } from 'app/contexts/accounts';
+import { ExplorerLink } from 'components/common/ExplorerLink';
 import { SendTransactionError, SignTransactionError } from 'utils/errors';
 import { setProgramIds } from 'utils/ids';
 import { notify } from 'utils/notifications';
 import { sleep, useLocalStorageState } from 'utils/utils';
 
-import { ExplorerLink } from '../../../components/common/ExplorerLink';
-import { ENDPOINTS } from './constants';
-
-export type ENV = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet';
+import { ENDPOINTS, EndpointType } from './constants';
 
 const DEFAULT = ENDPOINTS[0].endpoint;
-const DEFAULT_SLIPPAGE = 0.25;
 const DEFAULT_TIMEOUT = 15000;
 
-interface ConnectionConfig {
+interface ConnectionContextState {
   connection: Connection;
   // sendConnection: Connection;
+  chain: EndpointType;
   endpoint: string;
-  slippage: number;
-  setSlippage: (val: number) => void;
-  env: ENV;
   setEndpoint: (val: string) => void;
-  tokens: TokenInfo[];
-  tokenMap: Map<string, TokenInfo>;
 }
 
-const ConnectionContext = React.createContext<ConnectionConfig>({
+const ConnectionContext = React.createContext<ConnectionContextState>({
+  chain: ENDPOINTS[0],
   endpoint: DEFAULT,
   setEndpoint: () => {},
-  slippage: DEFAULT_SLIPPAGE,
-  setSlippage: (val: number) => {},
   connection: new Connection(DEFAULT, 'recent'),
   // sendConnection: new Connection(DEFAULT, 'recent'),
-  env: ENDPOINTS[0].name,
-  tokens: [],
-  tokenMap: new Map<string, TokenInfo>(),
 });
 
 export function ConnectionProvider({ children = undefined as any }) {
   const [endpoint, setEndpoint] = useLocalStorageState('connectionEndpoint', ENDPOINTS[0].endpoint);
 
-  const [slippage, setSlippage] = useLocalStorageState('slippage', DEFAULT_SLIPPAGE.toString());
-
   const connection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
   // const sendConnection = useMemo(() => new Connection(endpoint, 'recent'), [endpoint]);
 
-  const chain = ENDPOINTS.find((end) => end.endpoint === endpoint) || ENDPOINTS[0];
-  const env = chain.name;
-
-  const [tokens, setTokens] = useState<TokenInfo[]>([]);
-  const [tokenMap, setTokenMap] = useState<Map<string, TokenInfo>>(new Map());
+  const chain = useMemo(() => ENDPOINTS.find((end) => end.endpoint === endpoint) || ENDPOINTS[0], [endpoint]);
 
   useEffect(() => {
     cache.clear();
-    // fetch token files
-    (async () => {
-      const container = await new TokenListProvider().resolve();
-      const tokens = container.filterByChainId(chain.chainId).excludeByTag('nft').getList();
-      const tokenMap = tokens.reduce((map, item) => {
-        map.set(item.address, item);
-        return map;
-      }, new Map<string, TokenInfo>());
+  }, [connection, chain.chainId, chain.env]);
 
-      setTokenMap(tokenMap);
-      setTokens(tokens);
-
-      // const accounts = await getMultipleAccounts(connection, [...knownMints.keys()], 'single');
-      // accounts.keys.forEach((key, index) => {
-      //   const account = accounts.array[index];
-      //   if (!account) {
-      //     return;
-      //   }
-      //
-      //   cache.add(new PublicKey(key), account, MintParser);
-      // });
-    })();
-  }, [connection, chain.chainId, env]);
-
-  setProgramIds(env);
+  setProgramIds(chain.env);
 
   // The websocket library solana/web3.js uses closes its websocket connection when the subscription list
   // is empty after opening its first time, preventing subsequent subscriptions from receiving responses.
@@ -129,15 +89,11 @@ export function ConnectionProvider({ children = undefined as any }) {
   return (
     <ConnectionContext.Provider
       value={{
+        chain,
         endpoint,
         setEndpoint,
-        slippage: parseFloat(slippage),
-        setSlippage: (val) => setSlippage(val.toString()),
         connection,
         // sendConnection,
-        tokens,
-        tokenMap,
-        env,
       }}
     >
       {children}
@@ -159,15 +115,8 @@ export function useConnectionConfig() {
   return {
     endpoint: context.endpoint,
     setEndpoint: context.setEndpoint,
-    env: context.env,
-    tokens: context.tokens,
-    tokenMap: context.tokenMap,
+    chain: context.chain,
   };
-}
-
-export function useSlippageConfig() {
-  const { slippage, setSlippage } = useContext(ConnectionContext);
-  return { slippage, setSlippage };
 }
 
 // const getErrorForTransaction = async (connection: Connection, txid: string) => {

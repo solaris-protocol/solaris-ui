@@ -18,6 +18,7 @@ import { LendingProvider } from 'app/contexts/lending';
 import { MarketProvider } from 'app/contexts/market';
 import { ModalsProvider } from 'app/contexts/modals';
 import { PythProvider } from 'app/contexts/pyth';
+import { TokenListProvider } from 'app/contexts/tokenList';
 import { notify } from 'utils/notifications';
 
 export const Providers: FC = ({ children }) => {
@@ -48,17 +49,19 @@ export const Providers: FC = ({ children }) => {
 
   return (
     <ConnectionProvider>
-      <WalletProvider wallets={wallets} onError={onError}>
-        <ModalsProvider>
-          <AccountsProvider>
-            <PythProvider>
-              <MarketProvider>
-                <LendingProvider>{children}</LendingProvider>
-              </MarketProvider>
-            </PythProvider>
-          </AccountsProvider>
-        </ModalsProvider>
-      </WalletProvider>
+      <TokenListProvider>
+        <WalletProvider wallets={wallets} onError={onError}>
+          <ModalsProvider>
+            <AccountsProvider>
+              <PythProvider>
+                <MarketProvider>
+                  <LendingProvider>{children}</LendingProvider>
+                </MarketProvider>
+              </PythProvider>
+            </AccountsProvider>
+          </ModalsProvider>
+        </WalletProvider>
+      </TokenListProvider>
     </ConnectionProvider>
   );
 };

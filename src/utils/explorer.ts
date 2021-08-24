@@ -25,7 +25,7 @@ export function getExplorerUrl(
     if (env?.chainId === ChainId.Testnet) {
       cluster = 'testnet';
     } else if (env?.chainId === ChainId.Devnet) {
-      if (env?.name === 'localnet') {
+      if (env?.env === 'localnet') {
         cluster = `custom&customUrl=${encodeURIComponent('http://127.0.0.1:8899')}`;
       } else {
         cluster = 'devnet';

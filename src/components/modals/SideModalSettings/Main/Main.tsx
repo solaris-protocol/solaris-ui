@@ -67,7 +67,7 @@ interface Props {
 }
 
 export const Main: FC<Props> = ({ setState }) => {
-  const { env } = useConnectionConfig();
+  const { chain } = useConnectionConfig();
 
   return (
     <Wrapper>
@@ -77,7 +77,7 @@ export const Main: FC<Props> = ({ setState }) => {
         </IconWrapper>
         <Name>Network</Name>
         <Network>
-          {env} <ArrowIconStyled />
+          {chain.env} <ArrowIconStyled />
         </Network>
       </ItemWrapper>
       <ItemWrapper>

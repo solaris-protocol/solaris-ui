@@ -6,10 +6,11 @@ import { parseMappingData, parsePriceData, parseProductData } from '@pythnetwork
 import { PublicKey } from '@solana/web3.js';
 import throttle from 'lodash/throttle';
 
+import { useTokenListContext } from 'app/contexts/tokenList';
 import { PYTH_PROGRAM_ID } from 'utils/ids';
 
 import { getMultipleAccounts } from './accounts';
-import { useConnection, useConnectionConfig } from './connection';
+import { useConnection } from './connection';
 
 type Products = Record<string, Product>;
 type Prices = Record<string, number>;
@@ -33,7 +34,7 @@ const PythContext = React.createContext<PythContextState>({
 // TODO: unsubscribe
 export function PythProvider({ children = null as any }) {
   const connection = useConnection();
-  const { tokenMap } = useConnectionConfig();
+  const { tokenMap } = useTokenListContext();
   const [products, setProducts] = useState<Products>({});
   const [prices, setPrices] = useState<Prices>({});
   const [subscriptions, setSubscriptions] = useState<Subscriptions>({});
