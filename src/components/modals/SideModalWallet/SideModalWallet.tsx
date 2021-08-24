@@ -88,14 +88,25 @@ export const SideModalWallet: FC<SideModalPropsType> = ({ close, ...props }) => 
     }
   }, [wallet.connected]);
 
+  function connect() {
+    wallet.connect().catch((err) => {
+      console.error('Wallet connect: ', err);
+    });
+  }
+
   useUpdateEffect(() => {
     if (wallet.wallet) {
-      wallet.connect().catch(() => {});
+      connect();
     }
   }, [wallet.wallet]);
 
   const handleWalletClick = (name: WalletName) => () => {
-    wallet.select(name);
+    // if different
+    if (wallet.wallet?.name !== name) {
+      wallet.select(name);
+    } else if (wallet.wallet) {
+      connect();
+    }
   };
 
   const renderWalletAddress = (url: string) => {
