@@ -10,7 +10,7 @@ import { POOLS_WITH_AIRDROP } from 'app/models/airdrops';
 import { MINT_TO_MARKET } from 'app/models/marketOverrides';
 import { EventEmitter } from 'utils/eventEmitter';
 import { LIQUIDITY_PROVIDER_FEE, SERUM_FEE } from 'utils/pools';
-import { convert, fromLamports, getPoolName, getTokenName, KnownTokenMap, STABLE_COINS } from 'utils/utils';
+import { convert, fromLamports, getPoolName, getTokenSymbol, KnownTokenMap, STABLE_COINS } from 'utils/utils';
 
 import { cache, getMultipleAccounts } from './accounts';
 import { useConnectionConfig } from './connection/connection';
@@ -357,7 +357,7 @@ function createEnrichedPools(
         key: p.pubkeys.account.toBase58(),
         id: index,
         name,
-        names: mints.map((m) => getTokenName(tokenMap, m)),
+        names: mints.map((m) => getTokenSymbol(tokenMap, m)),
         accounts: [accountA?.pubkey, accountB?.pubkey],
         address: p.pubkeys.mint.toBase58(),
         link,

@@ -6,7 +6,7 @@ import { PublicKey } from '@solana/web3.js';
 import { cache, ParsedAccount } from 'app/contexts/accounts';
 import { useTokenListContext } from 'app/contexts/tokenList';
 import { Reserve, ReserveParser } from 'app/models';
-import { getTokenByName } from 'utils/utils';
+import { getTokenBySymbol } from 'utils/utils';
 
 export const getReserves = () => {
   return cache
@@ -40,7 +40,7 @@ export function useReserve(address?: string | PublicKey) {
   const { reserveAccounts } = useReserves();
   let addressName = address;
   if (typeof address === 'string') {
-    const token: TokenInfo | null = getTokenByName(tokenMap, address);
+    const token: TokenInfo | null = getTokenBySymbol(tokenMap, address);
     if (token) {
       const account = reserveAccounts.filter((acc) => acc.info.liquidity.mintPubkey.toBase58() === token.address)[0];
       if (account) {

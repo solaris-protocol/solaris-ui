@@ -19,7 +19,7 @@ const TokenListContext = React.createContext<TokenListContextState>({
 const SLS_SOL_TOKEN_INFO: TokenInfo = {
   chainId: 101,
   address: 'So11111111111111111111111111111111111111113',
-  name: 'Solaris staked SOL (mSOL)',
+  name: 'Solaris staked SOL (slsSOL)',
   decimals: 9,
   symbol: 'slsSOL',
   // TODO: temp logo, check design and make it svg

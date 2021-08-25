@@ -1,5 +1,3 @@
-import { useCallback, useState } from 'react';
-
 import { MintInfo } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey } from '@solana/web3.js';
@@ -17,41 +15,12 @@ export const formatPriceNumber = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 8,
 });
 
-export function useLocalStorageState(key: string, defaultState?: string) {
-  const [state, setState] = useState(() => {
-    // NOTE: Not sure if this is ok
-    const storedState = localStorage.getItem(key);
-    if (storedState) {
-      return JSON.parse(storedState);
-    }
-    return defaultState;
-  });
-
-  const setLocalStorageState = useCallback(
-    (newState) => {
-      const changed = state !== newState;
-      if (!changed) {
-        return;
-      }
-      setState(newState);
-      if (newState === null) {
-        localStorage.removeItem(key);
-      } else {
-        localStorage.setItem(key, JSON.stringify(newState));
-      }
-    },
-    [state, key]
-  );
-
-  return [state, setLocalStorageState];
-}
-
 // shorten the checksummed version of the input address to have 4 characters at start and end
 export function shortenAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
 
-export function getTokenName(map: KnownTokenMap, mint?: string | PublicKey, shorten = true): string {
+export function getTokenSymbol(map: KnownTokenMap, mint?: string | PublicKey, shorten = true): string {
   const mintAddress = typeof mint === 'string' ? mint : mint?.toBase58();
 
   if (!mintAddress) {
@@ -65,7 +34,7 @@ export function getTokenName(map: KnownTokenMap, mint?: string | PublicKey, shor
 
   return shorten ? `${mintAddress.substring(0, 5)}...` : mintAddress;
 }
-export function getVerboseTokenName(map: KnownTokenMap, mint?: string | PublicKey, shorten = true): string {
+export function getTokenName(map: KnownTokenMap, mint?: string | PublicKey, shorten = true): string {
   const mintAddress = typeof mint === 'string' ? mint : mint?.toBase58();
 
   if (!mintAddress) {
@@ -80,7 +49,7 @@ export function getVerboseTokenName(map: KnownTokenMap, mint?: string | PublicKe
   return shorten ? `${mintAddress.substring(0, 5)}...` : mintAddress;
 }
 
-export function getTokenByName(tokenMap: KnownTokenMap, name: string) {
+export function getTokenBySymbol(tokenMap: KnownTokenMap, name: string) {
   let token: TokenInfo | null = null;
   for (const val of tokenMap.values()) {
     if (val.symbol === name) {
@@ -223,5 +192,5 @@ export function sleep(ms: number): Promise<void> {
 
 export function getPoolName(map: KnownTokenMap, pool: PoolInfo, shorten = true) {
   const sorted = pool.pubkeys.holdingMints.map((a) => a.toBase58()).sort();
-  return sorted.map((item) => getTokenName(map, item, shorten)).join('/');
+  return sorted.map((item) => getTokenSymbol(map, item, shorten)).join('/');
 }

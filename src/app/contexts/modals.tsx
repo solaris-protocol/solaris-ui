@@ -1,9 +1,9 @@
 import React, { ElementType, useCallback, useContext, useMemo, useState } from 'react';
 import { TransitionGroup } from 'react-transition-group';
 
-import { ModalStake } from 'components/modals/ModalStake';
 import { SideModalSettings } from 'components/modals/SideModalSettings';
 import { SideModalWallet } from 'components/modals/SideModalWallet';
+import { ModalStake } from 'components/modals/stakeModals/ModalStake';
 import { CommonModalPropsType, CommonModalType } from 'components/modals/types';
 
 type ModalState = { modalName: CommonModalType; modalId: number; props: any };

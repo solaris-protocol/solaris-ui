@@ -15,10 +15,11 @@ import {
 
 import { cache } from 'app/contexts/accounts';
 import { ExplorerLink } from 'components/common/ExplorerLink';
+import { useLocalStorageState } from 'hooks';
 import { SendTransactionError, SignTransactionError } from 'utils/errors';
 import { setProgramIds } from 'utils/ids';
 import { notify } from 'utils/notifications';
-import { sleep, useLocalStorageState } from 'utils/utils';
+import { sleep } from 'utils/utils';
 
 import { ENDPOINTS, EndpointType } from './constants';
 

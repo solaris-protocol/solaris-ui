@@ -7,7 +7,7 @@ import { usePyth } from 'app/contexts/pyth';
 import { useTokenListContext } from 'app/contexts/tokenList';
 import { calculateDepositAPY, Reserve, TokenAccount } from 'app/models';
 import { useReserves } from 'hooks';
-import { fromLamports, getTokenName } from 'utils/utils';
+import { fromLamports, getTokenSymbol } from 'utils/utils';
 
 import { useUserAccounts } from '../system/useUserAccounts';
 import { calculateCollateralBalance } from './useCollateralBalance';
@@ -66,7 +66,7 @@ export function useUserDeposits(exclude?: Set<string>, include?: Set<string>) {
               amount,
               amountInQuote,
               apy: calculateDepositAPY(reserve.info),
-              name: getTokenName(tokenMap, reserve.info.liquidity.mintPubkey),
+              name: getTokenSymbol(tokenMap, reserve.info.liquidity.mintPubkey),
             },
             reserve,
           } as UserDeposit;
