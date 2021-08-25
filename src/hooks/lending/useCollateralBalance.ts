@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { PublicKey } from '@solana/web3.js';
 
-import { useMint } from 'app/contexts/accounts';
+import { useMint } from 'app/contexts/accounts/accounts';
 import { usePrice } from 'app/contexts/pyth';
 import { Reserve, reserveMarketCap } from 'app/models';
 import { fromLamports } from 'utils/utils';

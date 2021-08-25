@@ -19,7 +19,6 @@ module.exports = {
     'plugin:prettier/recommended', // Enables eslint-plugin-prettier to display Prettier errors as ESLint errors
   ],
   plugins: [
-    '@typescript-eslint', // Allows for manually setting @typescript-eslint/* rules
     'prettier', // Allows for manually setting prettier/* rules
     'react', // Allows for manually setting react/* rules
     'simple-import-sort',
@@ -31,10 +30,6 @@ module.exports = {
   },
   rules: {
     'prettier/prettier': 'off',
-
-    '@typescript-eslint/no-empty-function': 'off',
-    '@typescript-eslint/no-empty-interface': 'off',
-    '@typescript-eslint/ban-ts-comment': 'off',
 
     // sort
     'sort-imports': 'off',

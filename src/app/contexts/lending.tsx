@@ -7,6 +7,7 @@ import {
   isObligation,
   isReserve,
   LendingMarketParser,
+  MintParser,
   ObligationParser,
   Reserve,
   ReserveParser,
@@ -14,7 +15,7 @@ import {
 import { useReserves } from 'hooks';
 import { LENDING_PROGRAM_ID } from 'utils/ids';
 
-import { cache, getMultipleAccounts, MintParser, ParsedAccount } from './accounts';
+import { cache, getMultipleAccounts, ParsedAccount } from './accounts';
 import { useConnection } from './connection/connection';
 import { usePrecacheMarket } from './market';
 

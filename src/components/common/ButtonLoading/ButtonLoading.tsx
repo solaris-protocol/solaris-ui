@@ -5,7 +5,6 @@ import { styled } from '@linaria/react';
 import ClockIcon from 'assets/icons/clock-icon.svg';
 import { Button } from 'components/common/Button';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const ClockIconStyled = styled(ClockIcon)`
   margin-right: 10px;

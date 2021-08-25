@@ -1,11 +1,11 @@
 import React, { FC, useMemo, useState } from 'react';
 
-import { Modal } from '../common/Modal';
-import { SideModalPropsType } from '../types';
+import { SideModal } from '../common/SideModal';
+import { CommonModalPropsType } from '../types';
 import { Main } from './Main';
 import { Network } from './Network';
 
-export const SideModalSettings: FC<SideModalPropsType> = ({ close, ...props }) => {
+export const SideModalSettings: FC<CommonModalPropsType> = ({ close, ...props }) => {
   const [state, setState] = useState('main');
 
   const { title, back, component } = useMemo(() => {
@@ -26,8 +26,8 @@ export const SideModalSettings: FC<SideModalPropsType> = ({ close, ...props }) =
   }, [state, setState]);
 
   return (
-    <Modal back={back} title={title} close={close} {...props}>
+    <SideModal back={back} title={title} close={close} {...props}>
       {component}
-    </Modal>
+    </SideModal>
   );
 };

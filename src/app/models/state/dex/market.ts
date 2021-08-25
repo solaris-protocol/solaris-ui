@@ -1,11 +1,12 @@
 import { Market, MARKETS, Orderbook } from '@project-serum/serum';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 
-import { cache, MintParser, ParsedAccountBase } from 'app/contexts/accounts';
+import { cache, ParsedAccountBase } from 'app/contexts/accounts';
+import { MintParser } from 'app/models';
 
 const DEFAULT_DEX_ID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY');
 
-export const OrderBookParser = (id: PublicKey, acc: AccountInfo<Buffer>) => {
+const OrderBookParser = (id: PublicKey, acc: AccountInfo<Buffer>) => {
   const decoded = Orderbook.LAYOUT.decode(acc.data);
 
   const details = {

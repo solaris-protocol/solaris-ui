@@ -113,7 +113,7 @@ export const Network: FC<Props> = (props) => {
             value={endpointItem.endpoint}
             name="endpoint"
           />
-          <RadioVisible>{endpointItem.name}</RadioVisible>
+          <RadioVisible>{endpointItem.env}</RadioVisible>
         </ItemLabelWrapper>
       ))}
     </Wrapper>

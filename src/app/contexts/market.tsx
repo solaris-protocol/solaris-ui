@@ -5,10 +5,9 @@ import { Market, MARKETS, Orderbook, TOKEN_MINTS } from '@project-serum/serum';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 
 import { useTokenListContext } from 'app/contexts/tokenList';
-import { PoolInfo, Reserve } from 'app/models';
+import { DexMarketParser, PoolInfo, Reserve } from 'app/models';
 import { POOLS_WITH_AIRDROP } from 'app/models/airdrops';
 import { MINT_TO_MARKET } from 'app/models/marketOverrides';
-import { DexMarketParser } from 'app/models/state/dex';
 import { EventEmitter } from 'utils/eventEmitter';
 import { LIQUIDITY_PROVIDER_FEE, SERUM_FEE } from 'utils/pools';
 import { convert, fromLamports, getPoolName, getTokenName, KnownTokenMap, STABLE_COINS } from 'utils/utils';

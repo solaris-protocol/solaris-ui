@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 
 import { useConnectionConfig } from 'app/contexts/connection';
 import ArrowIcon from 'assets/icons/arrow-icon.svg';
-import EyeHideIcon from 'assets/icons/eye-hide-icon.svg';
+// import EyeHideIcon from 'assets/icons/eye-hide-icon.svg';
 import NetworkIcon from 'assets/icons/network-icon.svg';
 
 const Wrapper = styled.div`
@@ -53,7 +53,6 @@ const Network = styled.span`
   color: #fff;
 `;
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const ArrowIconStyled = styled(ArrowIcon)`
   height: 11px;
@@ -80,12 +79,12 @@ export const Main: FC<Props> = ({ setState }) => {
           {chain.env} <ArrowIconStyled />
         </Network>
       </ItemWrapper>
-      <ItemWrapper>
-        <IconWrapper>
-          <EyeHideIcon />
-        </IconWrapper>
-        <Name>Hide zero balances</Name>
-      </ItemWrapper>
+      {/*<ItemWrapper>*/}
+      {/*  <IconWrapper>*/}
+      {/*    <EyeHideIcon />*/}
+      {/*  </IconWrapper>*/}
+      {/*  <Name>Hide zero balances</Name>*/}
+      {/*</ItemWrapper>*/}
     </Wrapper>
   );
 };

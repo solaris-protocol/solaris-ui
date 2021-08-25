@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 
 import { styled } from '@linaria/react';
 
-import { ParsedAccount } from 'app/contexts/accounts';
+import { ParsedAccount } from 'app/contexts/accounts/accounts';
 import { calculateBorrowAPY, Reserve } from 'app/models';
 // import WalletIcon from 'assets/icons/wallet-icon.svg';
 import { TokenIcon } from 'components/common/TokenIcon';
@@ -48,7 +48,6 @@ const Symbol = styled.span`
 //   letter-spacing: 0.02em;
 // `;
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 // const WalletIconStyled = styled(WalletIcon)`
 //   width: 20px;

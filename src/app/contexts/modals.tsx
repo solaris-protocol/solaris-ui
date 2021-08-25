@@ -1,21 +1,23 @@
 import React, { ElementType, useCallback, useContext, useMemo, useState } from 'react';
 import { TransitionGroup } from 'react-transition-group';
 
+import { ModalStake } from 'components/modals/ModalStake';
 import { SideModalSettings } from 'components/modals/SideModalSettings';
 import { SideModalWallet } from 'components/modals/SideModalWallet';
-import { SideModalPropsType, SideModalType } from 'components/modals/types';
+import { CommonModalPropsType, CommonModalType } from 'components/modals/types';
 
-type ModalState = { modalName: SideModalType; modalId: number; props: any };
+type ModalState = { modalName: CommonModalType; modalId: number; props: any };
 
-const modalsMap = new Map<SideModalType, ElementType<SideModalPropsType>>([
+const modalsMap = new Map<CommonModalType, ElementType<CommonModalPropsType>>([
   ['wallet', SideModalWallet],
   ['settings', SideModalSettings],
+  ['stake', ModalStake],
 ]);
 
 let modalId = 0;
 
 const ModalsContext = React.createContext<{
-  openModal: (modalName: SideModalType, props?: any) => void;
+  openModal: (modalName: CommonModalType, props?: any) => void;
   closeModal: (modalId: number) => void;
   closeTopModal: () => void;
 }>({
@@ -27,7 +29,7 @@ const ModalsContext = React.createContext<{
 export function ModalsProvider({ children = null as any }) {
   const [modals, setModals] = useState<ModalState[]>([]);
 
-  const openModal = useCallback((modalName: SideModalType, props?: any) => {
+  const openModal = useCallback((modalName: CommonModalType, props?: any) => {
     setModals((state) => [
       ...state,
       {

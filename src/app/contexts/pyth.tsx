@@ -9,7 +9,7 @@ import throttle from 'lodash/throttle';
 import { useTokenListContext } from 'app/contexts/tokenList';
 import { PYTH_PROGRAM_ID } from 'utils/ids';
 
-import { getMultipleAccounts } from './accounts';
+import { getMultipleAccounts } from './accounts/accounts';
 import { useConnection } from './connection';
 
 type Products = Record<string, Product>;

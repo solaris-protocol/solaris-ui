@@ -5,11 +5,11 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletName } from '@solana/wallet-adapter-wallets';
 import classNames from 'classnames';
 
-import { SideModalPropsType } from 'components/modals/types';
+import { CommonModalPropsType } from 'components/modals/types';
 import useUpdateEffect from 'hooks/react/useUpdateEffect';
 import { shortenAddress } from 'utils/utils';
 
-import { Modal } from '../common/Modal';
+import { SideModal } from '../common/SideModal';
 
 const Content = styled.div`
   display: flex;
@@ -79,7 +79,7 @@ const Address = styled.span`
   letter-spacing: 0.02em;
 `;
 
-export const SideModalWallet: FC<SideModalPropsType> = ({ close, ...props }) => {
+export const SideModalWallet: FC<CommonModalPropsType> = ({ close, ...props }) => {
   const wallet = useWallet();
 
   useUpdateEffect(() => {
@@ -118,7 +118,7 @@ export const SideModalWallet: FC<SideModalPropsType> = ({ close, ...props }) => 
   };
 
   return (
-    <Modal title="Select wallet" close={close} {...props}>
+    <SideModal title="Select wallet" close={close} {...props}>
       <Content>
         {wallet.wallets.map((walletItem) => (
           <Button
@@ -132,6 +132,6 @@ export const SideModalWallet: FC<SideModalPropsType> = ({ close, ...props }) => 
           </Button>
         ))}
       </Content>
-    </Modal>
+    </SideModal>
   );
 };

@@ -4,7 +4,7 @@ import { styled } from '@linaria/react';
 import { useWallet } from '@solana/wallet-adapter-react';
 
 import { withdraw } from 'app/actions';
-import { ParsedAccount, useMint } from 'app/contexts/accounts';
+import { ParsedAccount, useMint } from 'app/contexts/accounts/accounts';
 import { useConnection } from 'app/contexts/connection';
 import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';

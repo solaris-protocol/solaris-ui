@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { ParsedAccount } from 'app/contexts/accounts';
+import { ParsedAccount } from 'app/contexts/accounts/accounts';
 import { Obligation, Reserve } from 'app/models';
 import { wadToLamports } from 'utils/utils';
 

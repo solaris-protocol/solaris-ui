@@ -2,7 +2,7 @@ import React, { FC, useMemo } from 'react';
 
 import { styled } from '@linaria/react';
 
-import { ParsedAccount, useMint } from 'app/contexts/accounts';
+import { ParsedAccount, useMint } from 'app/contexts/accounts/accounts';
 import { usePrice } from 'app/contexts/pyth';
 import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';

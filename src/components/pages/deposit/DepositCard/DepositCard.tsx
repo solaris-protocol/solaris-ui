@@ -3,7 +3,7 @@ import React, { FC, useState } from 'react';
 import { styled } from '@linaria/react';
 import classNames from 'classnames';
 
-import { ParsedAccount } from 'app/contexts/accounts';
+import { ParsedAccount } from 'app/contexts/accounts/accounts';
 import { Reserve } from 'app/models';
 import { Card } from 'components/common/Card';
 

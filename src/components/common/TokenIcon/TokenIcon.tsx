@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 
 import { PublicKey } from '@solana/web3.js';
 
-import { useConnectionConfig } from 'app/contexts/connection';
+import { useTokenListContext } from 'app/contexts/tokenList';
 import { getTokenIcon } from 'utils/utils';
 
 import { Identicon } from '../Identicon';
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export const TokenIcon: FC<Props> = ({ mintAddress, size, style, className }) => {
-  const { tokenMap } = useConnectionConfig();
+  const { tokenMap } = useTokenListContext();
   const icon = getTokenIcon(tokenMap, mintAddress);
 
   const customSize = size || 20;

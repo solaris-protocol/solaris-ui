@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import BN from 'bn.js';
 
-import { ParsedAccount } from 'app/contexts/accounts';
+import { ParsedAccount } from 'app/contexts/accounts/accounts';
 import { Obligation, Reserve } from 'app/models';
 import { wadToLamports } from 'utils/utils';
 
