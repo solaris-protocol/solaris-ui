@@ -12,14 +12,11 @@ const WIDTH_OPENED = 260;
 const TRANSITION_DURATION = 400;
 const TRANSITION_DURATION_SMART = 300;
 
-const Wrapper = styled.div`
+const PlaceHandler = styled.div`
   position: relative;
 
   flex-shrink: 0;
   width: ${WIDTH_CLOSED}px;
-
-  background: #130e14;
-  border-right: 1px solid #201a22;
 
   transition: width ${TRANSITION_DURATION}ms cubic-bezier(0.7, -0.4, 0.4, 1.4);
 
@@ -55,7 +52,7 @@ const TransitionGroupWrapper = styled.div`
 `;
 
 const Main = styled.div`
-  position: absolute;
+  position: fixed;
 
   display: flex;
   flex-direction: column;
@@ -64,6 +61,9 @@ const Main = styled.div`
   width: ${WIDTH_CLOSED}px;
   height: 100%;
   padding: 30px 26px;
+
+  background: #130e14;
+  border-right: 1px solid #201a22;
 
   &.isOpen {
     width: ${WIDTH_OPENED}px;
@@ -113,7 +113,7 @@ export const SideBar: FC = () => {
   };
 
   return (
-    <Wrapper className={classNames({ isOpen })}>
+    <PlaceHandler className={classNames({ isOpen })}>
       <TransitionGroup component={TransitionGroupWrapper}>
         <CSSTransition key={isOpen ? 'open' : 'close'} timeout={300} classNames="transition">
           <Main className={classNames({ isOpen })} onClick={handleSidebarToggleClick}>
@@ -123,6 +123,6 @@ export const SideBar: FC = () => {
           </Main>
         </CSSTransition>
       </TransitionGroup>
-    </Wrapper>
+    </PlaceHandler>
   );
 };
