@@ -51,15 +51,15 @@ export const Providers: FC = ({ children }) => {
     <ConnectionProvider>
       <TokenListProvider>
         <WalletProvider wallets={wallets} onError={onError}>
-          <ModalsProvider>
-            <AccountsProvider>
-              <PythProvider>
+          <PythProvider>
+            <ModalsProvider>
+              <AccountsProvider>
                 <MarketProvider>
                   <LendingProvider>{children}</LendingProvider>
                 </MarketProvider>
-              </PythProvider>
-            </AccountsProvider>
-          </ModalsProvider>
+              </AccountsProvider>
+            </ModalsProvider>
+          </PythProvider>
         </WalletProvider>
       </TokenListProvider>
     </ConnectionProvider>
