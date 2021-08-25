@@ -20,6 +20,11 @@ export const globalCss = css`
 
     body {
       font-family: 'Montserrat', sans-serif;
+
+      /* TODO: remove after remove antd */
+      font-variant: normal;
+      font-feature-settings: normal;
+
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
 
