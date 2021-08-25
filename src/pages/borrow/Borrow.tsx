@@ -10,7 +10,7 @@ import { formatNumber } from 'utils/utils';
 const CardsWrapper = styled.div`
   display: grid;
   grid-gap: 20px;
-  grid-template-columns: repeat(auto-fill, 417px);
+  grid-template-columns: repeat(auto-fill, minmax(417px, 1fr));
 
   margin-top: 20px;
 `;

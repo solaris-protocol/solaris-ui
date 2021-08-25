@@ -6,8 +6,8 @@ const Wrapper = styled.div`
   position: relative;
 
   display: flex;
+  flex-basis: 417px;
   flex-direction: column;
-  width: 417px;
   height: 230px;
   padding: 20px;
 
