@@ -10,13 +10,14 @@ import { Reserve } from 'app/models';
 import { Button } from 'components/common/Button';
 import { ButtonConnect } from 'components/common/ButtonConnect';
 import { ButtonLoading } from 'components/common/ButtonLoading';
+import { ButtonMax } from 'components/common/ButtonMax';
 import { CollateralInput } from 'components/common/CollateralInput';
 import { calculateCollateralBalance, useUserBalance, useUserObligations } from 'hooks';
 import { useMaxWithdrawValueInLiquidity } from 'hooks/lending/useMaxWithdrawValueInLiquidity';
 import { notify } from 'utils/notifications';
 import { fromLamports } from 'utils/utils';
 
-import { Bottom, MaxButton } from '../common/styled';
+import { Bottom } from '../common/styled';
 import { StateType } from '../types';
 
 const CollateralBalanceWrapper = styled.div`
@@ -116,7 +117,7 @@ export const Withdraw: FC<Props> = ({ reserve, setState, isLoading, setIsLoading
           value={value}
           onChange={handleValueChange}
         />
-        <MaxButton onClick={handleMaxClick}>Max</MaxButton>
+        <ButtonMax onClick={handleMaxClick} />
       </CollateralBalanceWrapper>
       <Bottom>
         {isLoading ? (
