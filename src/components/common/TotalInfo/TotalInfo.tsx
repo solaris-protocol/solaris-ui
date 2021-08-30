@@ -27,6 +27,18 @@ const Wrapper = styled.div`
     background: linear-gradient(92.18deg, #9c32be -43.31%, #a422a1 102.49%);
   }
 
+  &.stake {
+    background-image: linear-gradient(180deg, rgba(164, 34, 161, 0.15) -13.46%, rgba(220, 31, 255, 0.15) 100%),
+      url('./bg-stake.png');
+    background-repeat: no-repeat;
+    background-position: center right;
+    background-size: cover;
+
+    &::after {
+      opacity: 0.04;
+    }
+  }
+
   &.isLoading {
     &::before {
       opacity: 1;
@@ -57,7 +69,7 @@ const Wrapper = styled.div`
     bottom: 0;
     left: 0;
 
-    background: url('./lines.svg') no-repeat 50% 30%;
+    background: url('./lines.svg') no-repeat 65% 35%;
     opacity: 0.1;
 
     content: '';
@@ -80,6 +92,10 @@ const Title = styled.span`
   line-height: 15px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+
+  &.stake {
+    color: rgba(255, 255, 255, 0.5);
+  }
 `;
 
 const Value = styled.span`
@@ -93,7 +109,7 @@ const Value = styled.span`
 `;
 
 interface Props {
-  type: 'deposit' | 'borrow';
+  type: 'deposit' | 'borrow' | 'stake';
   columns: { title: string; value: number | string }[];
   className?: string;
 }
@@ -103,7 +119,7 @@ export const TotalInfo: FC<Props> = ({ type, columns, className }) => {
     <Wrapper className={classNames(className, { [type]: true })}>
       {columns.map((column) => (
         <Column key={column.title}>
-          <Title>{column.title}</Title>
+          <Title className={classNames({ [type]: true })}>{column.title}</Title>
           <Value>{column.value}</Value>
         </Column>
       ))}

@@ -1,0 +1,1 @@
+export { SLSSOLCard } from './SLSSOLCard';

@@ -9,6 +9,7 @@ import { useModals } from 'app/contexts/modals';
 import SettingsIcon from 'assets/icons/settings-icon.svg';
 import WalletIcon from 'assets/icons/wallet-icon.svg';
 import { SideModalType } from 'components/modals/types';
+import { useDev } from 'hooks/system/useDev';
 import { shortenAddress } from 'utils/utils';
 
 import { ButtonBottom, ButtonTopA, Wrapper } from '../common/styled';
@@ -47,7 +48,6 @@ const ButtonWallet = styled(ButtonBottomStyled)`
   letter-spacing: 0.02em;
 `;
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const WalletIconStyled = styled(WalletIcon)`
   margin-left: 10px;
@@ -64,6 +64,7 @@ const BottomWrapper = styled.div`
 `;
 
 export const Opened: FC = () => {
+  const isDev = useDev();
   const { publicKey } = useWallet();
   const { openModal } = useModals();
 
@@ -85,6 +86,11 @@ export const Opened: FC = () => {
         <NavLink to="/borrow" component={ButtonTopAStyled} className="borrow">
           Borrow
         </NavLink>
+        {isDev ? (
+          <NavLink to="/stake" component={ButtonTopAStyled} className="stake">
+            Stake
+          </NavLink>
+        ) : null}
       </TopWrapper>
       <BottomWrapper>
         <ButtonWallet onClick={() => openModal('wallet')}>

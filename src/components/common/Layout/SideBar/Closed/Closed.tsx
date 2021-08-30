@@ -2,14 +2,15 @@ import React, { FC } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { styled } from '@linaria/react';
-import { useWallet } from '@solana/wallet-adapter-react';
 
 import { useModals } from 'app/contexts/modals';
 import BorrowIcon from 'assets/icons/borrow-icon.svg';
 import DepositIcon from 'assets/icons/deposit-icon.svg';
 import SettingsIcon from 'assets/icons/settings-icon.svg';
+import StakeIcon from 'assets/icons/stake-icon.svg';
 import WalletIcon from 'assets/icons/wallet-icon.svg';
 import { SideModalType } from 'components/modals/types';
+import { useDev } from 'hooks/system/useDev';
 
 import { ButtonBottom, ButtonTopA, Wrapper } from '../common/styled';
 
@@ -38,6 +39,7 @@ const BottomWrapper = styled.div`
 `;
 
 export const Closed: FC = () => {
+  const isDev = useDev();
   const { openModal } = useModals();
 
   const handleOpenSideModalClick = (sideModal: SideModalType) => () => {
@@ -58,6 +60,11 @@ export const Closed: FC = () => {
         <NavLink to="/borrow" component={ButtonTopAStyled} className="borrow">
           <BorrowIcon />
         </NavLink>
+        {isDev ? (
+          <NavLink to="/stake" component={ButtonTopAStyled} className="stake">
+            <StakeIcon />
+          </NavLink>
+        ) : null}
       </TopWrapper>
       <BottomWrapper>
         <ButtonBottomStyled onClick={() => openModal('wallet')}>

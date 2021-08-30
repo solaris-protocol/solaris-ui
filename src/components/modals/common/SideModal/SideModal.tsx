@@ -6,7 +6,7 @@ import { rgba } from 'polished';
 
 import ArrowIcon from 'assets/icons/arrow-icon.svg';
 import CloseIcon from 'assets/icons/close-icon.svg';
-import { SideModalPropsType } from 'components/modals/types';
+import { CommonModalPropsType } from 'components/modals/types';
 
 const TRANSITION_DURATION = 600;
 
@@ -80,7 +80,6 @@ const BackWrapper = styled.div`
   cursor: pointer;
 `;
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const BackIcon = styled(ArrowIcon)`
   height: 28px;
@@ -120,7 +119,6 @@ const ButtonClose = styled.button`
   background: transparent;
 `;
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const CloseIconStyled = styled(CloseIcon)`
   margin-top: -1px;
@@ -133,7 +131,14 @@ interface Props {
   title: string | React.ReactNode;
 }
 
-export const Modal: FC<Props & SideModalPropsType> = ({ noAnimation, back, title, close, children, ...props }) => {
+export const SideModal: FC<Props & CommonModalPropsType> = ({
+  noAnimation,
+  back,
+  title,
+  close,
+  children,
+  ...props
+}) => {
   const handleOutsideWrapperClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       close();

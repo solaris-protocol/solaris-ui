@@ -6,7 +6,7 @@ import { ParsedAccount } from 'app/contexts/accounts/accounts';
 import { calculateBorrowAPY, Reserve } from 'app/models';
 // import WalletIcon from 'assets/icons/wallet-icon.svg';
 import { TokenIcon } from 'components/common/TokenIcon';
-import { useTokenName } from 'hooks';
+import { useTokenSymbol } from 'hooks';
 
 // import { formatNumber } from 'utils/utils';
 import { StateType } from '../types';
@@ -24,10 +24,6 @@ const Left = styled.div`
 
 const TokenIconStyled = styled(TokenIcon)`
   margin-right: 15px;
-
-  &.active {
-    box-shadow: 0 -1px 15px rgba(255, 255, 255, 0.25);
-  }
 `;
 
 const Symbol = styled.span`
@@ -60,7 +56,7 @@ interface Props {
 }
 
 export const Top: FC<Props> = ({ reserve, state }) => {
-  const name = useTokenName(reserve.info.liquidity.mintPubkey);
+  const symbol = useTokenSymbol(reserve.info.liquidity.mintPubkey);
   const apr = calculateBorrowAPY(reserve.info);
   // const tokenBalance = 0;
 
@@ -68,7 +64,7 @@ export const Top: FC<Props> = ({ reserve, state }) => {
     <Wrapper>
       <Left>
         <TokenIconStyled mintAddress={reserve.info.liquidity.mintPubkey} size={40} />
-        <Symbol>{name}</Symbol>
+        <Symbol>{symbol}</Symbol>
         <APR apr={apr} isActive={state === 'borrow'} />
       </Left>
       {/*<WalletBalance title={String(tokenBalance)}>*/}

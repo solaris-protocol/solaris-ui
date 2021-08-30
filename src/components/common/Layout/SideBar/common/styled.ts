@@ -32,6 +32,15 @@ export const ButtonTopA = styled.a`
     box-shadow: 0 4px 150px rgba(220, 31, 255, 0.15);
   }
 
+  &.stake.active {
+    background: linear-gradient(328.39deg, #3c254d 6.49%, rgba(60, 37, 77, 0) 169.09%);
+    box-shadow: 0 4px 150px rgba(220, 31, 255, 0.15);
+
+    & svg path {
+      fill: url(#stake-icon_svg__gradient);
+    }
+  }
+
   &:hover {
     color: #fff !important;
   }
